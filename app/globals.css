@@ -158,28 +158,53 @@
   }
 }
 
+/* Tilt reactive CSS vars — updated by TiltGlass.tsx */
+:root {
+  --tilt-x: 40%;
+  --tilt-y: 30%;
+}
+
 /* ── Liquid Glass Utilities ──────────────────────────────────────────────── */
 @layer utilities {
+
+  /* Tilt-reactive glass — specular highlight follows device angle */
   .glass {
-    background: oklch(1 0 0 / 60%);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid oklch(1 0 0 / 40%);
+    background:
+      radial-gradient(
+        ellipse 80% 60% at var(--tilt-x) var(--tilt-y),
+        oklch(1 0 0 / 28%) 0%,
+        transparent 70%
+      ),
+      oklch(1 0 0 / 52%);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: none;
+    outline: 1px solid transparent;
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 50%) inset,
+      0 0 0 1px oklch(0.76 0.14 78 / 22%),         /* gold glow outline */
+      0 0 12px 1px oklch(0.76 0.14 78 / 10%),       /* soft gold ambient glow */
+      0 1px 0 0 oklch(1 0 0 / 45%) inset,           /* top specular edge */
       0 8px 32px oklch(0 0 0 / 8%),
-      0 2px 8px oklch(0 0 0 / 6%);
+      0 2px 8px oklch(0 0 0 / 5%);
+    transition: box-shadow 0.1s ease;
   }
 
   @media (prefers-color-scheme: dark) {
     .glass {
-      background: oklch(1 0 0 / 8%);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid oklch(1 0 0 / 14%);
+      background:
+        radial-gradient(
+          ellipse 80% 60% at var(--tilt-x) var(--tilt-y),
+          oklch(1 0 0 / 12%) 0%,
+          transparent 70%
+        ),
+        oklch(1 0 0 / 7%);
+      backdrop-filter: blur(28px) saturate(200%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%);
       box-shadow:
-        0 1px 0 0 oklch(1 0 0 / 15%) inset,
-        0 8px 32px oklch(0 0 0 / 40%),
+        0 0 0 1px oklch(0.82 0.15 78 / 28%),        /* gold glow outline */
+        0 0 16px 2px oklch(0.82 0.15 78 / 12%),     /* soft gold ambient glow */
+        0 1px 0 0 oklch(1 0 0 / 18%) inset,
+        0 8px 32px oklch(0 0 0 / 50%),
         0 2px 8px oklch(0 0 0 / 30%);
     }
   }
@@ -187,36 +212,98 @@
   .glass-gold {
     background: linear-gradient(
       135deg,
-      oklch(0.76 0.14 78 / 80%) 0%,
-      oklch(0.82 0.12 70 / 70%) 50%,
-      oklch(0.72 0.16 85 / 80%) 100%
+      oklch(0.76 0.14 78 / 85%) 0%,
+      oklch(0.84 0.12 68 / 75%) 40%,
+      oklch(0.72 0.16 85 / 85%) 100%
     );
     backdrop-filter: blur(24px) saturate(200%);
     -webkit-backdrop-filter: blur(24px) saturate(200%);
-    border: 1px solid oklch(0.88 0.1 78 / 60%);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 40%) inset,
-      0 8px 32px oklch(0.76 0.14 78 / 25%),
+      0 0 0 1px oklch(0.88 0.12 78 / 70%),
+      0 0 20px 4px oklch(0.76 0.14 78 / 30%),
+      0 1px 0 0 oklch(1 0 0 / 50%) inset,
+      0 8px 32px oklch(0.76 0.14 78 / 20%),
       0 2px 8px oklch(0 0 0 / 10%);
   }
 
   .widget-shadow {
     box-shadow:
-      0 2px 8px oklch(0 0 0 / 8%),
-      0 8px 24px oklch(0 0 0 / 6%),
+      0 2px 8px oklch(0 0 0 / 7%),
+      0 8px 24px oklch(0 0 0 / 5%),
       0 1px 2px oklch(0 0 0 / 4%);
   }
 
   @media (prefers-color-scheme: dark) {
     .widget-shadow {
       box-shadow:
-        0 2px 8px oklch(0 0 0 / 40%),
-        0 8px 24px oklch(0 0 0 / 35%),
+        0 2px 8px oklch(0 0 0 / 45%),
+        0 8px 24px oklch(0 0 0 / 38%),
         0 1px 2px oklch(0 0 0 / 20%);
     }
   }
 
   .safe-area-pb {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  /* Gold filled dot with glow */
+  .gold-dot-glow {
+    background: radial-gradient(circle, oklch(0.86 0.16 78) 0%, oklch(0.72 0.14 78) 100%);
+    box-shadow:
+      0 0 6px 2px oklch(0.82 0.15 78 / 60%),
+      0 0 12px 4px oklch(0.76 0.14 78 / 30%);
+  }
+
+  /* Drum nav drawer */
+  .drum-drawer {
+    background:
+      radial-gradient(
+        ellipse 90% 60% at var(--tilt-x) var(--tilt-y),
+        oklch(1 0 0 / 14%) 0%,
+        transparent 70%
+      ),
+      oklch(1 0 0 / 10%);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    box-shadow:
+      -1px 0 0 0 oklch(0.82 0.15 78 / 30%),
+      -4px 0 24px oklch(0.76 0.14 78 / 12%),
+      -8px 0 40px oklch(0 0 0 / 30%);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .drum-drawer {
+      background:
+        radial-gradient(
+          ellipse 90% 60% at var(--tilt-x) var(--tilt-y),
+          oklch(1 0 0 / 10%) 0%,
+          transparent 70%
+        ),
+        oklch(0 0 0 / 55%);
+    }
+  }
+
+  /* Drum center highlight stripe */
+  .drum-center-highlight {
+    background: oklch(0.82 0.15 78 / 12%);
+    border-top: 1px solid oklch(0.82 0.15 78 / 35%);
+    border-bottom: 1px solid oklch(0.82 0.15 78 / 35%);
+  }
+
+  /* Drum fade top/bottom */
+  .drum-fade-top {
+    background: linear-gradient(to bottom, var(--drum-fade-color, oklch(1 0 0 / 85%)), transparent);
+  }
+  .drum-fade-bottom {
+    background: linear-gradient(to top, var(--drum-fade-color, oklch(1 0 0 / 85%)), transparent);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .drum-fade-top {
+      --drum-fade-color: oklch(0 0 0 / 75%);
+    }
+    .drum-fade-bottom {
+      --drum-fade-color: oklch(0 0 0 / 75%);
+    }
   }
 }

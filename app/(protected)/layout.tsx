@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
+import DrumNav from "@/components/DrumNav";
+import TiltGlass from "@/components/TiltGlass";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -14,9 +16,11 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen bg-background">
+      <TiltGlass />
       <Sidebar />
-      {/* Desktop: offset for sidebar. Mobile: offset for top bar + bottom nav */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0 pb-24 md:pb-0 p-4 md:p-6">
+      <DrumNav />
+      {/* Desktop: offset for sidebar. Mobile: no header/footer offset, full screen content */}
+      <main className="flex-1 md:ml-64 p-4 md:p-6 pb-6">
         {children}
       </main>
     </div>
