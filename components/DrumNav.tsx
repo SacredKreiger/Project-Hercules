@@ -57,29 +57,26 @@ export default function DrumNav() {
   const animRef = useRef<number | null>(null);
   const lastSnapIdx = useRef(confirmedIndex);
 
-  // Reset 60s auto-dismiss timer whenever capsule opens or user interacts
+  // 60s auto-dismiss: closes capsule WITHOUT navigating
   const resetDismissTimer = useCallback(() => {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
     dismissTimer.current = setTimeout(() => {
-      if (openRef.current) {
-        // Dismiss without navigating — snap back to confirmed index
-        const snapped = confirmedIndex * ITEM_H;
-        setOffset(snapped);
-        startOffset.current = snapped;
-        lastSnapIdx.current = confirmedIndex;
-        setOpen(false);
-      }
+      if (!openRef.current) return;
+      const snapped = confirmedIndex * ITEM_H;
+      setOffset(snapped);
+      startOffset.current = snapped;
+      lastSnapIdx.current = confirmedIndex;
+      setOpen(false);
     }, AUTO_DISMISS_MS);
   }, [confirmedIndex, setOffset, setOpen]);
 
   useEffect(() => {
     if (open) resetDismissTimer();
-    else {
-      if (dismissTimer.current) clearTimeout(dismissTimer.current);
-    }
+    else if (dismissTimer.current) clearTimeout(dismissTimer.current);
     return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current); };
   }, [open, resetDismissTimer]);
 
+  // Sync wheel to route when navigating externally
   useEffect(() => {
     const idx = Math.max(0, NAV.findIndex((n) => n.href === pathname));
     setOffset(idx * ITEM_H);
@@ -92,7 +89,9 @@ export default function DrumNav() {
     setTimeout(() => setPulsing(null), 160);
   }, []);
 
-  const snapAndNavigate = useCallback((rawOffset: number, vel: number = 0) => {
+  // BUG FIX: snapTo only moves the wheel — does NOT navigate or close the capsule.
+  // Navigation only happens from confirmNavigation() or auto-dismiss.
+  const snapTo = useCallback((rawOffset: number, vel: number = 0) => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     let current = rawOffset;
     const friction = 0.82;
@@ -114,9 +113,8 @@ export default function DrumNav() {
       const dist = Math.abs(snapPoint - current);
       if (Math.abs(vel) < 0.25 && dist < 0.8) {
         setOffset(snapPoint);
+        // BUG FIX: update startOffset when animation settles so next drag starts correctly
         startOffset.current = snapPoint;
-        router.push(NAV[nearIdx].href);
-        setOpen(false);
         return;
       }
 
@@ -124,7 +122,7 @@ export default function DrumNav() {
       animRef.current = requestAnimationFrame(step);
     }
     animRef.current = requestAnimationFrame(step);
-  }, [router, triggerPulse, setOffset, setOpen]);
+  }, [triggerPulse, setOffset]);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     const t = e.touches[0];
@@ -137,6 +135,7 @@ export default function DrumNav() {
     isEdgeSwipe.current = t.clientX > window.innerWidth - EDGE_ZONE || openRef.current;
     if (animRef.current) {
       cancelAnimationFrame(animRef.current);
+      // Sync start to wherever the animation stopped
       startOffset.current = offsetRef.current;
     }
     if (openRef.current) resetDismissTimer();
@@ -154,17 +153,20 @@ export default function DrumNav() {
     lastT.current = now;
 
     if (!openRef.current && dx < -18) {
+      // Swipe in from right edge → open capsule
       setOpen(true);
       startOffset.current = offsetRef.current;
     } else if (openRef.current && !hasScrolled.current && dx > 50 && Math.abs(dy) < 20) {
+      // Swipe right → dismiss without navigating
       setOpen(false);
       setOffset(confirmedIndex * ITEM_H);
       startOffset.current = confirmedIndex * ITEM_H;
       lastSnapIdx.current = confirmedIndex;
       isEdgeSwipe.current = false;
     } else if (openRef.current && Math.abs(dy) > 6) {
+      // Spinning the drum wheel
       hasScrolled.current = true;
-      e.preventDefault();
+      e.preventDefault(); // prevents click from firing after scroll → backdrop onClick won't trigger
       const newOff = Math.max(0, Math.min((NAV.length - 1) * ITEM_H, startOffset.current - dy));
       setOffset(newOff);
       const snapIdx = Math.max(0, Math.min(NAV.length - 1, Math.round(newOff / ITEM_H)));
@@ -179,13 +181,14 @@ export default function DrumNav() {
     if (!isEdgeSwipe.current) return;
 
     if (openRef.current && hasScrolled.current) {
-      snapAndNavigate(offsetRef.current, -velY.current * 30);
+      // Finger lift after scroll → snap to nearest item, but STAY OPEN
+      snapTo(offsetRef.current, -velY.current * 30);
     }
 
     isEdgeSwipe.current = false;
     hasScrolled.current = false;
-    startOffset.current = offsetRef.current;
-  }, [snapAndNavigate]);
+    // Note: startOffset.current updated by snapTo() when it settles
+  }, [snapTo]);
 
   useEffect(() => {
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -198,7 +201,8 @@ export default function DrumNav() {
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
-  // Tap anywhere outside capsule → confirm + navigate
+  // BUG FIX: onClick instead of onPointerDown — onClick is suppressed after a scroll
+  // (because e.preventDefault() was called in touchmove), so it only fires on clean taps.
   function confirmNavigation() {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     const idx = Math.max(0, Math.min(NAV.length - 1, Math.round(offsetRef.current / ITEM_H)));
@@ -230,12 +234,15 @@ export default function DrumNav() {
         ))}
       </div>
 
-      {/* Tap anywhere → confirm navigation */}
+      {/* BUG FIX: onClick (not onPointerDown) so scrolling the wheel doesn't immediately confirm */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-40" onPointerDown={confirmNavigation} />
+        <div
+          className="md:hidden fixed inset-0 z-40"
+          onClick={confirmNavigation}
+        />
       )}
 
-      {/* Camera Control capsule */}
+      {/* Camera Control capsule — blooms from dot cluster position */}
       <div
         className="md:hidden fixed top-1/2 right-0 z-50"
         style={{
@@ -251,77 +258,59 @@ export default function DrumNav() {
             : "transform 0.26s cubic-bezier(0.4,0,0.6,1), opacity 0.18s ease",
           willChange: "transform, opacity",
           pointerEvents: "none",
-          // Outer depth shadow — makes it look like it protrudes from the bezel
+          // Outer depth shadow — protrusion from bezel
           filter: "drop-shadow(-6px 0 18px oklch(0 0 0 / 55%)) drop-shadow(-2px 0 6px oklch(0 0 0 / 35%))",
         }}
       >
-        {/* Glass body */}
+        {/* BUG FIX: no background:"none" override — let .glass class handle the
+            tilt-reactive radial gradient. Removed inner "frosted base" div that
+            was duplicating backdrop-filter and bypassing the CSS variable reactivity. */}
         <div
           className="w-full h-full glass overflow-hidden relative"
-          style={{
-            borderRadius: "20px 0 0 20px",
-            // Perspective curve: makes the left face look like it bends outward
-            background: "none",
-          }}
+          style={{ borderRadius: "20px 0 0 20px" }}
         >
-          {/* Bezel-bend gradient layer — mimics a curved physical surface catching light */}
-          <div
-            className="absolute inset-0 pointer-events-none z-20"
-            style={{
-              borderRadius: "20px 0 0 20px",
-              background: `
-                linear-gradient(
-                  to right,
-                  oklch(1 0 0 / 22%) 0px,
-                  oklch(1 0 0 / 10%) 4px,
-                  transparent 18px
-                )
-              `,
-            }}
-          />
-
-          {/* Frosted glass base */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              borderRadius: "20px 0 0 20px",
-              backdropFilter: "blur(28px) saturate(200%)",
-              WebkitBackdropFilter: "blur(28px) saturate(200%)",
-              background:
-                "radial-gradient(ellipse 90% 60% at var(--tilt-x) var(--tilt-y), oklch(1 0 0 / 12%) 0%, transparent 70%), oklch(1 0 0 / 8%)",
-              boxShadow: `
-                -1px 0 0 0 oklch(0.82 0.15 78 / 50%),
-                -3px 0 16px oklch(0.76 0.14 78 / 20%),
-                inset 1px 0 0 0 oklch(1 0 0 / 30%)
-              `,
-            }}
-          />
-
-          {/* Left rounded-edge specular — the "bevel" that makes it look 3D */}
+          {/* Bezel-bend: left edge specular highlight simulating curved physical surface */}
           <div
             className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
             style={{
               width: 6,
-              borderRadius: "20px 0 0 20px",
               background: "linear-gradient(to right, oklch(1 0 0 / 55%), transparent)",
             }}
           />
 
-          {/* Top/bottom corner softening */}
+          {/* Bezel-bend: outer edge gradient sweep (light catching the curve) */}
           <div
-            className="absolute top-0 left-0 right-0 pointer-events-none z-20"
+            className="absolute inset-0 pointer-events-none z-20"
             style={{
-              height: 20,
-              background: "linear-gradient(to bottom, oklch(1 0 0 / 18%), transparent)",
-              borderRadius: "20px 0 0 0",
+              background:
+                "linear-gradient(to right, oklch(1 0 0 / 18%) 0px, oklch(1 0 0 / 8%) 6px, transparent 20px)",
             }}
           />
+
+          {/* Top corner softening */}
           <div
-            className="absolute bottom-0 left-0 right-0 pointer-events-none z-20"
+            className="absolute top-0 inset-x-0 pointer-events-none z-20"
             style={{
               height: 20,
-              background: "linear-gradient(to top, oklch(1 0 0 / 18%), transparent)",
-              borderRadius: "0 0 0 20px",
+              background: "linear-gradient(to bottom, oklch(1 0 0 / 20%), transparent)",
+            }}
+          />
+
+          {/* Bottom corner softening */}
+          <div
+            className="absolute bottom-0 inset-x-0 pointer-events-none z-20"
+            style={{
+              height: 20,
+              background: "linear-gradient(to top, oklch(1 0 0 / 20%), transparent)",
+            }}
+          />
+
+          {/* Left gold edge glow line */}
+          <div
+            className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
+            style={{
+              width: 1,
+              background: "linear-gradient(to bottom, transparent, oklch(0.82 0.15 78 / 60%), transparent)",
             }}
           />
 
