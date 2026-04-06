@@ -54,6 +54,9 @@ export default function DrumNav() {
   const startOffset = useRef(confirmedIndex * ITEM_H);
   const isEdgeSwipe = useRef(false);
   const hasScrolled = useRef(false);
+  // True when the capsule was opened during this same touch gesture — that gesture
+  // should never trigger snapAndNavigate on lift, only separate scroll gestures should.
+  const openedDuringGesture = useRef(false);
   const velY = useRef(0);
   const lastY = useRef(0);
   const lastT = useRef(0);
@@ -145,6 +148,7 @@ export default function DrumNav() {
     lastT.current = Date.now();
     velY.current = 0;
     hasScrolled.current = false;
+    openedDuringGesture.current = false;
     isEdgeSwipe.current = t.clientX > window.innerWidth - EDGE_ZONE || openRef.current;
     if (animRef.current) {
       cancelAnimationFrame(animRef.current);
@@ -165,6 +169,7 @@ export default function DrumNav() {
 
     if (!openRef.current && dx < -18) {
       setOpen(true);
+      openedDuringGesture.current = true;
       startOffset.current = offsetRef.current;
       justOpened.current = true;
       setTimeout(() => { justOpened.current = false; }, 350);
@@ -186,7 +191,7 @@ export default function DrumNav() {
   const onTouchEnd = useCallback(() => {
     if (!isEdgeSwipe.current) return;
 
-    if (openRef.current && hasScrolled.current) {
+    if (openRef.current && hasScrolled.current && !openedDuringGesture.current) {
       // Finger lift → spring to nearest item → navigate
       snapAndNavigate(offsetRef.current, -velY.current * 30);
     }
