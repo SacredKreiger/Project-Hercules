@@ -349,3 +349,8 @@
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+@keyframes bezel-flash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
