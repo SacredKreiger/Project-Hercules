@@ -36,14 +36,18 @@ export default function TiltGlass() {
       permission = true;
     }
 
-    // Fallback: mouse tilt for desktop preview
+    // Fallback: mouse tilt for desktop only — skip on touch devices to prevent
+    // synthetic mousemove events from jumping the gradient on tap.
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     function handleMouse(e: MouseEvent) {
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
       document.documentElement.style.setProperty("--tilt-x", `${x.toFixed(1)}%`);
       document.documentElement.style.setProperty("--tilt-y", `${y.toFixed(1)}%`);
     }
-    window.addEventListener("mousemove", handleMouse);
+    if (!isTouchDevice) {
+      window.addEventListener("mousemove", handleMouse);
+    }
 
     return () => {
       window.removeEventListener("deviceorientation", handleOrientation);
