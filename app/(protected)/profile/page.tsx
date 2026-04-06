@@ -60,7 +60,7 @@ export default function ProfilePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             {[
               { label: "Calories", value: macros.calories, unit: "kcal" },
               { label: "Protein", value: macros.protein, unit: "g" },

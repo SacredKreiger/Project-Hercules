@@ -75,7 +75,7 @@ export default function ProgressPage() {
 
       {/* Stats */}
       {profile && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Starting Weight", value: `${profile.current_weight_lbs} lbs` },
             { label: "Current Weight", value: `${latestWeight ?? "—"} lbs` },

@@ -15,7 +15,10 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 ml-64 p-6">{children}</main>
+      {/* Desktop: offset for sidebar. Mobile: offset for top bar + bottom nav */}
+      <main className="flex-1 md:ml-64 pt-16 md:pt-0 pb-24 md:pb-0 p-4 md:p-6">
+        {children}
+      </main>
     </div>
   );
 }
