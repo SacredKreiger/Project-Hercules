@@ -18,10 +18,9 @@ const DEG_PER_ITEM = 26;
 const CAPSULE_W = 44;
 const CAPSULE_H = ITEM_H * 5; // 260px
 const EDGE_ZONE = 36;
-const AUTO_DISMISS_MS = 60_000;
 
-const CLOSED_SCALE_X = 0.18;
-const CLOSED_SCALE_Y = 0.35;
+// Apple spring easing — matches UIKit spring animations
+const SPRING = "cubic-bezier(0.32, 0.72, 0, 1)";
 
 export default function DrumNav() {
   const pathname = usePathname();
@@ -31,10 +30,13 @@ export default function DrumNav() {
   const [open, _setOpen] = useState(false);
   const [offset, _setOffset] = useState(confirmedIndex * ITEM_H);
   const [pulsing, setPulsing] = useState<number | null>(null);
+  // Haptic visual feedback state — briefly scales capsule down on confirm tap
+  const [confirming, setConfirming] = useState(false);
 
   const openRef = useRef(false);
   const offsetRef = useRef(confirmedIndex * ITEM_H);
-  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guard: ignore click events that fire immediately after swipe-to-open
+  const justOpened = useRef(false);
 
   const setOpen = useCallback((val: boolean) => {
     openRef.current = val;
@@ -57,26 +59,7 @@ export default function DrumNav() {
   const animRef = useRef<number | null>(null);
   const lastSnapIdx = useRef(confirmedIndex);
 
-  // 60s auto-dismiss: closes capsule WITHOUT navigating
-  const resetDismissTimer = useCallback(() => {
-    if (dismissTimer.current) clearTimeout(dismissTimer.current);
-    dismissTimer.current = setTimeout(() => {
-      if (!openRef.current) return;
-      const snapped = confirmedIndex * ITEM_H;
-      setOffset(snapped);
-      startOffset.current = snapped;
-      lastSnapIdx.current = confirmedIndex;
-      setOpen(false);
-    }, AUTO_DISMISS_MS);
-  }, [confirmedIndex, setOffset, setOpen]);
-
-  useEffect(() => {
-    if (open) resetDismissTimer();
-    else if (dismissTimer.current) clearTimeout(dismissTimer.current);
-    return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current); };
-  }, [open, resetDismissTimer]);
-
-  // Sync wheel to route when navigating externally
+  // Sync wheel to route on external navigation
   useEffect(() => {
     const idx = Math.max(0, NAV.findIndex((n) => n.href === pathname));
     setOffset(idx * ITEM_H);
@@ -89,8 +72,7 @@ export default function DrumNav() {
     setTimeout(() => setPulsing(null), 160);
   }, []);
 
-  // BUG FIX: snapTo only moves the wheel — does NOT navigate or close the capsule.
-  // Navigation only happens from confirmNavigation() or auto-dismiss.
+  // Snap wheel to nearest item — does NOT navigate or close
   const snapTo = useCallback((rawOffset: number, vel: number = 0) => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     let current = rawOffset;
@@ -113,7 +95,6 @@ export default function DrumNav() {
       const dist = Math.abs(snapPoint - current);
       if (Math.abs(vel) < 0.25 && dist < 0.8) {
         setOffset(snapPoint);
-        // BUG FIX: update startOffset when animation settles so next drag starts correctly
         startOffset.current = snapPoint;
         return;
       }
@@ -124,6 +105,35 @@ export default function DrumNav() {
     animRef.current = requestAnimationFrame(step);
   }, [triggerPulse, setOffset]);
 
+  // Global tap confirmation: tap anywhere on viewport → haptic scale → navigate → close
+  // No auto-dismiss timer — persists until user explicitly confirms or swipes away.
+  const confirmNavigation = useCallback(() => {
+    if (!openRef.current || justOpened.current) return;
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+
+    const idx = Math.max(0, Math.min(NAV.length - 1, Math.round(offsetRef.current / ITEM_H)));
+    const snapped = idx * ITEM_H;
+    setOffset(snapped);
+    startOffset.current = snapped;
+    lastSnapIdx.current = idx;
+
+    // Haptic visual: scale(0.98) for 80ms before navigating
+    setConfirming(true);
+    setTimeout(() => {
+      router.push(NAV[idx].href);
+      setOpen(false);
+      setConfirming(false);
+    }, 80);
+  }, [router, setOffset, setOpen]);
+
+  // Attach global click listener whenever capsule is open
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("click", confirmNavigation);
+    return () => window.removeEventListener("click", confirmNavigation);
+  }, [open, confirmNavigation]);
+
+  // Touch: open on edge swipe, spin wheel, dismiss on swipe-right
   const onTouchStart = useCallback((e: TouchEvent) => {
     const t = e.touches[0];
     touchStartX.current = t.clientX;
@@ -135,11 +145,9 @@ export default function DrumNav() {
     isEdgeSwipe.current = t.clientX > window.innerWidth - EDGE_ZONE || openRef.current;
     if (animRef.current) {
       cancelAnimationFrame(animRef.current);
-      // Sync start to wherever the animation stopped
       startOffset.current = offsetRef.current;
     }
-    if (openRef.current) resetDismissTimer();
-  }, [resetDismissTimer]);
+  }, []);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (!isEdgeSwipe.current) return;
@@ -153,9 +161,11 @@ export default function DrumNav() {
     lastT.current = now;
 
     if (!openRef.current && dx < -18) {
-      // Swipe in from right edge → open capsule
       setOpen(true);
       startOffset.current = offsetRef.current;
+      // Guard: swipe-open generates a click event — ignore it
+      justOpened.current = true;
+      setTimeout(() => { justOpened.current = false; }, 350);
     } else if (openRef.current && !hasScrolled.current && dx > 50 && Math.abs(dy) < 20) {
       // Swipe right → dismiss without navigating
       setOpen(false);
@@ -166,7 +176,7 @@ export default function DrumNav() {
     } else if (openRef.current && Math.abs(dy) > 6) {
       // Spinning the drum wheel
       hasScrolled.current = true;
-      e.preventDefault(); // prevents click from firing after scroll → backdrop onClick won't trigger
+      e.preventDefault(); // suppresses click → prevents accidental confirm on scroll
       const newOff = Math.max(0, Math.min((NAV.length - 1) * ITEM_H, startOffset.current - dy));
       setOffset(newOff);
       const snapIdx = Math.max(0, Math.min(NAV.length - 1, Math.round(newOff / ITEM_H)));
@@ -181,13 +191,12 @@ export default function DrumNav() {
     if (!isEdgeSwipe.current) return;
 
     if (openRef.current && hasScrolled.current) {
-      // Finger lift after scroll → snap to nearest item, but STAY OPEN
+      // Finger lift after wheel scroll → snap to nearest, stay open
       snapTo(offsetRef.current, -velY.current * 30);
     }
 
     isEdgeSwipe.current = false;
     hasScrolled.current = false;
-    // Note: startOffset.current updated by snapTo() when it settles
   }, [snapTo]);
 
   useEffect(() => {
@@ -201,48 +210,26 @@ export default function DrumNav() {
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
-  // BUG FIX: onClick instead of onPointerDown — onClick is suppressed after a scroll
-  // (because e.preventDefault() was called in touchmove), so it only fires on clean taps.
-  function confirmNavigation() {
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    const idx = Math.max(0, Math.min(NAV.length - 1, Math.round(offsetRef.current / ITEM_H)));
-    const snapped = idx * ITEM_H;
-    setOffset(snapped);
-    startOffset.current = snapped;
-    lastSnapIdx.current = idx;
-    router.push(NAV[idx].href);
-    setOpen(false);
-  }
-
   const activeIdx = Math.round(offset / ITEM_H);
 
   return (
     <>
-      {/* 6 bare dots — right edge, visible at rest */}
+      {/* 6 bare indicator dots — right edge, hidden while capsule is open */}
       <div
         className="md:hidden fixed right-2.5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-[10px] pointer-events-none"
-        style={{ opacity: open ? 0 : 1, transition: "opacity 0.2s ease" }}
+        style={{ opacity: open ? 0 : 1, transition: `opacity 0.2s ease` }}
       >
         {NAV.map((_, i) => (
           <div key={i} style={{ width: 8, height: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {i === confirmedIndex ? (
-              <div className="w-[7px] h-[7px] rounded-full active-dot" />
-            ) : (
-              <div className="w-[5px] h-[5px] rounded-full bg-foreground/25" />
-            )}
+            {i === confirmedIndex
+              ? <div className="w-[7px] h-[7px] rounded-full active-dot" />
+              : <div className="w-[5px] h-[5px] rounded-full bg-foreground/25" />
+            }
           </div>
         ))}
       </div>
 
-      {/* BUG FIX: onClick (not onPointerDown) so scrolling the wheel doesn't immediately confirm */}
-      {open && (
-        <div
-          className="md:hidden fixed inset-0 z-40"
-          onClick={confirmNavigation}
-        />
-      )}
-
-      {/* Camera Control capsule — blooms from dot cluster position */}
+      {/* Camera Control capsule — slides in from bezel, persists until tapped */}
       <div
         className="md:hidden fixed top-1/2 right-0 z-50"
         style={{
@@ -250,40 +237,73 @@ export default function DrumNav() {
           height: CAPSULE_H,
           transformOrigin: "right center",
           transform: open
-            ? "translateY(-50%) scale(1, 1)"
-            : `translateY(-50%) scale(${CLOSED_SCALE_X}, ${CLOSED_SCALE_Y})`,
-          opacity: open ? 1 : 0,
-          transition: open
-            ? "transform 0.44s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease"
-            : "transform 0.26s cubic-bezier(0.4,0,0.6,1), opacity 0.18s ease",
-          willChange: "transform, opacity",
+            ? `translateY(-50%) translateX(0) scale(${confirming ? 0.98 : 1})`
+            : "translateY(-50%) translateX(100%)",
+          transition: open && !confirming
+            ? `transform 0.5s ${SPRING}`
+            : confirming
+            ? "transform 0.06s ease-in"
+            : `transform 0.36s ${SPRING}`,
+          willChange: "transform",
           pointerEvents: "none",
-          filter: "drop-shadow(-4px 0 14px oklch(0 0 0 / 30%))",
+          // Outer depth: makes the capsule appear to protrude from the device edge
+          filter: "drop-shadow(-6px 0 20px rgba(0,0,0,0.55)) drop-shadow(-2px 0 6px rgba(0,0,0,0.35))",
         }}
       >
+        {/* Glass body — premium dark glass per spec */}
         <div
-          className="w-full h-full drum-capsule overflow-hidden relative"
-          style={{ borderRadius: "20px 0 0 20px" }}
+          className="w-full h-full overflow-hidden relative"
+          style={{
+            borderRadius: "24px 0 0 24px",
+            background: "rgba(20, 20, 20, 0.75)",
+            backdropFilter: "blur(15px) saturate(180%)",
+            WebkitBackdropFilter: "blur(15px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRight: "none",
+          }}
         >
-          {/* Left edge specular — curved surface highlight */}
+          {/* Left rounded-edge specular — light catching the curve */}
           <div
-            className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
+            className="absolute top-0 left-0 bottom-0 pointer-events-none z-20"
             style={{
-              width: 5,
-              background: "linear-gradient(to right, oklch(1 0 0 / 50%), transparent)",
+              width: 6,
+              background: "linear-gradient(to right, rgba(255,255,255,0.18), transparent)",
             }}
           />
 
-          {/* Top/bottom wheel fade */}
-          <div className="absolute inset-x-0 top-0 h-14 z-10 pointer-events-none drum-fade-top" />
-          <div className="absolute inset-x-0 bottom-0 h-14 z-10 pointer-events-none drum-fade-bottom" />
+          {/* Bezel-bend: right edge curvature — where screen meets device bezel */}
+          <div
+            className="absolute top-0 right-0 bottom-0 pointer-events-none z-20"
+            style={{
+              width: 12,
+              background: "linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 90%, rgba(0,0,0,0.5) 100%)",
+            }}
+          />
+
+          {/* Top fade — consistent with dark glass base */}
+          <div
+            className="absolute inset-x-0 top-0 h-14 z-10 pointer-events-none"
+            style={{ background: "linear-gradient(to bottom, rgba(20,20,20,0.92), transparent)" }}
+          />
+          {/* Bottom fade */}
+          <div
+            className="absolute inset-x-0 bottom-0 h-14 z-10 pointer-events-none"
+            style={{ background: "linear-gradient(to top, rgba(20,20,20,0.92), transparent)" }}
+          />
 
           {/* Center selection band */}
           <div
             className="absolute inset-x-0 z-10 pointer-events-none"
             style={{ top: "50%", height: ITEM_H, transform: "translateY(-50%)" }}
           >
-            <div className="h-full mx-1.5 rounded-xl drum-center-highlight" />
+            <div
+              className="h-full mx-1.5 rounded-xl"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                borderTop: "1px solid rgba(255,255,255,0.12)",
+                borderBottom: "1px solid rgba(255,255,255,0.12)",
+              }}
+            />
           </div>
 
           {/* 3D drum wheel */}
@@ -334,11 +354,11 @@ export default function DrumNav() {
                     }}
                   >
                     <item.icon
-                      className={isActive ? "text-foreground" : "text-foreground/35"}
                       style={{
                         width: 18,
                         height: 18,
                         flexShrink: 0,
+                        color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)",
                         transform: isPulsing ? "scale(1.45)" : "scale(1)",
                         transition: isPulsing ? "none" : "transform 0.1s ease",
                       }}
