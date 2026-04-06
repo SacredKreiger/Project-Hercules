@@ -18,9 +18,8 @@ const DEG_PER_ITEM = 26;
 const CAPSULE_W = 44;
 const CAPSULE_H = ITEM_H * 5; // 260px
 const EDGE_ZONE = 36;
+const AUTO_DISMISS_MS = 60_000;
 
-// Closed scale: approximate dot cluster dimensions relative to capsule
-// Dots: ~8px wide, ~92px tall → 8/44 ≈ 0.18x, 92/260 ≈ 0.35y
 const CLOSED_SCALE_X = 0.18;
 const CLOSED_SCALE_Y = 0.35;
 
@@ -35,6 +34,7 @@ export default function DrumNav() {
 
   const openRef = useRef(false);
   const offsetRef = useRef(confirmedIndex * ITEM_H);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setOpen = useCallback((val: boolean) => {
     openRef.current = val;
@@ -57,6 +57,29 @@ export default function DrumNav() {
   const animRef = useRef<number | null>(null);
   const lastSnapIdx = useRef(confirmedIndex);
 
+  // Reset 60s auto-dismiss timer whenever capsule opens or user interacts
+  const resetDismissTimer = useCallback(() => {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = setTimeout(() => {
+      if (openRef.current) {
+        // Dismiss without navigating — snap back to confirmed index
+        const snapped = confirmedIndex * ITEM_H;
+        setOffset(snapped);
+        startOffset.current = snapped;
+        lastSnapIdx.current = confirmedIndex;
+        setOpen(false);
+      }
+    }, AUTO_DISMISS_MS);
+  }, [confirmedIndex, setOffset, setOpen]);
+
+  useEffect(() => {
+    if (open) resetDismissTimer();
+    else {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    }
+    return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current); };
+  }, [open, resetDismissTimer]);
+
   useEffect(() => {
     const idx = Math.max(0, NAV.findIndex((n) => n.href === pathname));
     setOffset(idx * ITEM_H);
@@ -73,17 +96,14 @@ export default function DrumNav() {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     let current = rawOffset;
     const friction = 0.82;
-    const magnetStrength = 0.14; // pulls toward nearest snap point
+    const magnetStrength = 0.14;
 
     function step() {
-      // Apply magnetic attraction toward nearest snap
       const nearIdx = Math.max(0, Math.min(NAV.length - 1, Math.round(current / ITEM_H)));
       const snapPoint = nearIdx * ITEM_H;
       vel += (snapPoint - current) * magnetStrength;
       vel *= friction;
       current += vel;
-
-      // Clamp
       current = Math.max(0, Math.min((NAV.length - 1) * ITEM_H, current));
 
       if (nearIdx !== lastSnapIdx.current) {
@@ -92,8 +112,6 @@ export default function DrumNav() {
       }
 
       const dist = Math.abs(snapPoint - current);
-
-      // Settled: low velocity and close enough to snap point
       if (Math.abs(vel) < 0.25 && dist < 0.8) {
         setOffset(snapPoint);
         startOffset.current = snapPoint;
@@ -121,7 +139,8 @@ export default function DrumNav() {
       cancelAnimationFrame(animRef.current);
       startOffset.current = offsetRef.current;
     }
-  }, []);
+    if (openRef.current) resetDismissTimer();
+  }, [resetDismissTimer]);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (!isEdgeSwipe.current) return;
@@ -138,7 +157,6 @@ export default function DrumNav() {
       setOpen(true);
       startOffset.current = offsetRef.current;
     } else if (openRef.current && !hasScrolled.current && dx > 50 && Math.abs(dy) < 20) {
-      // Swipe right → dismiss without navigating
       setOpen(false);
       setOffset(confirmedIndex * ITEM_H);
       startOffset.current = confirmedIndex * ITEM_H;
@@ -180,6 +198,7 @@ export default function DrumNav() {
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
+  // Tap anywhere outside capsule → confirm + navigate
   function confirmNavigation() {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     const idx = Math.max(0, Math.min(NAV.length - 1, Math.round(offsetRef.current / ITEM_H)));
@@ -211,12 +230,12 @@ export default function DrumNav() {
         ))}
       </div>
 
-      {/* Tap-outside → confirm navigation */}
+      {/* Tap anywhere → confirm navigation */}
       {open && (
         <div className="md:hidden fixed inset-0 z-40" onPointerDown={confirmNavigation} />
       )}
 
-      {/* Camera Control capsule — blooms from dot cluster via transform-origin: right center */}
+      {/* Camera Control capsule */}
       <div
         className="md:hidden fixed top-1/2 right-0 z-50"
         style={{
@@ -231,17 +250,83 @@ export default function DrumNav() {
             ? "transform 0.44s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease"
             : "transform 0.26s cubic-bezier(0.4,0,0.6,1), opacity 0.18s ease",
           willChange: "transform, opacity",
-          pointerEvents: open ? "none" : "none",
+          pointerEvents: "none",
+          // Outer depth shadow — makes it look like it protrudes from the bezel
+          filter: "drop-shadow(-6px 0 18px oklch(0 0 0 / 55%)) drop-shadow(-2px 0 6px oklch(0 0 0 / 35%))",
         }}
       >
-        {/* Glass panel — rounded left, flush right */}
+        {/* Glass body */}
         <div
           className="w-full h-full glass overflow-hidden relative"
-          style={{ borderRadius: "16px 0 0 16px" }}
+          style={{
+            borderRadius: "20px 0 0 20px",
+            // Perspective curve: makes the left face look like it bends outward
+            background: "none",
+          }}
         >
-          {/* Top fade */}
+          {/* Bezel-bend gradient layer — mimics a curved physical surface catching light */}
+          <div
+            className="absolute inset-0 pointer-events-none z-20"
+            style={{
+              borderRadius: "20px 0 0 20px",
+              background: `
+                linear-gradient(
+                  to right,
+                  oklch(1 0 0 / 22%) 0px,
+                  oklch(1 0 0 / 10%) 4px,
+                  transparent 18px
+                )
+              `,
+            }}
+          />
+
+          {/* Frosted glass base */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: "20px 0 0 20px",
+              backdropFilter: "blur(28px) saturate(200%)",
+              WebkitBackdropFilter: "blur(28px) saturate(200%)",
+              background:
+                "radial-gradient(ellipse 90% 60% at var(--tilt-x) var(--tilt-y), oklch(1 0 0 / 12%) 0%, transparent 70%), oklch(1 0 0 / 8%)",
+              boxShadow: `
+                -1px 0 0 0 oklch(0.82 0.15 78 / 50%),
+                -3px 0 16px oklch(0.76 0.14 78 / 20%),
+                inset 1px 0 0 0 oklch(1 0 0 / 30%)
+              `,
+            }}
+          />
+
+          {/* Left rounded-edge specular — the "bevel" that makes it look 3D */}
+          <div
+            className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
+            style={{
+              width: 6,
+              borderRadius: "20px 0 0 20px",
+              background: "linear-gradient(to right, oklch(1 0 0 / 55%), transparent)",
+            }}
+          />
+
+          {/* Top/bottom corner softening */}
+          <div
+            className="absolute top-0 left-0 right-0 pointer-events-none z-20"
+            style={{
+              height: 20,
+              background: "linear-gradient(to bottom, oklch(1 0 0 / 18%), transparent)",
+              borderRadius: "20px 0 0 0",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 pointer-events-none z-20"
+            style={{
+              height: 20,
+              background: "linear-gradient(to top, oklch(1 0 0 / 18%), transparent)",
+              borderRadius: "0 0 0 20px",
+            }}
+          />
+
+          {/* Top/bottom wheel fade */}
           <div className="absolute inset-x-0 top-0 h-14 z-10 pointer-events-none drum-fade-top" />
-          {/* Bottom fade */}
           <div className="absolute inset-x-0 bottom-0 h-14 z-10 pointer-events-none drum-fade-bottom" />
 
           {/* Center selection band */}
@@ -261,6 +346,7 @@ export default function DrumNav() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              zIndex: 5,
             }}
           >
             <div
@@ -304,7 +390,7 @@ export default function DrumNav() {
                         width: 18,
                         height: 18,
                         flexShrink: 0,
-                        transform: isPulsing ? "scale(1.4)" : "scale(1)",
+                        transform: isPulsing ? "scale(1.45)" : "scale(1)",
                         transition: isPulsing ? "none" : "transform 0.1s ease",
                       }}
                     />
