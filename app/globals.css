@@ -309,4 +309,43 @@
       --drum-fade-color: oklch(0.18 0 0 / 90%);
     }
   }
+
+  /* ── Skeleton shimmer ──────────────────────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      oklch(0 0 0 / 5%) 25%,
+      oklch(0 0 0 / 9%) 50%,
+      oklch(0 0 0 / 5%) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        oklch(1 0 0 / 5%) 25%,
+        oklch(1 0 0 / 9%) 50%,
+        oklch(1 0 0 / 5%) 75%
+      );
+      background-size: 200% 100%;
+    }
+  }
+
+  /* Safe-area bottom padding for mobile */
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  /* Micro-interaction: subtle press scale on tap */
+  .press {
+    @apply transition-transform duration-100 active:scale-[0.97];
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

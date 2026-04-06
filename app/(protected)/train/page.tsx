@@ -25,8 +25,8 @@ export default async function TrainPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Training</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber} · {profile.phase} phase</p>
+        <h1 className="text-2xl font-bold tracking-tight">Training</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber} · <span className="capitalize">{profile.phase}</span> phase</p>
       </div>
 
       {workouts && workouts.length > 0 ? (

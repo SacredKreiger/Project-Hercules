@@ -1,20 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
-import { Flame, Beef, Wheat, Droplets } from "lucide-react";
 import { redirect } from "next/navigation";
+import { MacroRing } from "@/components/MacroRing";
+
+const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> = {
+  bulk:        { label: "Bulk",        bg: "bg-amber-500/12",   text: "text-amber-500" },
+  cut:         { label: "Cut",         bg: "bg-rose-500/12",    text: "text-rose-500" },
+  maintenance: { label: "Maintenance", bg: "bg-emerald-500/12", text: "text-emerald-500" },
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
-
   if (!profile) redirect("/onboarding");
 
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
   const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
 
-  const today = new Date().toISOString().split("T")[0];
   const dayOfWeek = new Date().getDay();
   const startDate = new Date(profile.program_start_date);
   const now = new Date();
@@ -34,76 +38,71 @@ export default async function DashboardPage() {
     .from("progress_logs").select("*")
     .eq("user_id", user!.id).order("log_date", { ascending: false }).limit(1).single();
 
-  const phaseColors: Record<string, string> = {
-    bulk: "text-amber-500",
-    cut: "text-rose-500",
-    maintenance: "text-emerald-500",
-  };
+  const loggedCal  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.calories  ?? 0), 0) ?? 0;
+  const loggedPro  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.protein_g ?? 0), 0) ?? 0;
+  const loggedCarb = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.carbs_g   ?? 0), 0) ?? 0;
+  const loggedFat  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.fat_g     ?? 0), 0) ?? 0;
 
   const currentWeight = latestLog?.weight_lbs ?? profile.current_weight_lbs;
   const progressPct = Math.min(100, Math.abs(
     (currentWeight - profile.current_weight_lbs) /
-    (profile.goal_weight_lbs - profile.current_weight_lbs)
+    Math.max(1, profile.goal_weight_lbs - profile.current_weight_lbs)
   ) * 100);
 
+  const phase = PHASE_STYLES[profile.phase] ?? PHASE_STYLES.maintenance;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+
       {/* Header */}
       <div className="flex items-start justify-between pt-1">
         <div>
-          <p className="text-sm text-muted-foreground">{today}</p>
-          <h1 className="text-2xl font-bold mt-0.5">
-            Good {getGreeting()}, {profile.name.split(" ")[0]}
+          <p className="text-xs text-muted-foreground tracking-wide">
+            {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+          <h1 className="text-2xl font-bold mt-0.5 tracking-tight">
+            {getGreeting()}, {profile.name.split(" ")[0]}
           </h1>
         </div>
-        <span className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 glass rounded-full widget-shadow ${phaseColors[profile.phase]}`}>
-          {profile.phase}
+        <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full ${phase.bg} ${phase.text}`}>
+          {phase.label}
         </span>
       </div>
 
-      {/* Macro cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: "Calories", value: macros.calories, unit: "kcal", icon: Flame, color: "text-orange-400" },
-          { label: "Protein", value: macros.protein, unit: "g", icon: Beef, color: "text-rose-400" },
-          { label: "Carbs", value: macros.carbs, unit: "g", icon: Wheat, color: "text-amber-400" },
-          { label: "Fat", value: macros.fat, unit: "g", icon: Droplets, color: "text-sky-400" },
-        ].map(({ label, value, unit, icon: Icon, color }) => (
-          <div key={label} className="glass widget-shadow rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Icon className={`h-3.5 w-3.5 ${color}`} />
-              <span className="text-xs text-muted-foreground font-medium">{label}</span>
-            </div>
-            <p className="text-2xl font-bold tracking-tight">
-              {value}
-              <span className="text-xs font-normal text-muted-foreground ml-1">{unit}</span>
-            </p>
-          </div>
-        ))}
+      {/* Macro rings */}
+      <div className="glass widget-shadow rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-semibold">Today&apos;s Macros</p>
+          <p className="text-xs text-muted-foreground">logged / target</p>
+        </div>
+        <div className="grid grid-cols-4 gap-2 justify-items-center">
+          <MacroRing label="Calories" logged={loggedCal}  target={macros.calories} unit="kcal" color="oklch(0.72 0.17 42)"  size={76} />
+          <MacroRing label="Protein"  logged={loggedPro}  target={macros.protein}  unit="g"    color="oklch(0.68 0.20 15)"  size={76} />
+          <MacroRing label="Carbs"    logged={loggedCarb} target={macros.carbs}    unit="g"    color="oklch(0.78 0.16 80)"  size={76} />
+          <MacroRing label="Fat"      logged={loggedFat}  target={macros.fat}      unit="g"    color="oklch(0.68 0.16 235)" size={76} />
+        </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
+      {/* Goal progress */}
+      <div className="glass widget-shadow rounded-2xl p-4 space-y-2.5">
         <div className="flex justify-between items-center">
-          <span className="text-sm font-semibold">Progress to Goal</span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm font-semibold">Goal Progress</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
             {currentWeight} → {profile.goal_weight_lbs} lbs
           </span>
         </div>
         <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
-          <div
-            className="h-full glass-gold rounded-full transition-all duration-700"
-            style={{ width: `${progressPct}%` }}
-          />
+          <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
         </div>
-        <p className="text-xs text-muted-foreground">
-          {Math.abs(currentWeight - profile.goal_weight_lbs).toFixed(1)} lbs to goal · Week {weekNumber}
-        </p>
+        <div className="flex justify-between">
+          <p className="text-xs text-muted-foreground">{Math.abs(currentWeight - profile.goal_weight_lbs).toFixed(1)} lbs remaining</p>
+          <p className="text-xs text-muted-foreground">Week {weekNumber}</p>
+        </div>
       </div>
 
       {/* Today's Meals */}
       <div className="glass widget-shadow rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-2 border-b border-border">
+        <div className="px-4 pt-4 pb-2.5 border-b border-border">
           <h2 className="text-sm font-semibold">Today&apos;s Meals</h2>
         </div>
         <div className="divide-y divide-border">
@@ -111,19 +110,20 @@ export default async function DashboardPage() {
             todayMeals.map((entry: any) => (
               <div key={entry.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Meal {entry.meal_slot}</p>
+                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Meal {entry.meal_slot}</p>
                   <p className="text-sm font-medium mt-0.5">{entry.recipes?.name}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{entry.recipes?.cuisine}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{entry.recipes?.calories} kcal</p>
-                  <p className="text-xs text-muted-foreground">{entry.recipes?.protein_g}g protein</p>
+                <div className="text-right shrink-0 ml-3">
+                  <p className="text-sm font-bold tabular-nums">{entry.recipes?.calories}</p>
+                  <p className="text-[11px] text-muted-foreground">kcal · {entry.recipes?.protein_g}g P</p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="px-4 py-5 text-center">
+            <div className="px-4 py-6 text-center">
               <p className="text-sm text-muted-foreground">No meals planned yet.</p>
-              <a href="/meals" className="text-xs text-primary font-medium mt-1 inline-block">Set up meal plan →</a>
+              <a href="/meals" className="text-xs text-primary font-semibold mt-1.5 inline-block press">Set up meal plan →</a>
             </div>
           )}
         </div>
@@ -131,13 +131,13 @@ export default async function DashboardPage() {
 
       {/* Today's Training */}
       <div className="glass widget-shadow rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-2 border-b border-border">
+        <div className="px-4 pt-4 pb-2.5 border-b border-border">
           <h2 className="text-sm font-semibold">Today&apos;s Training</h2>
         </div>
         {todayWorkout ? (
           todayWorkout.is_rest_day ? (
-            <div className="px-4 py-5 text-center">
-              <p className="text-base font-semibold">Rest Day</p>
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm font-semibold">Rest Day</p>
               <p className="text-xs text-muted-foreground mt-1">Recovery is part of the program.</p>
             </div>
           ) : (
@@ -149,26 +149,27 @@ export default async function DashboardPage() {
                 {(todayWorkout.exercises as any[])?.slice(0, 4).map((ex: any, i: number) => (
                   <div key={i} className="flex items-center justify-between px-4 py-3">
                     <span className="text-sm">{ex.name}</span>
-                    <span className="text-xs font-medium text-muted-foreground">{ex.sets}×{ex.reps}</span>
+                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">{ex.sets}×{ex.reps}</span>
                   </div>
                 ))}
               </div>
             </div>
           )
         ) : (
-          <div className="px-4 py-5 text-center">
+          <div className="px-4 py-6 text-center">
             <p className="text-sm text-muted-foreground">No workout scheduled.</p>
-            <a href="/train" className="text-xs text-primary font-medium mt-1 inline-block">View training plan →</a>
+            <a href="/train" className="text-xs text-primary font-semibold mt-1.5 inline-block press">View training plan →</a>
           </div>
         )}
       </div>
+
     </div>
   );
 }
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }

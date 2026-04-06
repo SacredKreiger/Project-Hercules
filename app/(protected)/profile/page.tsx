@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/Skeleton";
+
+const PHASE_STYLES: Record<string, { bg: string; text: string }> = {
+  bulk:        { bg: "bg-amber-500/12",   text: "text-amber-500" },
+  cut:         { bg: "bg-rose-500/12",    text: "text-rose-500" },
+  maintenance: { bg: "bg-emerald-500/12", text: "text-emerald-500" },
+};
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -34,35 +41,54 @@ export default function ProfilePage() {
     setSaved(true); setSaving(false);
   }
 
-  if (!profile) return <p className="text-muted-foreground text-sm">Loading...</p>;
+  if (!profile) {
+    return (
+      <div className="space-y-4 max-w-lg">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-4 w-44" />
+        </div>
+        <Skeleton className="h-32 rounded-2xl" />
+        <Skeleton className="h-44 rounded-2xl" />
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-24 rounded-2xl" />
+      </div>
+    );
+  }
 
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
   const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+  const phaseStyle = PHASE_STYLES[profile.phase] ?? PHASE_STYLES.maintenance;
 
   return (
     <div className="space-y-4 max-w-lg">
+
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Your stats and phase</p>
       </div>
 
-      {/* Macro summary */}
+      {/* Daily targets */}
       <div className="glass widget-shadow rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold">Daily Targets</p>
-          <span className="text-xs text-primary font-semibold uppercase tracking-widest glass rounded-full px-2.5 py-1">{profile.phase}</span>
+          <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full ${phaseStyle.bg} ${phaseStyle.text}`}>
+            {profile.phase}
+          </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+        <div className="grid grid-cols-4 gap-2 text-center">
           {[
-            { label: "Calories", value: macros.calories, unit: "kcal" },
-            { label: "Protein", value: macros.protein, unit: "g" },
-            { label: "Carbs", value: macros.carbs, unit: "g" },
-            { label: "Fat", value: macros.fat, unit: "g" },
+            { label: "Cal",     value: macros.calories, unit: "kcal" },
+            { label: "Protein", value: macros.protein,  unit: "g" },
+            { label: "Carbs",   value: macros.carbs,    unit: "g" },
+            { label: "Fat",     value: macros.fat,      unit: "g" },
           ].map(({ label, value, unit }) => (
             <div key={label} className="bg-foreground/5 rounded-xl p-3">
-              <p className="text-lg font-bold">{value}<span className="text-xs font-normal text-muted-foreground ml-0.5">{unit}</span></p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+              <p className="text-base font-bold tabular-nums tracking-tight">{value}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{unit}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
             </div>
           ))}
         </div>
@@ -134,7 +160,7 @@ export default function ProfilePage() {
           <Select value={profile.phase} onValueChange={(v) => v && setProfile({ ...profile, phase: v })}>
             <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="bulk">Bulk — gain muscle & size</SelectItem>
+              <SelectItem value="bulk">Bulk — gain muscle &amp; size</SelectItem>
               <SelectItem value="cut">Cut — lose fat, keep muscle</SelectItem>
               <SelectItem value="maintenance">Maintenance — hold current weight</SelectItem>
             </SelectContent>
@@ -144,8 +170,7 @@ export default function ProfilePage() {
         {error && <p className="text-sm text-destructive px-1">{error}</p>}
         {saved && <p className="text-sm text-emerald-500 px-1">Saved successfully.</p>}
 
-        <Button type="submit" disabled={saving}
-          className="w-full glass-gold rounded-full h-11 font-semibold text-foreground border-0">
+        <Button type="submit" disabled={saving} className="w-full rounded-full h-11 font-semibold press">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>

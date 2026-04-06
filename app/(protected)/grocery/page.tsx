@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Skeleton } from "@/components/Skeleton";
 
 type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean };
 const CATEGORY_ORDER = ["Protein", "Produce", "Dairy", "Grains & Carbs", "Pantry", "Other"];
@@ -54,7 +55,9 @@ export default function GroceryPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <div className="space-y-3">
+          {[0,1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+        </div>
       ) : items.length > 0 ? (
         CATEGORY_ORDER.map((cat) => byCategory[cat].length > 0 && (
           <div key={cat} className="glass widget-shadow rounded-2xl overflow-hidden">
@@ -65,7 +68,7 @@ export default function GroceryPage() {
               {byCategory[cat].map((item, i) => {
                 const globalIndex = items.indexOf(item);
                 return (
-                  <label key={i} className="flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-foreground/5 transition-colors">
+                  <label key={i} className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors">
                     <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${item.checked ? "border-primary bg-primary" : "border-border"}`}
                       onClick={() => toggle(globalIndex)}>
                       {item.checked && (

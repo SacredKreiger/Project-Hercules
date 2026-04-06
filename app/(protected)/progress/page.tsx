@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/Skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Log = { id: string; log_date: string; weight_lbs: number; notes: string | null };
@@ -16,6 +17,7 @@ export default function ProgressPage() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
 
@@ -27,6 +29,7 @@ export default function ProgressPage() {
     const { data } = await supabase.from("progress_logs").select("*")
       .eq("user_id", user!.id).order("log_date", { ascending: true });
     setLogs(data ?? []);
+    setLoading(false);
   }
 
   async function handleLog(e: React.FormEvent) {
@@ -35,9 +38,10 @@ export default function ProgressPage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const today = new Date().toISOString().split("T")[0];
-    const { error } = await supabase.from("progress_logs").upsert({
-      user_id: user!.id, log_date: today, weight_lbs: parseFloat(weight), notes: notes || null,
-    }, { onConflict: "user_id,log_date" });
+    const { error } = await supabase.from("progress_logs").upsert(
+      { user_id: user!.id, log_date: today, weight_lbs: parseFloat(weight), notes: notes || null },
+      { onConflict: "user_id,log_date" }
+    );
     if (error) { setError(error.message); setSaving(false); return; }
     setWeight(""); setNotes("");
     await load(); setSaving(false);
@@ -50,24 +54,43 @@ export default function ProgressPage() {
 
   const latestWeight = logs[logs.length - 1]?.weight_lbs ?? profile?.current_weight_lbs;
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[0,1,2].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-56 rounded-2xl" />
+        <Skeleton className="h-36 rounded-2xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Progress</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Progress</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Track your weight over time</p>
       </div>
 
-      {/* Stats */}
+      {/* Weight stats */}
       {profile && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Starting", value: `${profile.current_weight_lbs}`, unit: "lbs" },
-            { label: "Current", value: `${latestWeight ?? "—"}`, unit: "lbs" },
-            { label: "Goal", value: `${profile.goal_weight_lbs}`, unit: "lbs" },
-          ].map(({ label, value, unit }) => (
+            { label: "Starting", value: profile.current_weight_lbs },
+            { label: "Current",  value: latestWeight ?? "—" },
+            { label: "Goal",     value: profile.goal_weight_lbs },
+          ].map(({ label, value }) => (
             <div key={label} className="glass widget-shadow rounded-2xl p-4 text-center">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{label}</p>
-              <p className="text-2xl font-bold mt-1">{value}<span className="text-xs font-normal text-muted-foreground ml-1">{unit}</span></p>
+              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest">{label}</p>
+              <p className="text-2xl font-bold mt-1.5 tabular-nums tracking-tight">{value}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">lbs</p>
             </div>
           ))}
         </div>
@@ -83,9 +106,14 @@ export default function ProgressPage() {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis domain={["auto", "auto"]} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip
-                contentStyle={{ background: "oklch(0.14 0 0 / 90%)", border: "1px solid oklch(1 0 0 / 12%)", borderRadius: "12px", fontSize: "12px" }}
+                contentStyle={{
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                }}
               />
-              <Line type="monotone" dataKey="weight" stroke="oklch(0.82 0.15 78)" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="weight" stroke="oklch(0.60 0.18 255)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -110,8 +138,7 @@ export default function ProgressPage() {
                 className="rounded-xl bg-foreground/5 border-border h-10" />
             </div>
           </div>
-          <Button type="submit" disabled={saving}
-            className="w-full glass-gold rounded-full h-10 font-semibold text-foreground border-0">
+          <Button type="submit" disabled={saving} className="w-full rounded-full h-10 font-semibold press">
             {saving ? "Saving..." : "Log Weight"}
           </Button>
         </form>
@@ -129,7 +156,7 @@ export default function ProgressPage() {
                 <span className="text-sm text-muted-foreground">
                   {new Date(log.log_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                 </span>
-                <span className="text-sm font-semibold">{log.weight_lbs} lbs</span>
+                <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
               </div>
             ))}
           </div>

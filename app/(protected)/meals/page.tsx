@@ -29,8 +29,8 @@ export default async function MealsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Meal Plan</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber} · {profile.phase} phase</p>
+        <h1 className="text-2xl font-bold tracking-tight">Meal Plan</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber} · <span className="capitalize">{profile.phase}</span> phase</p>
       </div>
 
       {mealPlan && mealPlan.length > 0 ? (

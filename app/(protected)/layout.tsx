@@ -18,7 +18,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       <Sidebar />
       <DrumNav />
       {/* Desktop: offset for sidebar. Mobile: no header/footer offset, full screen content */}
-      <main className="flex-1 md:ml-64 p-4 md:p-6 pb-6">
+      <main className="flex-1 md:ml-64 p-4 md:p-6 pb-safe">
         {children}
       </main>
     </div>

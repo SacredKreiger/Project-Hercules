@@ -41,7 +41,7 @@ export default function Sidebar() {
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all",
+              "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all press",
               pathname === href
                 ? "glass-active text-primary font-semibold"
                 : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
