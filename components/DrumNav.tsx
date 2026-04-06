@@ -69,6 +69,11 @@ export default function DrumNav() {
 
   // Fire haptic visual + flash, then navigate and close
   const fireConfirm = useCallback((idx: number) => {
+    // Guard: if already fired (e.g. synthetic click after touchend) — bail out
+    if (!openRef.current) return;
+    // Immediately block re-entry via the global click listener
+    openRef.current = false;
+
     const snapped = idx * ITEM_H;
     setOffset(snapped);
     startOffset.current = snapped;
