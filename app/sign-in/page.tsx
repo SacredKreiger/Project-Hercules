@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -20,67 +19,67 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
+    if (error) { setError(error.message); setLoading(false); return; }
     router.push("/dashboard");
     router.refresh();
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Hercules account</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSignIn}>
-          <CardContent className="space-y-4">
-            {error && (
-              <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Don&apos;t have an account?{" "}
-              <Link href="/sign-up" className="text-primary underline underline-offset-4">
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
+    <div className="min-h-screen bg-background flex items-center justify-center px-5 relative overflow-hidden">
+      {/* Glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm space-y-6">
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl font-bold tracking-[0.12em]">HERCULES</h1>
+          <p className="text-sm text-muted-foreground">Sign in to your account</p>
+        </div>
+
+        <form onSubmit={handleSignIn} className="glass widget-shadow rounded-3xl p-6 space-y-4">
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-xl">{error}</p>
+          )}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Email</Label>
+            <Input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-xl bg-foreground/5 border-border h-11"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Password</Label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-xl bg-foreground/5 border-border h-11"
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full glass-gold rounded-full h-11 font-semibold text-foreground border-0 mt-2"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </Button>
         </form>
-      </Card>
+
+        <p className="text-sm text-muted-foreground text-center">
+          Don&apos;t have an account?{" "}
+          <Link href="/sign-up" className="text-primary font-medium underline underline-offset-4">
+            Sign up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
