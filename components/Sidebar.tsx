@@ -43,7 +43,7 @@ export default function Sidebar() {
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all",
               pathname === href
-                ? "glass-gold text-foreground font-semibold widget-shadow"
+                ? "glass-active text-primary font-semibold"
                 : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
             )}
           >

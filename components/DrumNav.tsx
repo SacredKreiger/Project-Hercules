@@ -226,7 +226,7 @@ export default function DrumNav() {
         {NAV.map((_, i) => (
           <div key={i} style={{ width: 8, height: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {i === confirmedIndex ? (
-              <div className="w-[7px] h-[7px] rounded-full gold-dot-glow" />
+              <div className="w-[7px] h-[7px] rounded-full active-dot" />
             ) : (
               <div className="w-[5px] h-[5px] rounded-full bg-foreground/25" />
             )}
@@ -258,59 +258,19 @@ export default function DrumNav() {
             : "transform 0.26s cubic-bezier(0.4,0,0.6,1), opacity 0.18s ease",
           willChange: "transform, opacity",
           pointerEvents: "none",
-          // Outer depth shadow — protrusion from bezel
-          filter: "drop-shadow(-6px 0 18px oklch(0 0 0 / 55%)) drop-shadow(-2px 0 6px oklch(0 0 0 / 35%))",
+          filter: "drop-shadow(-4px 0 14px oklch(0 0 0 / 30%))",
         }}
       >
-        {/* BUG FIX: no background:"none" override — let .glass class handle the
-            tilt-reactive radial gradient. Removed inner "frosted base" div that
-            was duplicating backdrop-filter and bypassing the CSS variable reactivity. */}
         <div
-          className="w-full h-full glass overflow-hidden relative"
+          className="w-full h-full drum-capsule overflow-hidden relative"
           style={{ borderRadius: "20px 0 0 20px" }}
         >
-          {/* Bezel-bend: left edge specular highlight simulating curved physical surface */}
+          {/* Left edge specular — curved surface highlight */}
           <div
             className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
             style={{
-              width: 6,
-              background: "linear-gradient(to right, oklch(1 0 0 / 55%), transparent)",
-            }}
-          />
-
-          {/* Bezel-bend: outer edge gradient sweep (light catching the curve) */}
-          <div
-            className="absolute inset-0 pointer-events-none z-20"
-            style={{
-              background:
-                "linear-gradient(to right, oklch(1 0 0 / 18%) 0px, oklch(1 0 0 / 8%) 6px, transparent 20px)",
-            }}
-          />
-
-          {/* Top corner softening */}
-          <div
-            className="absolute top-0 inset-x-0 pointer-events-none z-20"
-            style={{
-              height: 20,
-              background: "linear-gradient(to bottom, oklch(1 0 0 / 20%), transparent)",
-            }}
-          />
-
-          {/* Bottom corner softening */}
-          <div
-            className="absolute bottom-0 inset-x-0 pointer-events-none z-20"
-            style={{
-              height: 20,
-              background: "linear-gradient(to top, oklch(1 0 0 / 20%), transparent)",
-            }}
-          />
-
-          {/* Left gold edge glow line */}
-          <div
-            className="absolute top-0 bottom-0 left-0 pointer-events-none z-20"
-            style={{
-              width: 1,
-              background: "linear-gradient(to bottom, transparent, oklch(0.82 0.15 78 / 60%), transparent)",
+              width: 5,
+              background: "linear-gradient(to right, oklch(1 0 0 / 50%), transparent)",
             }}
           />
 
