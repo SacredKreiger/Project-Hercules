@@ -135,7 +135,14 @@ export async function setupMealPlan(formData: FormData) {
     }
   }
 
-  await supabase.from("meal_plans").insert(entries);
+  if (entries.length === 0) {
+    redirect("/meals/setup?error=No recipes found for your selections. Try adding more cuisines.");
+  }
+
+  const { error: insertError } = await supabase.from("meal_plans").insert(entries);
+  if (insertError) {
+    redirect(`/meals/setup?error=${encodeURIComponent("Failed to save meal plan: " + insertError.message)}`);
+  }
 
   redirect("/meals");
 }

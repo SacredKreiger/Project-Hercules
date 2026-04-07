@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { setupMealPlan } from "@/lib/actions/meal-plan";
 import { Button } from "@/components/ui/button";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 const CUISINES = [
   "American", "Caribbean", "Chinese", "Indian", "Italian",
@@ -28,6 +29,7 @@ export default function MealSetupPage() {
   const [selectedCuisines, setSelectedCuisines] = useState<Set<string>>(new Set());
   const [selectedRestrictions, setSelectedRestrictions] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   function toggleCuisine(c: string) {
     setSelectedCuisines((prev) => {
@@ -49,11 +51,19 @@ export default function MealSetupPage() {
     e.preventDefault();
     if (selectedCuisines.size === 0) return;
     setPending(true);
+    setClientError(null);
 
     const fd = new FormData();
     selectedCuisines.forEach((c) => fd.append("cuisines", c));
     selectedRestrictions.forEach((r) => fd.append("restrictions", r));
-    await setupMealPlan(fd);
+
+    try {
+      await setupMealPlan(fd);
+    } catch (err: unknown) {
+      if (isRedirectError(err)) throw err;
+      setPending(false);
+      setClientError("Something went wrong. Please try again.");
+    }
   }
 
   return (
@@ -67,8 +77,8 @@ export default function MealSetupPage() {
         </p>
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive glass rounded-2xl px-4 py-3">{error}</p>
+      {(error || clientError) && (
+        <p className="text-sm text-destructive glass rounded-2xl px-4 py-3">{error ?? clientError}</p>
       )}
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
