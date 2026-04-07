@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { setupMealPlan } from "@/lib/actions/meal-plan";
 import { Button } from "@/components/ui/button";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -26,9 +26,10 @@ export default function MealSetupPage() {
   const error = searchParams.get("error");
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [isPending, startTransition] = useTransition();
+  const [mixAll, setMixAll] = useState(false);
   const [selectedCuisines, setSelectedCuisines] = useState<Set<string>>(new Set());
   const [selectedRestrictions, setSelectedRestrictions] = useState<Set<string>>(new Set());
-  const [pending, setPending] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
 
   function toggleCuisine(c: string) {
@@ -47,24 +48,30 @@ export default function MealSetupPage() {
     });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedCuisines.size === 0) return;
-    setPending(true);
+    if (!mixAll && selectedCuisines.size === 0) return;
     setClientError(null);
 
     const fd = new FormData();
-    selectedCuisines.forEach((c) => fd.append("cuisines", c));
+    if (mixAll) {
+      fd.append("mix", "true");
+    } else {
+      selectedCuisines.forEach((c) => fd.append("cuisines", c));
+    }
     selectedRestrictions.forEach((r) => fd.append("restrictions", r));
 
-    try {
-      await setupMealPlan(fd);
-    } catch (err: unknown) {
-      if (isRedirectError(err)) throw err;
-      setPending(false);
-      setClientError("Something went wrong. Please try again.");
-    }
+    startTransition(async () => {
+      try {
+        await setupMealPlan(fd);
+      } catch (err: unknown) {
+        if (isRedirectError(err)) throw err;
+        setClientError("Something went wrong. Please try again.");
+      }
+    });
   }
+
+  const canSubmit = mixAll || selectedCuisines.size > 0;
 
   return (
     <div className="max-w-lg space-y-6">
@@ -85,31 +92,52 @@ export default function MealSetupPage() {
 
         {/* Cuisine preferences */}
         <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
-          <div>
-            <p className="text-sm font-semibold">Cuisine Preferences</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Your meal plan will only pull from these cuisines.</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">Cuisine Preferences</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {mixAll ? "Pulling from all available cuisines." : "Your meal plan will only pull from selected cuisines."}
+              </p>
+            </div>
+            {/* Mix toggle */}
+            <button
+              type="button"
+              onClick={() => { setMixAll((v) => !v); setSelectedCuisines(new Set()); }}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all press ${
+                mixAll
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+              }`}
+            >
+              Mix it up
+            </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {CUISINES.map((c) => {
-              const selected = selectedCuisines.has(c);
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggleCuisine(c)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all press border ${
-                    selected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  }`}
-                >
-                  {c}
-                </button>
-              );
-            })}
-          </div>
-          {selectedCuisines.size === 0 && (
-            <p className="text-xs text-destructive">Select at least one cuisine.</p>
+
+          {!mixAll && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {CUISINES.map((c) => {
+                  const selected = selectedCuisines.has(c);
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleCuisine(c)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all press border ${
+                        selected
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedCuisines.size === 0 && (
+                <p className="text-xs text-destructive">Select at least one cuisine, or tap "Mix it up".</p>
+              )}
+            </>
           )}
         </div>
 
@@ -142,10 +170,10 @@ export default function MealSetupPage() {
 
         <Button
           type="submit"
-          disabled={selectedCuisines.size === 0 || pending}
+          disabled={!canSubmit || isPending}
           className="w-full rounded-full h-11 font-semibold press"
         >
-          {pending ? "Building your plan…" : "Generate My Meal Plan"}
+          {isPending ? "Building your plan…" : "Generate My Meal Plan"}
         </Button>
 
       </form>

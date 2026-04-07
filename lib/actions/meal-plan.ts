@@ -53,18 +53,17 @@ export async function setupMealPlan(formData: FormData) {
   if (!profile) redirect("/onboarding");
 
   // Parse form selections
+  const mixAll = formData.get("mix") === "true";
   const cuisines = formData.getAll("cuisines") as string[];
   const restrictions = formData.getAll("restrictions") as string[];
 
-  if (cuisines.length === 0) {
-    // Return error — at least one cuisine required
-    // (handled on client via redirect with error param)
-    redirect("/meals/setup?error=Pick at least one cuisine");
+  if (!mixAll && cuisines.length === 0) {
+    redirect("/meals/setup?error=Pick at least one cuisine or use Mix it up");
   }
 
   // Save preferences to profile
   await supabase.from("profiles").update({
-    cuisine_preferences: cuisines,
+    cuisine_preferences: mixAll ? [] : cuisines,
     dietary_restrictions: restrictions,
   }).eq("id", user.id);
 
@@ -80,11 +79,14 @@ export async function setupMealPlan(formData: FormData) {
     (Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7
   );
 
-  // Load recipes filtered by selected cuisines
-  const { data: allRecipes } = await supabase
+  // Load recipes — all or filtered by selected cuisines
+  const recipesQuery = supabase
     .from("recipes")
-    .select("id, name, meal_type, calories, tags")
-    .in("cuisine", cuisines);
+    .select("id, name, meal_type, calories, tags");
+
+  const { data: allRecipes } = mixAll
+    ? await recipesQuery
+    : await recipesQuery.in("cuisine", cuisines);
 
   if (!allRecipes?.length) {
     redirect("/meals/setup?error=No recipes found for selected cuisines");
