@@ -132,7 +132,6 @@ export async function setupMealPlan(formData: FormData) {
         day_type: DAY_TYPES[dow],
         meal_slot: slot,
         recipe_id: recipe.id,
-        servings_multiplier: 1.0,
       });
     }
   }
