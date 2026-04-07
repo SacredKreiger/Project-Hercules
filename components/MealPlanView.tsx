@@ -50,6 +50,12 @@ export default function MealPlanView({
 
   const recipe = selected?.recipes ?? null;
   const ingredients = Array.isArray(recipe?.ingredients) ? recipe.ingredients : [];
+  const steps = recipe?.instructions
+    ? recipe.instructions
+        .split(/\.\s+/)
+        .map((s) => s.replace(/\.$/, "").trim())
+        .filter(Boolean)
+    : [];
 
   return (
     <>
@@ -169,13 +175,16 @@ export default function MealPlanView({
 
                 {/* Ingredients */}
                 {ingredients.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold">Ingredients</p>
-                    <ul className="space-y-1.5">
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold tracking-wide uppercase text-xs text-muted-foreground">Ingredients</p>
+                    <ul className="divide-y divide-border/50">
                       {ingredients.map((ing, i) => (
-                        <li key={i} className="flex items-baseline justify-between text-sm">
-                          <span>{ing.name}</span>
-                          <span className="text-muted-foreground ml-3 shrink-0">{ing.qty} {ing.unit}</span>
+                        <li key={i} className="flex items-center gap-3 py-2.5">
+                          <span className="shrink-0 min-w-[56px] text-right text-sm font-semibold tabular-nums">
+                            {ing.qty % 1 === 0 ? ing.qty : ing.qty}
+                          </span>
+                          <span className="shrink-0 text-xs text-muted-foreground w-10">{ing.unit}</span>
+                          <span className="text-sm">{ing.name}</span>
                         </li>
                       ))}
                     </ul>
@@ -183,10 +192,19 @@ export default function MealPlanView({
                 )}
 
                 {/* Instructions */}
-                {recipe.instructions && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold">Instructions</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{recipe.instructions}</p>
+                {steps.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold tracking-wide uppercase text-xs text-muted-foreground">Instructions</p>
+                    <ol className="space-y-4">
+                      {steps.map((step, i) => (
+                        <li key={i} className="flex gap-3">
+                          <span className="shrink-0 w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center mt-0.5">
+                            {i + 1}
+                          </span>
+                          <p className="text-sm leading-relaxed">{step}.</p>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
                 )}
               </>
