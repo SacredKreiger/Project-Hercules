@@ -37,13 +37,14 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function pickRecipe(pool: any[], targetCal: number, usedIds: Set<string>): any {
-  const available = shuffle(pool.filter((r) => !usedIds.has(r.id)));
-  // When all recipes have been used, rotate randomly so the same one
-  // isn't repeated every remaining day.
-  if (available.length === 0) return shuffle(pool)[0];
-  return available.reduce((best: any, r: any) =>
-    Math.abs(r.calories - targetCal) < Math.abs(best.calories - targetCal) ? r : best
-  );
+  const available = pool.filter((r) => !usedIds.has(r.id));
+  const source = available.length > 0 ? available : pool;
+  // Pick randomly from recipes within 25% of target — true day-to-day variety
+  // while staying nutritionally close. Fall back to the full source if nothing qualifies.
+  const tolerance = targetCal * 0.25;
+  const goodEnough = source.filter((r) => Math.abs(r.calories - targetCal) <= tolerance);
+  const candidates = goodEnough.length > 0 ? goodEnough : source;
+  return shuffle(candidates)[0];
 }
 
 export async function setupMealPlan(formData: FormData) {
