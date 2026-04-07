@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:recipes": "npx tsx db/seeds/run-seed.ts",
+    "seed:meals": "npx tsx db/seeds/seed-meal-plan.ts",
+    "seed:training": "npx tsx db/seeds/seed-training-plan.ts",
+    "seed:grocery": "npx tsx db/seeds/seed-grocery-list.ts",
+    "seed:plans": "npx tsx db/seeds/seed-all-plans.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -74,6 +73,7 @@ export default async function MealsPage() {
       ) : (
         <div className="glass widget-shadow rounded-2xl px-4 py-12 text-center">
           <p className="text-muted-foreground text-sm">Your meal plan hasn&apos;t been generated yet.</p>
+          <a href="/meals/setup" className="text-xs text-primary font-semibold mt-1.5 inline-block press">Set up meal plan →</a>
         </div>
       )}
     </div>

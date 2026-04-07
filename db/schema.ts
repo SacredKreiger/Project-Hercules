@@ -41,6 +41,8 @@ export const profiles = pgTable("profiles", {
   phase: phaseEnum("phase").notNull(),
   program_start_date: date("program_start_date").notNull(),
   onboarding_complete: boolean("onboarding_complete").default(false).notNull(),
+  cuisine_preferences: text("cuisine_preferences").array().default([]).notNull(),
+  dietary_restrictions: text("dietary_restrictions").array().default([]).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -78,6 +80,7 @@ export const mealPlans = pgTable("meal_plans", {
   recipe_id: uuid("recipe_id")
     .notNull()
     .references(() => recipes.id),
+  servings_multiplier: real("servings_multiplier").default(1.0).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
