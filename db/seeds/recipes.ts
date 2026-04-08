@@ -37,7 +37,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cilantro", qty: 2, unit: "tbsp" },
       { name: "Avocado", qty: 0.25, unit: "whole" },
     ],
-    instructions: "Simmer salsa in a skillet. Add chips and toss until coated and slightly softened, 2 min. Push to edges, fry eggs in center. Plate chips and eggs, top with cotija, crema, onion, cilantro, avocado.",
+    instructions: "Pour 0.75 cup red salsa into a medium skillet over medium heat and bring to a simmer. Add 2 cups corn tortilla chips and toss with tongs until every chip is coated and just starting to soften, about 2 minutes — chips should bend, not turn mushy. Push chips to the edges of the pan. Crack 3 large eggs into the center of the pan and fry over medium heat until whites are fully set but yolks are still runny, 3–4 minutes. Slide chips and eggs onto a plate. Immediately crumble 2 tbsp cotija over the top, drizzle 1 tbsp Mexican crema, scatter 0.25 cup sliced white onion and 2 tbsp cilantro, and fan out 0.25 avocado (sliced thin) on the side.",
     tags: ["high-protein", "gluten-free", "vegetarian"],
   },
   {
@@ -55,7 +55,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Salt", qty: 0.25, unit: "tsp" },
       { name: "Corn tortillas", qty: 2, unit: "pieces" },
     ],
-    instructions: "Sauté onion and jalapeño in oil 3 min. Add tomato, cook 2 min. Add beaten eggs, scramble on low heat until just set. Serve with warm tortillas.",
+    instructions: "Heat 1 tsp olive oil in a medium skillet over medium heat. Add 0.25 cup diced white onion and 1 minced jalapeño; cook, stirring often, until the onion is translucent and just golden at the edges, about 3 minutes. Add 1 diced Roma tomato and cook until most of the liquid evaporates, about 2 minutes. Beat 4 large eggs with 0.25 tsp salt and pour into the pan. Reduce heat to low and stir gently with a silicone spatula, folding the eggs slowly until they are just set and no longer wet, about 2–3 minutes. Remove from heat immediately — carryover heat will finish them. Warm 2 corn tortillas directly over a gas flame or in a dry skillet 30 seconds per side. Serve eggs with warm tortillas.",
     tags: ["high-protein", "gluten-free", "quick", "vegetarian"],
   },
   {
@@ -71,7 +71,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Pico de gallo", qty: 0.25, unit: "cup" },
       { name: "Pickled jalapeños", qty: 4, unit: "slices" },
     ],
-    instructions: "Toast bolillo cut-side up under broiler 2 min. Spread refried beans, top with cheese. Broil until cheese melts, 2–3 min. Top with pico de gallo and jalapeños.",
+    instructions: "Split 1 bolillo roll in half lengthwise and place cut-side up on a baking sheet. Broil on high, 6 inches from element, for 2 minutes until the cut face is lightly golden and crisp. Remove from oven. Spread 0.5 cup refried beans evenly over both halves to the edges. Scatter 1 oz shredded Oaxaca or mozzarella cheese over the beans. Return to broiler for 2–3 minutes until the cheese is fully melted and beginning to bubble and spot-brown. Top each half with 0.25 cup pico de gallo and 4 slices pickled jalapeños. Serve immediately.",
     tags: ["vegetarian", "meal-prep"],
   },
   {
@@ -90,7 +90,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic powder", qty: 0.5, unit: "tsp" },
       { name: "Cumin", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Season steak with garlic powder, cumin, salt. Grill on high heat 3–4 min per side. Rest 5 min, slice thin against the grain. Warm tortillas, fill with steak, onion, cilantro, salsa. Squeeze lime.",
+    instructions: "Pat 6 oz skirt steak dry, then season both sides with 0.5 tsp garlic powder, 0.5 tsp cumin, and a generous pinch of salt. Heat a cast-iron grill pan or outdoor grill to high (you should see wisps of smoke). Grill steak 3–4 minutes per side for medium-rare — an instant-read thermometer should read 130–135°F. Transfer to a cutting board and rest, uncovered, for 5 minutes. Meanwhile, warm 3 corn tortillas in a dry skillet over medium heat, about 30 seconds per side, until pliable. Slice steak very thin against the grain at a slight angle. Divide among the 3 tortillas, top each with 1 tbsp diced white onion and 1 tbsp chopped cilantro, and spoon 1 tbsp salsa verde over each. Squeeze the juice of 1 lime over all three tacos before serving.",
     tags: ["high-protein", "gluten-free", "no-dairy"],
   },
   {
@@ -108,7 +108,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Romaine lettuce (shredded)", qty: 0.5, unit: "cup" },
       { name: "Avocado", qty: 0.25, unit: "whole" },
     ],
-    instructions: "Blend chipotle and tomatoes. Simmer sauce 5 min, add chicken, cook 10 min. Spread beans on tostadas, top with tinga, lettuce, avocado.",
+    instructions: "Blend 1.5 chipotle peppers in adobo with 0.5 cup crushed tomatoes until smooth. Pour sauce into a medium skillet over medium heat and simmer, stirring occasionally, for 5 minutes until slightly thickened and deepened in color. Add 5 oz cooked shredded chicken breast and stir to coat; cook 10 minutes over medium-low heat until the chicken has absorbed the sauce and the flavors meld. Season with salt to taste. Warm 3 tostada shells if needed. Spread 0.5 cup drained black beans across the tostadas. Spoon the chicken tinga on top, then layer on 0.5 cup shredded romaine lettuce and fan 0.25 avocado (sliced) over the top.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -126,7 +126,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cumin", qty: 0.5, unit: "tsp" },
       { name: "Garlic", qty: 2, unit: "cloves" },
     ],
-    instructions: "Season chicken with cumin, garlic, salt. Grill 6 min per side. Grill nopales until tender and charred, 4 min. Slice chicken, serve over rice with nopales and salsa. Squeeze lime.",
+    instructions: "Season 5 oz chicken breast on both sides with 0.5 tsp cumin, 2 minced garlic cloves, and 0.5 tsp salt. Heat a grill or grill pan to medium-high. Grill chicken 6 minutes per side until the internal temperature reaches 165°F and grill marks are deeply set. At the same time, lay 1 cup cleaned nopales (cactus paddles) flat on the grill. Cook 4 minutes per side until they turn a deep, bright green, develop char marks, and feel completely tender when pierced with a fork — the sliminess will disappear when fully cooked. Transfer chicken to a cutting board and let rest 3 minutes, then slice crosswise into strips. Spoon 1 cup cooked white rice into a bowl, arrange the sliced chicken and grilled nopales alongside. Spoon 3 tbsp salsa roja over the top and squeeze 1 tbsp lime juice over everything.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -145,7 +145,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cumin", qty: 0.5, unit: "tsp" },
       { name: "Olive oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Toast fideo in oil until golden. Blend tomatoes, garlic, onion. Add to pan with chicken, cook 2 min. Add broth and cumin, simmer 15 min until noodles are tender.",
+    instructions: "Heat 1 tsp olive oil in a medium saucepan over medium heat. Add 0.75 cup dry fideo noodles and toast, stirring constantly, until golden-brown and nutty-smelling, about 3–4 minutes — watch closely as they color fast. Transfer toasted noodles to a bowl. Blend 2 Roma tomatoes, 3 garlic cloves, and 0.25 whole white onion until completely smooth. Return pan to medium heat, add 4 oz diced chicken breast and sear 2 minutes. Pour the tomato-garlic purée into the pan — it will sizzle and spit — and cook 2 minutes, stirring, until the sauce darkens slightly. Add the toasted noodles back to the pan along with 2 cups chicken broth and 0.5 tsp cumin. Bring to a boil over high heat, then reduce to a gentle simmer. Cook uncovered for 15 minutes, stirring occasionally, until noodles are tender and have absorbed most of the broth. Season with salt.",
     tags: ["meal-prep", "no-dairy"],
   },
   {
@@ -164,7 +164,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic powder", qty: 0.5, unit: "tsp" },
       { name: "Cumin", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Season steak, grill 3–4 min per side. Rest and slice. Mix cilantro and lime juice into rice. Build bowl: rice, beans, steak, pico. Season to taste.",
+    instructions: "Pat 7 oz skirt steak dry and season both sides generously with 0.5 tsp garlic powder, 0.5 tsp cumin, salt, and pepper. Heat a cast-iron grill pan or outdoor grill to high. Grill steak 3–4 minutes per side for medium (135–140°F internal) — it should have pronounced char marks and feel slightly springy. Transfer to a cutting board and rest 5 minutes. While steak rests, stir 3 tbsp chopped cilantro and 2 tbsp lime juice into 1.25 cups hot cooked white rice until combined. Slice steak thin against the grain. Build the bowl: cilantro-lime rice on the bottom, 0.5 cup drained black beans on one side, sliced steak on the other, and 0.5 cup pico de gallo over the top.",
     tags: ["high-protein", "gluten-free", "no-dairy", "bulk-friendly"],
   },
   {
@@ -182,7 +182,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mexican crema", qty: 1, unit: "tbsp" },
       { name: "Cilantro", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Preheat oven 375°F. Warm tortillas. Fill each with chicken and onion, roll, place seam-down in baking dish. Pour salsa verde over, top with cheese. Bake 20 min until bubbly. Top with crema and cilantro.",
+    instructions: "Preheat oven to 375°F. Briefly warm 3 corn tortillas in a dry skillet over medium heat, 20 seconds per side, so they roll without cracking. Divide 5 oz shredded cooked chicken breast and 3 tbsp diced white onion evenly among the tortillas. Roll each snugly and place seam-side down in a single layer in a small baking dish. Pour 0.75 cup salsa verde evenly over all three enchiladas, making sure to coat the ends. Scatter 1.5 oz shredded Monterey Jack over the top. Bake at 375°F for 20 minutes until the sauce is bubbling at the edges and the cheese is fully melted and spotting golden. Remove from oven and immediately drizzle 1 tbsp Mexican crema in thin lines over the cheese. Scatter 2 tbsp chopped cilantro and serve.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -200,7 +200,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Ancho chili powder", qty: 1, unit: "tsp" },
       { name: "Mexican rice (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Marinate chicken in citrus, garlic, cumin, and chili powder 15 min. Grill on medium-high 10–12 min per side until cooked through. Serve over Mexican rice.",
+    instructions: "Whisk together 3 tbsp orange juice, 2 tbsp lime juice, 3 minced garlic cloves, 1 tsp cumin, 1 tsp ancho chili powder, and 0.5 tsp salt. Place 8 oz bone-in chicken thighs in the marinade and turn to coat; let sit at room temperature for 15 minutes. Heat a grill to medium-high. Shake off excess marinade and grill thighs bone-side up first, 10–12 minutes, then flip and grill skin-side down 10–12 minutes until the skin is deeply charred and crisp and the internal temperature reaches 175°F at the thickest point (avoiding the bone). Rest 5 minutes. Serve over 1 cup cooked Mexican rice.",
     tags: ["high-protein", "gluten-free", "no-dairy"],
   },
   {
@@ -220,7 +220,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "White onion", qty: 0.25, unit: "cup" },
       { name: "Cilantro", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Blend rehydrated chiles, garlic, broth. Braise beef in sauce 2.5–3 hrs until shreddable. Dip tortillas in consommé fat, griddle, fill with beef and cheese. Serve with consommé for dipping.",
+    instructions: "Blend 3 rehydrated guajillo chiles, 2 rehydrated ancho chiles, 4 garlic cloves, and 2 cups beef broth until completely smooth. Season 12 oz beef chuck roast generously with salt, then place in a Dutch oven or heavy pot. Pour the chile purée over the beef. Bring to a boil over high heat, then reduce to the lowest possible simmer. Cover tightly and braise 2.5–3 hours, flipping the beef once halfway through, until the meat shreds easily when pressed with a fork. Remove beef and shred using two forks. Skim fat from the surface of the braising liquid (consommé) and reserve both consommé and fat separately. Heat a griddle or cast-iron over medium-high. Quickly dip each of the 4 corn tortillas into the hot consommé fat, then lay on the griddle. Fill one half of each tortilla with shredded beef and 0.5 oz shredded Oaxaca cheese per taco. Fold and cook 2 minutes per side until the tortilla is crispy and the cheese is melted. Serve topped with 0.25 cup diced white onion and 3 tbsp cilantro, with warm consommé in a cup for dipping.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -238,7 +238,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lime juice", qty: 1, unit: "tbsp" },
       { name: "Olive oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Blend chipotle and tomatoes. Sauté garlic in oil 1 min. Add sauce, simmer 5 min. Add shrimp, cook 3–4 min until pink. Serve over rice with lime.",
+    instructions: "Blend 2 chipotle peppers in adobo with 0.5 cup crushed tomatoes until smooth; set aside. Heat 1 tsp olive oil in a large skillet over medium heat. Add 3 minced garlic cloves and sauté, stirring, until fragrant and just golden, about 1 minute. Pour in the chipotle-tomato sauce (it will spatter — reduce heat briefly if needed) and simmer over medium heat for 5 minutes, stirring occasionally, until the sauce thickens and turns a deep brick-red. Add 8 oz peeled, deveined large shrimp in a single layer. Cook over medium-high heat 1.5–2 minutes per side until the shrimp are pink, opaque, and just curled — do not overcook. Serve immediately over 1 cup cooked white rice, drizzle 1 tbsp lime juice over the top.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -256,7 +256,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cilantro", qty: 2, unit: "tbsp" },
       { name: "Corn tortillas", qty: 2, unit: "pieces" },
     ],
-    instructions: "Brown chorizo, add onion and garlic. Add beans and broth, simmer 15 min. Mash lightly. Serve with warm tortillas and cilantro.",
+    instructions: "Cook 2 oz Mexican chorizo in a medium saucepan over medium heat, breaking it up with a spoon, until fully browned and rendered, about 4 minutes. Add 0.25 cup diced white onion and 2 minced garlic cloves; cook, stirring, until the onion is softened, about 3 minutes. Add 1 cup drained pinto beans and 0.5 cup chicken broth. Bring to a simmer, then cook over medium-low heat for 15 minutes, stirring occasionally, until the broth has reduced and the mixture is thick and saucy. Use the back of a spoon or a potato masher to crush about half the beans against the side of the pan — you want a creamy, chunky texture. Season with salt. Warm 2 corn tortillas. Serve beans topped with 2 tbsp chopped cilantro alongside the warm tortillas.",
     tags: ["meal-prep", "gluten-free"],
   },
   {
@@ -273,7 +273,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Jalapeño (sliced)", qty: 4, unit: "slices" },
       { name: "Salt", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Mash avocado with lime and salt. Spread over turkey slices, add tomato and jalapeño. Roll up tightly.",
+    instructions: "Halve 0.5 avocado and scoop the flesh into a small bowl. Add 1 tsp lime juice and 0.25 tsp salt and mash with a fork until smooth but slightly chunky. Lay 4 oz deli turkey breast slices flat on a work surface. Spread the mashed avocado evenly over all the slices. Scatter 0.25 diced Roma tomato and 4 jalapeño slices over the top. Roll each slice up tightly into a cylinder. Secure with a toothpick if needed and serve immediately.",
     tags: ["high-protein", "quick", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -290,7 +290,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cotija cheese", qty: 1, unit: "tbsp" },
       { name: "Cilantro", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Combine cottage cheese and corn. Top with tajin, cotija, cilantro, squeeze lime.",
+    instructions: "Spoon 0.75 cup cottage cheese into a bowl. Add 0.5 cup corn kernels (canned and drained, or roasted) and stir to combine. Sprinkle 0.5 tsp Tajin seasoning and 1 tbsp crumbled cotija cheese over the top. Scatter 1 tbsp chopped cilantro. Squeeze 1 tsp lime juice directly over everything just before eating.",
     tags: ["high-protein", "quick", "gluten-free", "vegetarian", "cut-friendly"],
   },
   {
@@ -305,7 +305,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cheddar cheese (shredded)", qty: 1, unit: "oz" },
       { name: "Salsa", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Spread beans over half the tortilla. Top with cheese. Fold, cook in dry skillet 2 min per side until golden. Serve with salsa.",
+    instructions: "Lay one 8-inch flour tortilla flat. Spread 0.25 cup drained black beans evenly over one half, leaving a small border at the edge. Scatter 1 oz shredded cheddar over the beans. Fold the bare half over to form a half-moon and press gently. Heat a dry skillet over medium heat. Cook the quesadilla 2 minutes per side, pressing lightly with a spatula, until each side is deep golden and crisp and the cheese is fully melted. Slice into 2–3 wedges and serve with 2 tbsp salsa on the side.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -320,7 +320,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Tajin seasoning", qty: 0.5, unit: "tsp" },
       { name: "Honey", qty: 1, unit: "tsp" },
     ],
-    instructions: "Layer yogurt and mango. Drizzle honey, dust with tajin.",
+    instructions: "Spoon 0.75 cup 0% Greek yogurt into a bowl. Top with 0.75 cup diced mango, spreading it evenly. Drizzle 1 tsp honey in a zigzag over the fruit. Dust 0.5 tsp Tajin seasoning over the top and serve immediately.",
     tags: ["high-protein", "quick", "gluten-free", "vegetarian", "cut-friendly"],
   },
 
@@ -342,7 +342,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion (sliced)", qty: 1, unit: "tbsp" },
       { name: "Nori (shredded)", qty: 1, unit: "sheet" },
     ],
-    instructions: "Crack eggs directly onto hot rice. Add soy sauce and sesame oil. Stir vigorously until creamy. Top with green onion and nori.",
+    instructions: "Scoop 1.5 cups of freshly cooked, still-steaming white rice into a bowl — the heat is essential. Make a small well in the center and crack in 2 large eggs. Add 1 tbsp soy sauce and 0.5 tsp sesame oil. Using chopsticks or a fork, stir vigorously in small circular motions, gradually incorporating the egg into the rice until the mixture becomes pale, creamy, and slightly glossy, about 1 minute. Scatter 1 tbsp sliced green onion over the top and crumble 1 sheet of nori into rough shreds. Serve immediately.",
     tags: ["quick", "no-dairy", "bulk-friendly"],
   },
   {
@@ -359,7 +359,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion", qty: 2, unit: "tbsp" },
       { name: "White rice (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Heat dashi, do not boil. Whisk in miso. Add tofu and wakame, heat 2 min. Serve alongside rice topped with green onion.",
+    instructions: "Pour 1.5 cups dashi stock into a small saucepan and heat over medium heat until steaming but not boiling — small bubbles around the edge only (boiling destroys miso's probiotic qualities). Remove from heat. Ladle 3–4 tbsp of hot dashi into a small bowl and add 1.5 tbsp white miso paste; whisk until completely dissolved with no lumps, then pour back into the saucepan. Return to very low heat. Add 4 oz silken tofu cut into 0.75-inch cubes and 1 tsp dried wakame; heat gently for 2 minutes until the tofu is warmed through and the wakame has rehydrated and plumped. Ladle into a soup bowl. Serve alongside 1 cup cooked white rice topped with 2 tbsp sliced green onion.",
     tags: ["vegetarian", "no-dairy", "gluten-free"],
   },
   {
@@ -377,7 +377,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Honey", qty: 1, unit: "tbsp" },
       { name: "Mixed berries", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Whisk yolks, protein powder, flour, milk, baking powder. Beat whites to stiff peaks, fold in. Cook on low heat in a ring mold, covered, 4 min per side. Top with berries and honey.",
+    instructions: "Separate 2 large eggs. In a medium bowl, whisk together the 2 yolks, 1 scoop vanilla protein powder, 3 tbsp flour, 3 tbsp milk, and 0.5 tsp baking powder until smooth. In a separate clean bowl, beat the 2 egg whites with an electric mixer or whisk until stiff, glossy peaks form — the whites should not slide when the bowl is tilted. Gently fold the beaten whites into the yolk batter in three additions, using a wide spatula in a figure-eight motion until just combined (some streaks are fine). Lightly grease a non-stick pan and 2 ring molds. Heat over the lowest possible flame. Spoon the batter into the molds to about 1-inch height. Cover the pan with a lid and cook for 4 minutes until the bottoms are pale golden and set. Carefully flip, replace the molds, cover and cook 4 minutes more until fully cooked through and springy to the touch. Top with 0.5 cup mixed berries and drizzle 1 tbsp honey.",
     tags: ["high-protein", "vegetarian"],
   },
   {
@@ -397,7 +397,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Eggs (for sauce)", qty: 2, unit: "large" },
       { name: "White onion (thin sliced)", qty: 0.25, unit: "cup" },
     ],
-    instructions: "Pound chicken thin. Dip in beaten egg, coat in panko. Shallow fry 3–4 min per side. Simmer dashi, soy, mirin, onion 3 min. Add sliced katsu, pour beaten eggs over, cover 1 min. Slide over rice.",
+    instructions: "Pound 6 oz chicken breast between two sheets of plastic wrap to an even 0.5-inch thickness. Beat 1 large egg in a shallow bowl. Spread 0.25 cup panko breadcrumbs on a plate. Season chicken with salt, dip in beaten egg to coat both sides, then press firmly into panko so it adheres. Heat 0.25 inch of neutral oil in a skillet over medium-high heat until a breadcrumb sizzles immediately on contact. Fry the katsu 3–4 minutes per side until deep golden and cooked through (165°F internal) — the crust should be very crunchy. Drain on a rack. In a separate small sauté pan, combine 0.25 cup dashi stock, 1.5 tbsp soy sauce, and 1 tbsp mirin; bring to a simmer over medium heat. Add 0.25 cup thin-sliced white onion and cook 3 minutes until translucent. Cut the cooked katsu into 1-inch strips and lay over the onions. Beat 2 large eggs and pour evenly over the katsu. Place a lid on the pan and cook 1 minute until the egg is just set but still glossy. Slide the whole mixture over 1.5 cups cooked white rice.",
     tags: ["high-protein", "no-dairy", "bulk-friendly"],
   },
   {
@@ -415,7 +415,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Salt", qty: 0.25, unit: "tsp" },
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Mix tuna with mayo and sriracha. Season rice with salt. Wet hands, form rice into triangle with tuna in center. Wrap with nori, sprinkle sesame seeds.",
+    instructions: "Drain 4 oz canned tuna completely and place in a small bowl. Mix in 1.5 tbsp Kewpie mayo and 0.5 tsp sriracha until evenly combined. Season 1.5 cups warm cooked rice with 0.25 tsp salt and fold gently to distribute. Wet both hands thoroughly with cold water to prevent sticking. Place roughly a third of the rice in one palm, press a small indent in the center, add one-third of the tuna filling, then cup another third of rice on top. Press and squeeze the onigiri firmly into a triangle shape, rotating and pressing each flat face and the three edges several times until compact and holds its shape. Repeat with remaining filling. Wrap the flat faces of each onigiri with half-sheets of nori. Sprinkle 1 tsp sesame seeds on top and serve immediately or wrap tightly in plastic for later.",
     tags: ["meal-prep", "no-dairy", "quick"],
   },
   {
@@ -435,7 +435,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dashi stock", qty: 0.25, unit: "cup" },
       { name: "Pickled ginger", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Simmer dashi, soy, mirin, sake, sugar. Add onion, cook 3 min. Add beef, cook 3–4 min until cooked through. Serve over rice with pickled ginger.",
+    instructions: "Combine 0.25 cup dashi stock, 2 tbsp soy sauce, 2 tbsp mirin, 1 tbsp sake, and 1 tsp sugar in a medium skillet. Bring to a simmer over medium heat, stirring until the sugar dissolves. Add 0.5 sliced white onion and cook 3 minutes until the onion becomes translucent and tender. Add 5 oz thin-sliced beef ribeye, spreading the slices out in a single layer as much as possible. Cook over medium heat 3–4 minutes, stirring occasionally, until the beef is fully cooked and has absorbed the sweet-savory broth. The liquid should reduce to a glossy sauce that coats the meat and onions. Ladle over 1.5 cups cooked white rice and top with 1 tbsp pickled ginger.",
     tags: ["high-protein", "no-dairy", "bulk-friendly", "quick"],
   },
   {
@@ -454,7 +454,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Grated daikon radish", qty: 2, unit: "tbsp" },
       { name: "Wasabi", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Cook soba, rinse in cold water. Mix soy, mirin, dashi for sauce. Serve soba with chicken, drizzle sauce, top with green onion, daikon, wasabi.",
+    instructions: "Bring a pot of water to a rolling boil. Cook 3 oz dry soba noodles according to package directions, usually 4–5 minutes, until tender but with slight chew. Drain in a colander and immediately rinse under cold running water, rubbing the noodles between your fingers to remove surface starch — rinse until the noodles are completely cold and no longer feel slippery. Shake off excess water. Combine 2 tbsp soy sauce, 1 tbsp mirin, and 0.5 cup dashi stock in a small bowl to make the dipping sauce. Arrange cold soba on a plate or in a zaru (bamboo tray). Fan 5 oz poached, thinly sliced chicken breast alongside. Pour the dipping sauce into a small bowl. Top the soba with 2 tbsp sliced green onion, 2 tbsp grated daikon (squeezed of excess liquid), and 0.5 tsp wasabi on the side.",
     tags: ["high-protein", "no-dairy", "cut-friendly"],
   },
   {
@@ -473,7 +473,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Broccoli (steamed)", qty: 1, unit: "cup" },
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Mix soy, mirin, sake, sugar. Pan-sear salmon 3 min per side. Add sauce to pan, cook until glaze thickens and coats salmon. Serve over rice with broccoli, sprinkle sesame.",
+    instructions: "Stir together 2 tbsp soy sauce, 2 tbsp mirin, 1 tbsp sake, and 1 tsp sugar in a small bowl until the sugar dissolves; set aside. Pat 6 oz salmon fillet dry with paper towels and season with a pinch of salt. Heat a non-stick skillet over medium-high until very hot. Place the salmon skin-side up and sear 3 minutes until the flesh is golden-brown and releases easily from the pan. Flip and sear the skin side 3 minutes until the skin is crispy. Reduce heat to medium and pour the teriyaki sauce into the pan. Cook, basting the salmon constantly with a spoon, for 1–2 minutes until the sauce reduces to a thick glaze that coats the back of a spoon. The salmon is done when it flakes under gentle pressure. Serve over 1.5 cups cooked white rice alongside 1 cup steamed broccoli. Sprinkle 1 tsp sesame seeds over the salmon.",
     tags: ["high-protein", "no-dairy", "meal-prep"],
   },
   {
@@ -491,7 +491,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "White rice (cooked)", qty: 1.5, unit: "cups" },
       { name: "Green onion", qty: 3, unit: "stalks" },
     ],
-    instructions: "Thread chicken on skewers, alternating with green onion. Simmer soy, mirin, sake, sugar until slightly thick — this is tare. Grill skewers on high, brushing with tare every 2 min, 8–10 min total. Serve over rice.",
+    instructions: "Cut 6 oz boneless chicken thighs into 1-inch chunks. Slice 3 green onion stalks into 1-inch pieces. Alternate threading chicken and green onion segments onto 3–4 metal or pre-soaked wooden skewers. Combine 2 tbsp soy sauce, 2 tbsp mirin, 1 tbsp sake, and 1 tsp sugar in a small saucepan over medium heat. Simmer, stirring, for 3–4 minutes until reduced by about a third and slightly syrupy — this is the tare glaze. Heat a grill or grill pan to high. Place skewers on the grill and cook, turning every 2 minutes and brushing with tare on each turn, for 8–10 minutes total until the chicken is charred in spots, cooked through (165°F internal), and lacquered with glaze. Serve over 1.5 cups cooked white rice with any remaining tare drizzled on top.",
     tags: ["high-protein", "no-dairy"],
   },
   {
@@ -512,7 +512,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion", qty: 3, unit: "tbsp" },
       { name: "Garlic", qty: 2, unit: "cloves" },
     ],
-    instructions: "Braise pork belly in soy and mirin 30 min. Soft boil eggs 7 min, marinate in soy mixture. Simmer broth with garlic and soy. Cook noodles. Assemble: broth, noodles, sliced chashu, halved egg, nori, sprouts, green onion.",
+    instructions: "Roll 8 oz pork belly tightly, tie with kitchen twine, and sear in a hot pan on all sides until browned, about 6 minutes total. Add 3 tbsp soy sauce and 2 tbsp mirin to the pan with just enough water to come halfway up the pork. Bring to a simmer, cover, and braise over low heat for 30 minutes until tender, turning once. Remove pork and let cool; slice into 0.5-inch rounds. Bring a small pot of water to a boil. Lower 2 large eggs in gently and cook exactly 7 minutes. Transfer to an ice bath for 5 minutes, then peel. Marinate peeled eggs in 2 tbsp of the pork braising liquid for at least 20 minutes. Heat 3 cups chicken broth with 2 minced garlic cloves and 3 tbsp soy sauce over medium heat for 10 minutes. Cook 4 oz ramen noodles per package directions; drain. Divide noodles between 2 bowls, pour hot broth over. Top each bowl with 2 slices chashu, 1 halved marinated egg, 1 sheet nori, 0.25 cup bean sprouts, and 1.5 tbsp green onion.",
     tags: ["high-protein", "no-dairy", "bulk-friendly"],
   },
   {
@@ -530,7 +530,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Bok choy", qty: 2, unit: "heads" },
       { name: "White rice (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Mix miso, mirin, sake, ginger. Marinate cod 10 min. Broil 6 min until caramelized and cooked through. Sauté bok choy with sesame oil. Serve over rice.",
+    instructions: "Whisk together 2 tbsp white miso paste, 1 tbsp mirin, 1 tbsp sake, and 1 tsp grated fresh ginger until smooth. Pat 6 oz black cod (or sea bass) fillet dry and place in a shallow dish. Coat both sides with the miso marinade and let sit at room temperature for 10 minutes (or refrigerate up to overnight for deeper flavor). Position an oven rack 4–5 inches from the broiler and preheat on high. Wipe off excess marinade from the fish (it burns easily) and place on a foil-lined baking sheet. Broil for 5–6 minutes until the surface is deeply caramelized, spotting dark brown in places, and the fish flakes when pressed at the thickest point — do not flip. While the fish broils, halve 2 bok choy heads lengthwise and cook in a skillet with a splash of sesame oil over medium-high heat, 2 minutes per side until wilted and lightly charred. Serve cod and bok choy over 1 cup cooked white rice.",
     tags: ["high-protein", "no-dairy", "cut-friendly"],
   },
   {
@@ -549,7 +549,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Pickled daikon", qty: 3, unit: "tbsp" },
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Marinate beef in soy, sesame oil, garlic, sugar 10 min. Grill or pan fry on high 1–2 min per side. Serve over rice with pickled daikon, sesame seeds.",
+    instructions: "Combine 2 tbsp soy sauce, 1 tbsp sesame oil, 2 minced garlic cloves, and 1 tsp sugar in a bowl. Add 6 oz thin-sliced beef ribeye and toss to coat; marinate at room temperature for 10 minutes. Heat a cast-iron skillet or grill pan over high heat until smoking. Working in batches to avoid overcrowding, lay the beef slices flat and cook 1–2 minutes per side until caramelized at the edges and just cooked through — the thin slices should take on slight char while staying tender. Serve over 1.5 cups cooked white rice. Add 3 tbsp pickled daikon on the side and scatter 1 tsp sesame seeds over the beef.",
     tags: ["high-protein", "no-dairy", "quick"],
   },
   {
@@ -562,7 +562,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Edamame in pods (frozen)", qty: 1.5, unit: "cups" },
       { name: "Flaked sea salt", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Boil edamame 4–5 min. Drain, toss with sea salt. Serve immediately.",
+    instructions: "Bring a medium pot of water to a rolling boil. Add 1.5 cups frozen edamame in pods and cook 4–5 minutes until the pods are bright green and the beans inside are tender when you press one out. Drain in a colander and shake off excess water. Transfer to a bowl and toss immediately with 0.5 tsp flaked sea salt so the salt sticks to the warm pods. Serve right away — eat by squeezing beans directly from the pod.",
     tags: ["vegan", "gluten-free", "quick", "no-dairy", "cut-friendly"],
   },
   {
@@ -578,7 +578,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dashi stock", qty: 1, unit: "tbsp" },
       { name: "Green onion", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Cook eggs in 140°F water 15 min for onsen style. Serve over rice, drizzle soy mixed with dashi, top with green onion.",
+    instructions: "Bring a pot of water to 140°F — use a thermometer or combine boiling water with cold water to reach that temperature. Lower 2 large eggs (straight from room temperature) gently into the water using a spoon. Maintain 140°F (±2°F) for 15 minutes by adjusting burner to lowest setting or combining hot and cold water as needed. The result is a set-but-silky white with a thick, custardy yolk. Carefully crack the cooked eggs over 0.5 cup cooked white rice in a small bowl. Stir together 1 tsp soy sauce and 1 tbsp dashi stock and drizzle over the egg and rice. Scatter 1 tbsp sliced green onion on top.",
     tags: ["quick", "no-dairy", "vegetarian"],
   },
   {
@@ -594,7 +594,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion", qty: 2, unit: "tbsp" },
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Blend eggs, tofu, miso, sesame oil. Pour into silicone molds with green onion. Bake at 325°F in water bath 20 min.",
+    instructions: "Preheat oven to 325°F. Combine 3 large eggs, 2 oz silken tofu, 1 tsp white miso paste, and 0.5 tsp sesame oil in a blender. Blend on medium speed until completely smooth and no tofu lumps remain, about 30 seconds. Sprinkle 2 tbsp sliced green onion into the bottoms of 4 greased silicone muffin molds or a silicone egg-bite mold. Pour the egg mixture evenly over the green onion. Place the filled mold inside a deep baking dish and pour hot water into the outer dish to come 1 inch up the sides of the mold (water bath). Bake at 325°F for 20 minutes until the egg bites are just set — they should jiggle slightly in the center but not look liquid. A toothpick inserted should come out mostly clean. Let cool 5 minutes before unmolding.",
     tags: ["high-protein", "gluten-free", "no-dairy", "vegetarian", "meal-prep"],
   },
   {
@@ -609,7 +609,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Soy sauce", qty: 0.5, unit: "tsp" },
       { name: "Rice crackers (senbei)", qty: 10, unit: "pieces" },
     ],
-    instructions: "Mix tuna, mayo, soy sauce. Serve on rice crackers.",
+    instructions: "Drain 3 oz canned tuna in water thoroughly — press with a fork against the can lid to remove as much liquid as possible. Transfer to a small bowl. Add 1 tbsp Kewpie mayo and 0.5 tsp soy sauce and mix well until creamy and evenly combined. Spoon the tuna mixture onto 10 rice crackers (senbei) just before serving to keep them crispy.",
     tags: ["high-protein", "no-dairy", "quick", "cut-friendly"],
   },
 
@@ -629,7 +629,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Walnuts (chopped)", qty: 1, unit: "tbsp" },
       { name: "Mixed berries", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Layer yogurt in a bowl. Top with berries, walnuts, drizzle honey.",
+    instructions: "Spoon 1.5 cups 2% Greek yogurt into a bowl and smooth to an even layer. Arrange 0.5 cup mixed berries over the top. Scatter 1 tbsp chopped walnuts evenly over the berries. Drizzle 1 tbsp honey over everything in a thin, even stream. Serve immediately.",
     tags: ["high-protein", "quick", "gluten-free", "vegetarian", "cut-friendly"],
   },
   {
@@ -650,7 +650,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Pita bread", qty: 1, unit: "piece" },
     ],
-    instructions: "Sauté onion, pepper in oil 5 min. Add garlic, cumin, paprika 1 min. Add tomatoes, simmer 8 min. Make wells, crack in eggs. Cover and simmer 5–7 min. Top with feta, serve with pita.",
+    instructions: "Heat 1 tsp olive oil in a 10-inch skillet over medium heat. Add 0.25 whole white onion (diced) and 0.5 whole red bell pepper (diced); cook, stirring occasionally, until softened and the edges begin to color, about 5 minutes. Add 3 minced garlic cloves, 1 tsp cumin, and 1 tsp paprika; stir constantly for 1 minute until fragrant. Pour in 1 cup crushed tomatoes, stir, and bring to a simmer. Cook uncovered over medium-low heat for 8 minutes, stirring occasionally, until the sauce thickens enough to hold a spoon trail. Taste and season with salt. Using the back of a spoon, make 3 evenly spaced wells in the sauce. Crack 1 large egg into each well. Cover the pan and cook over low heat for 5–7 minutes until the whites are fully set but the yolks are still runny — check at 5 minutes. Crumble 1 oz feta over the top. Serve directly from the pan with 1 warmed pita on the side.",
     tags: ["vegetarian"],
   },
   {
@@ -668,7 +668,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Feta cheese", qty: 1, unit: "oz" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Sauté spinach and tomatoes in oil 2 min. Beat egg whites and whole egg, pour over. Cook low and slow. Add olives and feta, fold.",
+    instructions: "Heat 0.5 tsp olive oil in an 8-inch non-stick skillet over medium heat. Add 1 cup baby spinach and 0.5 cup halved cherry tomatoes; cook, stirring, for 2 minutes until the spinach wilts completely and the tomatoes soften slightly. Push the vegetables to one side. In a bowl, whisk together 5 egg whites and 1 whole large egg until frothy. Pour the eggs evenly into the pan and immediately reduce heat to medium-low. Let the eggs set from the bottom up without stirring, about 3 minutes, tilting the pan and lifting the edges with a spatula to let uncooked egg flow underneath. When the top is just slightly wet but mostly set, scatter 4 sliced Kalamata olives and crumble 1 oz feta over one half. Fold the bare half over and slide onto a plate.",
     tags: ["high-protein", "gluten-free", "vegetarian", "cut-friendly", "quick"],
   },
   {
@@ -688,7 +688,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lemon juice", qty: 1, unit: "tbsp" },
       { name: "Oregano", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Season chicken with lemon, oregano, salt. Grill 6 min per side. Slice. Build bowl with quinoa, chicken, cucumber, tomatoes, olives, feta. Drizzle tzatziki.",
+    instructions: "Season 6 oz chicken breast on both sides with 1 tbsp lemon juice, 0.5 tsp dried oregano, and 0.5 tsp salt. Heat a grill or grill pan to medium-high. Grill chicken 6 minutes per side until grill marks are pronounced and the internal temperature reaches 165°F. Transfer to a cutting board and rest 4 minutes, then slice crosswise into 0.5-inch strips. Scoop 1 cup cooked quinoa into a bowl. Fan the sliced chicken on top. Add 0.5 cup diced cucumber, 0.5 cup cherry tomatoes (halved), and 6 Kalamata olives around the bowl. Crumble 1 oz feta over everything. Spoon 3 tbsp tzatziki over the chicken.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -706,7 +706,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cucumber (sliced)", qty: 0.25, unit: "cup" },
       { name: "Tahini sauce", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Warm pita, spread hummus. Layer falafel, tabbouleh, lettuce, cucumber. Drizzle tahini.",
+    instructions: "Warm 1 whole wheat pita in a dry skillet over medium heat, 30 seconds per side, until pliable and lightly toasted. Spread 3 tbsp hummus in a thick, even layer across the inside surface. Arrange 5 falafel balls (halved if large) down the center. Spoon 0.5 cup tabbouleh alongside the falafel. Add 0.5 cup shredded romaine and 0.25 cup sliced cucumber. Drizzle 1 tbsp tahini sauce over the top. Fold the sides in and eat immediately.",
     tags: ["vegetarian", "vegan"],
   },
   {
@@ -725,7 +725,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Asparagus", qty: 6, unit: "spears" },
       { name: "Cherry tomatoes", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Cook couscous in boiling water 5 min. Sear salmon in oiled pan 3–4 min per side. Roast asparagus and tomatoes. Mix lemon, olive oil, dill, garlic. Combine couscous with vegetables, top with salmon, drizzle dressing.",
+    instructions: "Place 0.5 cup dry couscous in a heatproof bowl. Pour 0.5 cup boiling water over it, cover with a plate and let steam for 5 minutes. Fluff with a fork. Meanwhile, pat 5 oz salmon fillet dry and season with salt and pepper. Heat 0.5 tbsp olive oil in a skillet over medium-high heat. Sear salmon flesh-side down 3–4 minutes until golden-brown and releases cleanly. Flip and cook skin-side 2–3 minutes until salmon is opaque throughout and flakes when pressed. On a separate baking sheet, roast 6 asparagus spears and 0.5 cup cherry tomatoes with a drizzle of oil at 425°F for 8–10 minutes until the asparagus tips are crisp and the tomatoes burst. Whisk together 2 tbsp lemon juice, 0.5 tbsp olive oil, 2 tbsp chopped fresh dill, and 2 minced garlic cloves for the dressing. Toss the couscous with the roasted vegetables and half the dressing. Plate, top with the salmon fillet, and drizzle remaining dressing over.",
     tags: ["high-protein", "no-dairy", "meal-prep"],
   },
   {
@@ -746,7 +746,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Whole wheat pita", qty: 1, unit: "piece" },
     ],
-    instructions: "Sauté onion, garlic, carrot in oil 5 min. Add lentils, broth, cumin, paprika. Simmer 20 min until lentils are soft. Blend smooth. Stir in lemon juice. Serve with pita.",
+    instructions: "Heat 1 tsp olive oil in a medium saucepan over medium heat. Add 0.5 whole white onion (diced), 2 minced garlic cloves, and 1 medium carrot (peeled and diced); cook, stirring, for 5 minutes until the onion is soft and translucent. Add 0.5 cup dry red lentils, 3 cups vegetable broth, 1 tsp cumin, and 0.5 tsp paprika. Bring to a boil over high heat, then reduce to a steady simmer. Cook uncovered for 20 minutes, stirring occasionally, until the lentils are completely soft and falling apart. Remove from heat and blend until silky smooth — use an immersion blender directly in the pot or transfer carefully to a countertop blender in batches. Stir in 2 tbsp lemon juice and season with salt. The soup should be thick but pourable; add a splash of broth if too thick. Serve with 1 whole wheat pita, warmed.",
     tags: ["vegan", "vegetarian", "no-dairy", "meal-prep"],
   },
   {
@@ -766,7 +766,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Romaine lettuce", qty: 0.5, unit: "cup" },
       { name: "Sliced tomato", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Mix lamb with garlic, cumin, coriander, cinnamon, salt. Form onto skewers. Grill 4–5 min per side. Serve with warm pita, tzatziki, lettuce and tomato.",
+    instructions: "In a bowl, combine 6 oz ground lamb with 2 minced garlic cloves, 1 tsp cumin, 0.5 tsp coriander, 0.25 tsp cinnamon, and 0.75 tsp salt. Mix thoroughly with your hands until the spices are fully incorporated — the mixture should be sticky. Divide into 2–3 equal portions and press each firmly around a flat metal skewer (or a soaked wooden one), forming an elongated, uniform log about 1 inch thick. Chill 10 minutes to firm up if time allows. Heat a grill or grill pan to high. Grill 4–5 minutes per side until the exterior is charred and crusty and the internal temperature reaches 160°F. The kofta should feel firm when squeezed. Warm 1 whole wheat pita. Serve kofta off the skewer alongside the warm pita, 3 tbsp tzatziki, 0.5 cup shredded romaine, and 0.5 cup sliced tomato.",
     tags: ["high-protein", "no-dairy"],
   },
   {
@@ -785,7 +785,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Fresh oregano", qty: 2, unit: "sprigs" },
       { name: "Garlic", qty: 2, unit: "cloves" },
     ],
-    instructions: "Place fish in baking dish. Top with sliced lemon, tomatoes, olives, capers, garlic. Drizzle olive oil. Bake at 400°F 20–25 min until fish flakes.",
+    instructions: "Preheat oven to 400°F. Lay 7 oz sea bass fillet in a small baking dish and season with salt and pepper. Slice the whole lemon into thin rounds and lay half over the fish. Scatter 0.5 cup cherry tomatoes, 8 Kalamata olives, 1 tbsp capers, 2 bruised garlic cloves, and 2 sprigs fresh oregano around and over the fillet. Drizzle 1 tbsp olive oil evenly over everything. Bake uncovered at 400°F for 20–25 minutes — the fish is done when it flakes cleanly when pressed at the thickest point with a fork and the internal temperature reaches 145°F. Squeeze any remaining lemon juice from the extra lemon half over the fish before serving.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -804,7 +804,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Chicken broth", qty: 0.5, unit: "cup" },
       { name: "Tzatziki", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Marinate chicken in olive oil, lemon, garlic, oregano 10 min. Thread on skewers, grill 10–12 min turning. Cook rice in broth with a pinch of oregano. Serve skewers over rice with tzatziki.",
+    instructions: "Combine 1 tbsp olive oil, 2 tbsp lemon juice, 3 minced garlic cloves, and 1 tsp dried oregano in a bowl. Add 6 oz chicken breast cut into 1.5-inch cubes; toss to coat and marinate at room temperature for 10 minutes. Thread chicken onto 2–3 metal or soaked wooden skewers. Heat a grill or grill pan to medium-high. Grill skewers 10–12 minutes total, turning a quarter-turn every 3 minutes, until the exterior is lightly charred and the thickest piece registers 165°F. While chicken cooks, bring 0.5 cup chicken broth and a pinch of dried oregano to a boil in a small saucepan. Use this to cook 1 cup long grain rice (or add to already cooked rice and toss). Serve the skewers over the rice pilaf with 2 tbsp tzatziki dolloped alongside.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -825,7 +825,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Butter", qty: 1, unit: "tbsp" },
       { name: "Parmesan", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Roast eggplant slices 15 min at 400°F. Brown beef with garlic, cinnamon, allspice, tomatoes. Make béchamel: melt butter, whisk flour, add milk, stir until thick. Layer eggplant, meat, béchamel. Top with parmesan. Bake 35 min.",
+    instructions: "Preheat oven to 400°F. Slice 1 large eggplant into 0.5-inch rounds, brush lightly with oil, and spread in a single layer on a baking sheet. Roast 15 minutes until golden and tender; set aside. Reduce oven to 375°F. Cook 8 oz ground beef (93/7) with 2 minced garlic cloves in a skillet over medium-high heat, breaking it up, until fully browned with no pink remaining, about 6 minutes. Drain excess fat. Stir in 0.5 cup crushed tomatoes, 0.5 tsp cinnamon, and 0.25 tsp allspice; simmer 5 minutes. Make béchamel: melt 1 tbsp butter in a small saucepan over medium heat. Whisk in 1.5 tbsp flour and cook 1 minute until the mixture smells nutty. Gradually pour in 0.5 cup 2% milk, whisking constantly, and cook over medium heat 3–4 minutes until the sauce coats the back of a spoon and no floury taste remains. Season with salt. In a small baking dish, layer the eggplant slices, spread the meat sauce evenly on top, then pour the béchamel over the meat. Sprinkle 2 tbsp grated Parmesan over the top. Bake at 375°F for 35 minutes until the béchamel is set and the top is golden-brown. Let rest 10 minutes before slicing.",
     tags: ["high-protein", "meal-prep"],
   },
   {
@@ -842,7 +842,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Whole wheat pita (quartered)", qty: 0.5, unit: "piece" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Arrange vegetables on plate. Serve hummus drizzled with olive oil.",
+    instructions: "Spoon 4 tbsp hummus into the center of a plate and spread into a wide circle, creating a shallow well. Drizzle 0.5 tsp olive oil into the well. Arrange 1 cup sliced cucumber, 0.5 cup carrot sticks, and 0.5 cup cherry tomatoes around the hummus. Quarter 0.5 piece whole wheat pita and tuck the wedges alongside the vegetables. Serve immediately.",
     tags: ["vegan", "vegetarian", "quick"],
   },
   {
@@ -857,7 +857,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 0.5, unit: "tbsp" },
       { name: "Whole wheat pita", qty: 0.5, unit: "piece" },
     ],
-    instructions: "Spread labneh in bowl, drizzle olive oil, sprinkle za'atar. Serve with pita.",
+    instructions: "Spoon 0.5 cup labneh into a shallow bowl and spread with the back of the spoon into an even layer with a slight dip in the center. Drizzle 0.5 tbsp olive oil into the dip. Sprinkle 1 tsp za'atar spice mix evenly over the top. Serve with 0.5 piece whole wheat pita, torn into pieces or cut into wedges.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -873,7 +873,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dried oregano", qty: 0.25, unit: "tsp" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Combine all ingredients. Season with salt and pepper.",
+    instructions: "Spoon 0.75 cup cottage cheese into a bowl. Add 6 Kalamata olives (halved), 0.25 cup cherry tomatoes (halved), and 0.25 tsp dried oregano. Drizzle 0.5 tsp olive oil over the top. Season with salt and black pepper and stir gently to combine.",
     tags: ["high-protein", "gluten-free", "vegetarian", "cut-friendly", "quick"],
   },
   {
@@ -887,7 +887,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lemon juice", qty: 1, unit: "tbsp" },
       { name: "Tzatziki", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Arrange on plate, squeeze lemon, serve with tzatziki.",
+    instructions: "Arrange 5 canned stuffed grape leaves on a plate. Squeeze 1 tbsp lemon juice evenly over the dolmas. Spoon 2 tbsp tzatziki alongside for dipping and serve.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 
@@ -910,7 +910,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Parmesan (shaved)", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Toast bread, rub with garlic clove. Mix diced tomato, basil, olive oil, salt for bruschetta. Poach eggs 3 min. Top toast with tomato, place eggs, shave parmesan.",
+    instructions: "Toast 2 thick slices sourdough bread until deep golden and crisp — in a toaster or under the broiler 2 minutes. Immediately rub 1 garlic clove firmly over the warm cut face of each slice; the toast acts as a grater and the garlic melts in. Finely dice 1 Roma tomato and toss with 4 torn basil leaves, 1 tsp olive oil, and a pinch of salt; set aside. Fill a wide saucepan with 3 inches of water and bring to a gentle simmer over medium heat — small bubbles only, not a rolling boil. Crack 3 eggs individually into a small cup, then lower each into the water in the same spot. Cook 3 minutes exactly for set whites and soft yolks. Remove with a slotted spoon and blot dry. Spoon the tomato bruschetta mixture over each toast, top with a poached egg, and shave 1 tbsp Parmesan over everything.",
     tags: ["high-protein", "vegetarian", "quick"],
   },
   {
@@ -927,7 +927,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lemon zest", qty: 0.5, unit: "tsp" },
       { name: "Fresh thyme", qty: 2, unit: "sprigs" },
     ],
-    instructions: "Whip ricotta with lemon zest. Spread on toast. Drizzle honey, top with walnuts and thyme.",
+    instructions: "Toast 2 slices whole grain bread until golden and firm. In a small bowl, stir 0.5 cup ricotta cheese with 0.5 tsp lemon zest until fluffy and combined. Spread the whipped ricotta generously over both slices. Drizzle 1 tbsp honey in a thin zigzag pattern across both pieces. Scatter 1 tbsp chopped walnuts evenly over the top. Strip the leaves from 2 sprigs fresh thyme and scatter over everything. Serve immediately.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -945,7 +945,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Italian seasoning", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Sauté garlic and spinach. Add peppers. Beat eggs with pecorino and seasoning, pour over. Cook on stovetop 3 min, transfer to 375°F oven 8–10 min until set.",
+    instructions: "Preheat oven to 375°F. Heat 1 tsp olive oil in an 8-inch oven-safe skillet over medium heat. Add 1 minced garlic clove and stir for 30 seconds. Add 1 cup baby spinach and cook, tossing, until fully wilted, about 1–2 minutes. Add 0.25 cup roasted red peppers (sliced) and distribute evenly. In a bowl, whisk 4 large eggs with 2 tbsp grated Pecorino Romano and 0.5 tsp Italian seasoning until combined. Pour the egg mixture over the vegetables, lifting the edges with a spatula to let the raw egg flow underneath. Cook on medium heat for 3 minutes until the edges are set and pulling away from the pan but the center is still liquid. Transfer the skillet directly to the 375°F oven and bake 8–10 minutes until the center is set and springs back lightly when touched. Let cool 2 minutes before slicing.",
     tags: ["high-protein", "gluten-free", "vegetarian", "cut-friendly", "meal-prep"],
   },
   {
@@ -963,7 +963,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Parmesan (grated)", qty: 1, unit: "tbsp" },
       { name: "Olive oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Cook pasta al dente. Grill chicken 6 min per side, slice. Sauté garlic and tomatoes in olive oil 3 min. Toss pasta with pesto, chicken, tomatoes. Top with parmesan.",
+    instructions: "Bring a pot of salted water to a boil. Cook 3 oz dry rigatoni according to package directions until al dente — tender but with a slight bite in the center; reserve 0.25 cup pasta water before draining. While pasta cooks, season 5 oz chicken breast with salt and pepper. Heat a grill pan over medium-high. Grill chicken 6 minutes per side until grill marks are deep and the internal temperature reaches 165°F. Rest 3 minutes, then slice into 0.5-inch strips. In the pasta pot over medium heat, warm 1 tsp olive oil. Add 2 minced garlic cloves and 0.5 cup cherry tomatoes; cook 3 minutes until the tomatoes burst and garlic is golden. Toss the drained rigatoni into the pan with 2 tbsp basil pesto and a splash of pasta water; stir until every piece is glossy. Add the sliced chicken on top. Finish with 1 tbsp grated Parmesan.",
     tags: ["high-protein", "bulk-friendly"],
   },
   {
@@ -983,7 +983,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tbsp" },
       { name: "Red wine vinegar", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Arrange ingredients on plate. Whisk mustard, olive oil, vinegar for dressing. Drizzle over salad.",
+    instructions: "Arrange all salad components on a wide plate in distinct sections: 5 oz canned tuna in olive oil (flaked and drained), 0.5 cup halved boiled baby potatoes, 1 cup blanched green beans, 2 halved hard-boiled eggs, 6 Kalamata olives, and 0.5 cup cherry tomatoes. Whisk together 1 tsp Dijon mustard, 1 tbsp olive oil, and 1 tbsp red wine vinegar until emulsified. Drizzle the dressing evenly over the entire salad. Season with salt and pepper.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -1001,7 +1001,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Balsamic glaze", qty: 1, unit: "tsp" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Season and grill chicken 6 min per side. Slice. Toast ciabatta. Layer chicken, mozzarella, tomato, basil. Drizzle balsamic and olive oil.",
+    instructions: "Season 5 oz chicken breast with salt, pepper, and a drizzle of 0.5 tsp olive oil. Heat a grill pan over medium-high heat. Grill chicken 6 minutes per side until the internal temperature reaches 165°F and the surface has defined grill marks. Let rest 3 minutes, then slice on the diagonal into 0.5-inch pieces. Split 1 ciabatta roll in half and toast cut-side down in a skillet or under the broiler for 2 minutes until golden and slightly crisp. Layer the bottom half with sliced chicken, 1.5 oz fresh mozzarella (sliced), and 1 whole Roma tomato (sliced). Tuck 4 fresh basil leaves over the mozzarella. Drizzle 1 tsp balsamic glaze and 0.5 tsp olive oil over the top. Close the sandwich and press lightly before serving.",
     tags: ["high-protein"],
   },
   {
@@ -1022,7 +1022,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tbsp" },
       { name: "Whole grain bread", qty: 2, unit: "slices" },
     ],
-    instructions: "Sauté garlic, carrot, celery in olive oil 5 min. Add tomatoes, broth, beans, kale, rosemary. Simmer 20 min. Crush some beans for texture. Serve over toasted bread.",
+    instructions: "Heat 1 tbsp olive oil in a large pot over medium heat. Add 3 minced garlic cloves, 1 medium carrot (diced), and 2 stalks celery (diced); cook, stirring, for 5 minutes until the vegetables are softened and the garlic is golden. Add 1 cup crushed tomatoes, 3 cups vegetable broth, 1 can drained cannellini beans, 2 cups chopped kale, and 1 sprig rosemary. Bring to a boil over high heat, then reduce to a steady simmer and cook uncovered for 20 minutes until the kale is very tender. Using the back of a wooden spoon, crush approximately a quarter of the beans against the side of the pot to create a creamy, thickened base while leaving the rest whole. Remove the rosemary sprig. Season with salt and pepper. Toast 2 slices whole grain bread. Ladle the soup over or alongside the bread.",
     tags: ["vegan", "vegetarian", "meal-prep"],
   },
   {
@@ -1043,7 +1043,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tbsp" },
       { name: "Parmesan (grated)", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Sauté onion, garlic, carrot, celery in oil 5 min. Add beef, brown. Add wine, reduce 2 min. Add tomatoes, simmer 30 min low and slow. Cook pasta al dente. Serve with sauce and parmesan.",
+    instructions: "Heat 1 tbsp olive oil in a wide, heavy pot over medium heat. Add 0.5 whole white onion (finely diced), 3 minced garlic cloves, 1 medium carrot (finely diced), and 1 stalk celery (finely diced). Cook, stirring often, for 5 minutes until vegetables are soft and beginning to caramelize. Add 8 oz ground beef (93/7) and cook over medium-high heat, breaking it up with a spoon, until no pink remains and the meat is browned in spots, about 6 minutes. Pour in 0.25 cup red wine, scraping up any browned bits from the bottom; let bubble and reduce for 2 minutes until most of the wine has evaporated. Add 1.5 cups crushed tomatoes. Stir, then reduce heat to very low. Simmer uncovered for 30 minutes, stirring every 5–10 minutes, until the sauce is thick, dark, and the fat has separated slightly around the edges. Meanwhile, cook 6 oz dry spaghetti in well-salted boiling water until al dente. Reserve 0.25 cup pasta water, drain, and toss into the sauce with a splash of pasta water. Finish with 2 tbsp grated Parmesan.",
     tags: ["high-protein", "bulk-friendly", "meal-prep"],
   },
   {
@@ -1062,7 +1062,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Flour", qty: 2, unit: "tbsp" },
       { name: "Parsley", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Dredge chicken in flour. Sear in butter 3 min per side. Remove. Deglaze with broth and lemon juice, add capers. Simmer 3 min. Return chicken, finish 2 min. Serve over pasta with parsley.",
+    instructions: "Cook 2.5 oz angel hair pasta in salted boiling water 2–3 minutes until al dente; drain and set aside. Pat 6 oz pounded-thin chicken breast dry and season both sides with salt and pepper. Spread 2 tbsp flour on a plate and dredge the chicken on both sides, shaking off the excess. Melt 1 tbsp butter in a skillet over medium-high heat until foaming. Add the chicken and sear without moving 3 minutes until golden-brown. Flip and sear 3 minutes more until cooked through (165°F). Transfer to a plate. Pour 0.25 cup chicken broth and 3 tbsp lemon juice into the hot pan, scraping up all the browned bits from the bottom. Add 1.5 tbsp capers. Simmer over medium heat for 3 minutes until the sauce reduces by about a third. Return the chicken to the pan, spoon sauce over it, and cook 2 more minutes to meld. Serve over the angel hair pasta, spooning all the pan sauce on top. Scatter 2 tbsp chopped fresh parsley.",
     tags: ["high-protein"],
   },
   {
@@ -1084,7 +1084,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lemon zest", qty: 1, unit: "tsp" },
       { name: "Parsley", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Brown veal in oil. Sauté vegetables, add wine, reduce. Add tomatoes and broth, return veal. Braise 90 min. Cook polenta, finish with parmesan. Mix parsley and lemon zest for gremolata. Serve shanks over polenta, top with gremolata.",
+    instructions: "Season 16 oz cross-cut veal shanks generously on both sides with salt and pepper. Heat 1 tbsp oil in a Dutch oven over high heat. Sear the shanks 3–4 minutes per side until deeply browned; transfer to a plate. Reduce heat to medium and add 0.5 whole white onion (diced), 1 medium carrot (diced), and 2 stalks celery (diced); cook, stirring, 5 minutes until softened. Add 0.5 cup white wine, scraping up all browned bits; reduce 3 minutes until mostly evaporated. Pour in 1 cup crushed tomatoes and 1 cup chicken broth. Nestle the veal shanks back in (meat should be half-submerged). Bring to a simmer, then cover tightly and braise over the lowest possible heat for 90 minutes until the meat is completely tender and falling from the bone when prodded with a fork. Meanwhile, bring 2 cups salted water to a boil in a small saucepan. Whisk in 0.5 cup coarse polenta in a steady stream. Reduce heat to low and stir constantly for 5–10 minutes until very thick and pulling away from the sides. Stir in 2 tbsp grated Parmesan. Mix 3 tbsp finely chopped fresh parsley with 1 tsp lemon zest to make the gremolata. Spoon polenta into shallow bowls, top with a veal shank, ladle braising liquid over, and sprinkle gremolata on top.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -1101,7 +1101,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Fresh basil", qty: 4, unit: "leaves" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Preheat oven to 475°F with baking stone. Stretch dough, spread sauce, top with mozzarella and tomato. Bake 10–12 min. Top with fresh basil and drizzle olive oil.",
+    instructions: "Place a baking stone or inverted baking sheet on the top rack and preheat oven to 475°F for at least 30 minutes. On a lightly floured surface, stretch 5 oz whole wheat pizza dough by pressing from the center outward with your fingertips, then gently pulling, until you have a roughly 10-inch round with slightly thicker edges. Spread 3 tbsp pizza sauce evenly across the dough to within 0.5 inch of the edge. Scatter 2 oz shredded part-skim mozzarella evenly over the sauce. Arrange slices of 1 Roma tomato over the cheese. Slide the pizza onto the hot stone and bake 10–12 minutes until the crust is golden-brown and crispy underneath, the cheese is melted and bubbling with brown spots, and the tomato slices have softened. Remove, immediately scatter 4 fresh basil leaves over the top, and drizzle 0.5 tsp olive oil.",
     tags: ["vegetarian"],
   },
   {
@@ -1117,7 +1117,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Balsamic glaze", qty: 1, unit: "tsp" },
       { name: "Fresh basil", qty: 3, unit: "leaves" },
     ],
-    instructions: "Toast bread. Spread ricotta. Top with tomatoes, drizzle balsamic, garnish basil.",
+    instructions: "Toast 2 slices sourdough bread under the broiler or in a toaster until golden and crisp. Spread 1.5 tbsp ricotta on each slice while still warm. Arrange 0.5 cup halved cherry tomatoes over the ricotta. Drizzle 1 tsp balsamic glaze evenly over the top. Tear 3 fresh basil leaves and scatter over each piece. Serve immediately.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -1133,7 +1133,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Balsamic glaze", qty: 1, unit: "tsp" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Thread tomato, basil, mozzarella on toothpick skewers. Drizzle olive oil and balsamic.",
+    instructions: "Thread each toothpick skewer in this order: 1 cherry tomato, 1 fresh basil leaf (folded), and 1 ciliegine mozzarella ball. Repeat until all 8 tomatoes, 8 basil leaves, and 6 mozzarella balls are used across multiple skewers. Arrange on a plate. Drizzle 0.5 tsp olive oil and 1 tsp balsamic glaze over all the skewers and serve immediately.",
     tags: ["gluten-free", "vegetarian", "quick"],
   },
   {
@@ -1147,7 +1147,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cantaloupe (wedges)", qty: 1, unit: "cup" },
       { name: "Black pepper", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Wrap prosciutto around melon wedges. Season with black pepper.",
+    instructions: "Cut 1 cup cantaloupe into wedges or elongated chunks. Tear or fold 2 oz Prosciutto di Parma into ribbons. Wrap one ribbon of prosciutto around each melon piece. Arrange on a plate and grind 0.25 tsp black pepper over everything. Serve immediately.",
     tags: ["gluten-free", "no-dairy", "quick", "cut-friendly"],
   },
   {
@@ -1165,7 +1165,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Carrot sticks", qty: 1, unit: "cup" },
       { name: "Celery sticks", qty: 1, unit: "cup" },
     ],
-    instructions: "Blend beans, olive oil, garlic, lemon, rosemary until smooth. Season. Serve with crudités.",
+    instructions: "Drain and rinse 0.5 cup canned cannellini beans. Combine with 1 tbsp olive oil, 1 garlic clove, 1 tbsp lemon juice, and 0.5 tsp dried rosemary in a food processor or blender. Process for 60–90 seconds until completely smooth, scraping down the sides once. Add 1–2 tbsp water to loosen if the consistency is too thick. Season generously with salt and pepper. Spread into a small bowl. Serve with 1 cup carrot sticks and 1 cup celery sticks arranged around the dip.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 
@@ -1188,7 +1188,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Almond butter", qty: 1, unit: "tbsp" },
       { name: "Chia seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Mix oats, protein powder, milk, yogurt, chia seeds. Refrigerate overnight. Top with berries and almond butter.",
+    instructions: "In a jar or container, combine 0.75 cup rolled oats, 1 scoop chocolate protein powder, 0.75 cup 2% milk, 0.25 cup 0% Greek yogurt, and 1 tsp chia seeds. Stir thoroughly until the protein powder is fully dissolved with no clumps. Seal and refrigerate overnight (at least 6 hours) — the oats will absorb the liquid and swell into a thick, creamy texture. In the morning, stir once. If too thick, add a splash of milk. Top with 0.5 cup mixed berries and dollop 1 tbsp almond butter over the top.",
     tags: ["high-protein", "meal-prep", "vegetarian", "bulk-friendly"],
   },
   {
@@ -1206,7 +1206,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic powder", qty: 0.5, unit: "tsp" },
       { name: "Olive oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Brown turkey with onion and pepper in oil. Add sweet potato. Push to side, scramble eggs. Combine. Season with garlic powder, salt, pepper.",
+    instructions: "Heat 1 tsp olive oil in a medium skillet over medium-high heat. Add 4 oz ground turkey, breaking it up with a spoon, and cook until browned with no pink remaining, about 4 minutes. Add 0.25 cup diced white onion and 0.5 whole diced bell pepper; cook, stirring, 3 more minutes until the vegetables soften. Add 0.5 cup pre-roasted diced sweet potato and stir to combine; cook 2 minutes until heated through. Push the mixture to the edges of the pan. Crack 2 large eggs into the center, season with 0.5 tsp garlic powder and a pinch of salt, and scramble over medium heat until just set, about 1–2 minutes. Stir everything together in the pan to combine. Taste and adjust seasoning with salt and pepper.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -1224,7 +1224,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Maple syrup", qty: 1, unit: "tbsp" },
       { name: "Fresh berries", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Blend banana, eggs, protein, oats, baking powder until smooth. Cook spoonfuls in non-stick pan 2 min per side. Serve with maple syrup and berries.",
+    instructions: "Combine 1 medium ripe banana (broken into chunks), 2 large eggs, 1 scoop vanilla protein powder, 0.25 cup rolled oats, and 0.5 tsp baking powder in a blender. Blend on medium-high for 30–40 seconds until completely smooth and no oat pieces are visible — the batter will be pourable but thicker than traditional pancake batter. Heat a non-stick pan over medium-low heat (higher heat will burn the outside before the center cooks through) and lightly spray with cooking spray. Pour batter in 3-inch rounds, using about 3 tbsp per pancake. Cook 2 minutes until bubbles form across the surface and the edges look set and matte. Flip and cook 2 more minutes until cooked through — press gently with a spatula; it should spring back. Serve with 1 tbsp maple syrup and 0.5 cup fresh berries.",
     tags: ["high-protein", "gluten-free", "vegetarian"],
   },
   {
@@ -1242,7 +1242,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Coleslaw mix", qty: 0.5, unit: "cup" },
       { name: "Apple cider vinegar", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Grill chicken, brush with BBQ sauce last 2 min. Slice. Dress coleslaw with vinegar and salt. Build bowl: rice, beans, corn, chicken, coleslaw.",
+    instructions: "Season 6 oz chicken breast with salt and pepper. Heat a grill or grill pan to medium-high. Grill chicken 6 minutes per side without moving, then brush both sides generously with 2 tbsp BBQ sauce. Grill 1 more minute per side until the sauce caramelizes and the internal temperature reaches 165°F. Rest 4 minutes, then slice crosswise. In a bowl, toss 0.5 cup coleslaw mix with 1 tbsp apple cider vinegar and a pinch of salt until coated. Build the bowl: 1 cup cooked brown rice on the bottom, 0.5 cup drained black beans and 0.5 cup corn kernels on either side, sliced chicken on top, and coleslaw alongside.",
     tags: ["high-protein", "gluten-free", "no-dairy", "bulk-friendly"],
   },
   {
@@ -1261,7 +1261,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dijon mustard", qty: 1, unit: "tsp" },
       { name: "Greek yogurt (as mayo)", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Spread mustard and yogurt on wrap. Layer turkey, bacon, avocado, lettuce, tomato. Roll tightly.",
+    instructions: "Lay 1 whole wheat wrap flat on a work surface. Spread 1 tsp Dijon mustard and 1 tbsp Greek yogurt across the wrap, leaving a 1-inch border at the far edge. Layer in the center: 4 oz deli turkey breast, 2 strips cooked turkey bacon, 0.5 avocado (sliced), 0.5 cup romaine, and 2 tomato slices. Fold in the sides, then roll from the near edge away from you as tightly as possible, pressing the filling in as you go. Cut diagonally in half and serve.",
     tags: ["high-protein", "quick"],
   },
   {
@@ -1279,7 +1279,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Red onion (diced)", qty: 1, unit: "tbsp" },
       { name: "Lemon juice", qty: 1, unit: "tsp" },
     ],
-    instructions: "Mix tuna, yogurt, mustard, celery, onion, lemon juice. Halve and pit avocado. Fill with tuna mixture. Season with salt and pepper.",
+    instructions: "Drain 5 oz canned tuna completely — press a fork against the can to squeeze out all liquid. In a bowl, combine the tuna with 2 tbsp 0% Greek yogurt, 1 tsp Dijon mustard, 2 tbsp finely diced celery, 1 tbsp finely diced red onion, and 1 tsp lemon juice. Mix well until creamy and all ingredients are evenly distributed. Season with salt and pepper. Slice 1 whole avocado lengthwise, remove the pit, and scoop out a bit of the center flesh from each half to create a deeper cavity for the filling. Mound the tuna salad generously into each avocado half. Season the exposed avocado flesh with a small pinch of salt.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly", "quick"],
   },
   {
@@ -1296,7 +1296,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Caesar dressing (light)", qty: 2, unit: "tbsp" },
       { name: "Lemon juice", qty: 1, unit: "tsp" },
     ],
-    instructions: "Grill and slice chicken. Toss romaine with dressing and lemon. Top with chicken, parmesan, croutons.",
+    instructions: "Season 5 oz chicken breast with salt and pepper. Heat a grill pan over medium-high. Grill 6 minutes per side until the internal temperature reaches 165°F and grill marks are well defined. Rest 3 minutes, then slice diagonally into thin strips. In a large bowl, toss 3 cups chopped romaine with 2 tbsp light Caesar dressing and 1 tsp lemon juice until every leaf is lightly coated. Mound onto a plate. Fan the sliced chicken on top. Scatter 1 oz shaved Parmesan over the chicken and romaine. Add 0.25 cup whole grain croutons on top.",
     tags: ["high-protein", "cut-friendly"],
   },
   {
@@ -1314,7 +1314,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tbsp" },
       { name: "Lemon", qty: 0.5, unit: "whole" },
     ],
-    instructions: "Toss sweet potato in oil, roast at 400°F 20 min. Season salmon with garlic powder and paprika, grill 4 min per side. Steam green beans. Squeeze lemon over everything.",
+    instructions: "Preheat oven to 400°F. Toss 1 medium sweet potato (cubed into 0.75-inch pieces) with 0.5 tbsp olive oil and a pinch of salt. Spread in a single layer on a baking sheet and roast for 20 minutes, flipping once at the halfway mark, until tender and caramelized on the cut faces. Meanwhile, pat 6 oz salmon fillet dry and season both sides with 0.5 tsp garlic powder, 0.5 tsp paprika, salt, and pepper. Heat a grill or grill pan to medium-high. Grill salmon 4 minutes per side, flipping gently, until the flesh is opaque throughout and flakes when pressed at the thickest point (145°F internal). While salmon cooks, steam 1 cup green beans over boiling water for 4 minutes until bright green and tender-crisp. Plate the salmon alongside the sweet potato and green beans, then squeeze 0.5 lemon over everything.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -1333,7 +1333,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Hoagie roll", qty: 1, unit: "piece" },
       { name: "Part-skim mozzarella", qty: 1.5, unit: "oz" },
     ],
-    instructions: "Mix turkey, egg, breadcrumbs, seasonings. Form 4–5 balls. Bake at 375°F 18 min. Simmer in marinara 5 min. Place in split hoagie, top with cheese. Broil 2 min.",
+    instructions: "Preheat oven to 375°F. In a bowl, combine 5 oz ground turkey, 1 large egg, 2 tbsp breadcrumbs, 0.5 tsp garlic powder, 0.5 tsp Italian seasoning, and 0.5 tsp salt. Mix just until combined — do not overwork or the meatballs will be tough. Roll into 4–5 equal balls (about 1.5 inches each). Arrange on a baking sheet lined with foil and bake at 375°F for 18 minutes until firm to the touch and the internal temperature reaches 165°F. Transfer the baked meatballs to a small saucepan with 0.5 cup marinara sauce. Simmer over medium-low heat for 5 minutes, turning the meatballs occasionally, until the sauce clings to them. Split 1 hoagie roll and place cut-side up under the broiler for 1 minute to toast. Nestle the sauced meatballs into the roll and top with 1.5 oz shredded part-skim mozzarella. Broil on high for 2 minutes until the cheese is fully melted and bubbling.",
     tags: ["high-protein", "bulk-friendly"],
   },
   {
@@ -1352,7 +1352,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dijon mustard", qty: 1, unit: "tsp" },
       { name: "Smoked paprika", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Season beef with salt, pepper, paprika. Form patty, cook in cast iron 4 min per side. Mix yogurt and mustard for sauce. Serve over lettuce bowl with tomato, pickles, onion, sauce.",
+    instructions: "Season 6 oz ground beef (95/5) with 0.25 tsp smoked paprika, 0.5 tsp salt, and pepper. Form gently into a 3/4-inch-thick patty, pressing a shallow dimple in the center to prevent puffing. Heat a cast-iron skillet over high heat until smoking. Place the patty in the dry pan (no oil needed with lean beef — add 0.5 tsp oil if it sticks) and cook 4 minutes without pressing. Flip and cook 4 more minutes for medium (145°F internal). While beef cooks, whisk together 2 tbsp Greek yogurt and 1 tsp Dijon mustard for the sauce. Arrange 2 cups romaine as a base in a wide bowl. Rest the cooked patty for 2 minutes, then place on the romaine. Top with 2 tomato slices, 3 dill pickle slices, 2 red onion rings, and drizzle the yogurt-mustard sauce over all.",
     tags: ["high-protein", "gluten-free", "cut-friendly"],
   },
   {
@@ -1367,7 +1367,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mixed berries", qty: 0.5, unit: "cup" },
       { name: "Honey", qty: 1, unit: "tsp" },
     ],
-    instructions: "Layer yogurt, berries, granola. Drizzle honey.",
+    instructions: "Spoon half of 1 cup 0% Greek yogurt into a glass or bowl. Add a layer of 0.25 cup mixed berries, then 1.5 tbsp low-sugar granola. Add the remaining yogurt on top. Finish with another 0.25 cup berries and 1.5 tbsp granola. Drizzle 1 tsp honey over the top layer. Serve immediately to keep the granola crunchy.",
     tags: ["high-protein", "quick", "vegetarian", "cut-friendly"],
   },
   {
@@ -1380,7 +1380,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cottage cheese (2%)", qty: 1, unit: "cup" },
       { name: "Pineapple (diced)", qty: 0.75, unit: "cup" },
     ],
-    instructions: "Combine cottage cheese and pineapple.",
+    instructions: "Spoon 1 cup 2% cottage cheese into a bowl. Top with 0.75 cup diced fresh pineapple. Stir gently once or twice to incorporate, keeping some of the pineapple on top for visual appeal. Serve immediately.",
     tags: ["high-protein", "quick", "gluten-free", "vegetarian", "cut-friendly"],
   },
   {
@@ -1394,7 +1394,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Almond butter", qty: 1.5, unit: "tbsp" },
       { name: "Cinnamon", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Slice apple. Serve with almond butter for dipping. Dust cinnamon.",
+    instructions: "Core 1 large apple and slice into 0.25-inch thick rounds or wedges. Arrange on a plate. Spoon 1.5 tbsp almond butter into a small bowl and place alongside for dipping. Dust 0.25 tsp cinnamon evenly over the apple slices. Serve immediately.",
     tags: ["vegan", "gluten-free", "quick"],
   },
   {
@@ -1408,7 +1408,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Deli turkey breast", qty: 2, unit: "oz" },
       { name: "Salt and pepper", qty: 1, unit: "pinch" },
     ],
-    instructions: "Peel eggs, slice in half. Season. Serve with turkey slices.",
+    instructions: "Peel 2 hard-boiled large eggs and slice each in half lengthwise. Arrange cut-side up on a plate and season with a pinch of salt and pepper. Fan 2 oz deli turkey breast slices alongside the eggs. Serve immediately.",
     tags: ["high-protein", "gluten-free", "no-dairy", "quick", "cut-friendly"],
   },
 
@@ -1433,7 +1433,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Ghee or oil", qty: 1, unit: "tsp" },
       { name: "Whole wheat roti", qty: 1, unit: "piece" },
     ],
-    instructions: "Beat eggs with onion, tomato, chili, cilantro, turmeric, salt. Heat ghee, add cumin seeds. Pour egg mixture, cook on medium until set, fold. Serve with roti.",
+    instructions: "Crack 3 large eggs into a bowl. Add 3 tbsp finely diced white onion, 0.5 diced Roma tomato, 1 minced whole green chili, 2 tbsp chopped cilantro, 0.25 tsp turmeric, and a generous pinch of salt. Beat until fully combined. Heat 1 tsp ghee (or oil) in an 8-inch skillet over medium heat until shimmering. Add 0.25 tsp cumin seeds and let sizzle for 20–30 seconds until they pop and smell fragrant. Pour in the egg mixture and let it set on the bottom for 30 seconds, then gently push the edges in with a spatula, tilting the pan to let raw egg flow to the edges. Cook over medium heat until the omelette is set throughout but still moist on top, about 2–3 minutes. Fold in half and slide onto a plate. Warm 1 whole wheat roti and serve alongside.",
     tags: ["high-protein", "vegetarian", "quick"],
   },
   {
@@ -1453,7 +1453,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cilantro", qty: 2, unit: "tbsp" },
       { name: "Oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Rinse poha until soft. Temper mustard seeds, curry leaves, chili in oil. Add peanuts, roast 1 min. Add turmeric, poha, salt. Cook 3 min. Add lemon, cilantro.",
+    instructions: "Place 1 cup dry thick poha (flattened rice) in a fine mesh strainer. Rinse under cold running water, gently pressing and turning, for 30–45 seconds until each flake has softened and become pliable — press one between your fingers; it should yield without crumbling. Shake off excess water and set aside. Heat 1 tsp oil in a skillet over medium heat. Add 0.5 tsp mustard seeds and let them pop and splutter, about 30 seconds. Add 6 curry leaves (they will sizzle loudly) and 1 whole green chili (split); cook 15 seconds. Add 2 tbsp peanuts and stir-fry for 1 minute until the peanuts are lightly golden. Add 0.25 tsp turmeric, then immediately add the rinsed poha and 0.5 tsp salt. Stir gently to combine everything without mashing the poha. Cook 3 minutes over medium heat, stirring every minute, until the poha is heated through and the turmeric has evenly colored it yellow. Remove from heat. Squeeze 1 tbsp lemon juice over the top and scatter 2 tbsp chopped cilantro.",
     tags: ["vegan", "gluten-free", "quick"],
   },
   {
@@ -1473,7 +1473,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Ghee", qty: 1, unit: "tsp" },
       { name: "Whole wheat roti", qty: 2, unit: "pieces" },
     ],
-    instructions: "Sauté onion in ghee 3 min. Add ginger, cumin, turmeric, tomato 2 min. Add beaten eggs, scramble on low. Finish with garam masala. Serve with roti.",
+    instructions: "Heat 1 tsp ghee in a medium skillet over medium heat. Add 0.25 cup diced onion and cook, stirring frequently, until golden at the edges, about 3 minutes. Add 0.5 tsp grated ginger, 0.5 tsp cumin, and 0.25 tsp turmeric; stir continuously for 30 seconds until very fragrant. Add 0.5 diced tomato and cook 2 minutes until the tomato softens and most of the liquid evaporates. Beat 3 large eggs with a pinch of salt in a bowl. Pour into the pan and reduce heat to low. Stir slowly and continuously with a spatula, scraping the bottom in large, gentle folds, until the eggs form soft, creamy curds and are just barely set — about 3–4 minutes; they should look slightly underdone when you pull off the heat. Sprinkle 0.25 tsp garam masala over the top and fold in once. Serve immediately with 2 warm whole wheat rotis.",
     tags: ["high-protein", "vegetarian", "quick"],
   },
   {
@@ -1494,7 +1494,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Ginger", qty: 0.5, unit: "tsp" },
       { name: "Basmati rice (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Marinate chicken in yogurt, half the spices 10 min. Broil 8 min. Sauté garlic and ginger, add tomatoes, remaining spices, cream, simmer 10 min. Add chicken, simmer 5 min. Serve over basmati.",
+    instructions: "In a bowl, combine 6 oz cubed chicken breast with 2 tbsp Greek yogurt, 0.5 tsp garam masala, 0.25 tsp cumin, and 0.125 tsp turmeric. Stir to coat every piece and marinate at room temperature for 10 minutes. Spread chicken on a foil-lined baking sheet and broil on high, 6 inches from the element, for 8 minutes, turning once at 4 minutes, until lightly charred and cooked through (165°F). In a medium saucepan over medium heat, cook 2 minced garlic cloves and 0.5 tsp grated ginger for 1 minute. Add 0.5 cup crushed tomatoes, remaining 0.5 tsp garam masala, remaining 0.25 tsp cumin, and 0.125 tsp turmeric. Simmer 10 minutes, stirring often, until the sauce thickens and oil begins to separate at the edges. Stir in 2 tbsp heavy cream or coconut milk. Add the broiled chicken pieces, stir to coat, and simmer 5 minutes until heated through and the sauce clings to the chicken. Serve over 1 cup cooked basmati rice.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -1513,7 +1513,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Basmati rice (cooked)", qty: 1, unit: "cup" },
       { name: "Lemon juice", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Cook dal with turmeric until soft. Temper cumin, garlic, dried chili in ghee until fragrant. Pour over dal. Add lemon juice, salt. Serve over rice.",
+    instructions: "Rinse 0.5 cup yellow moong dal (split) until the water runs mostly clear. Place in a saucepan with 2 cups water and 0.5 tsp turmeric. Bring to a boil over high heat, skimming any foam. Reduce to a steady simmer and cook 20–25 minutes, stirring occasionally, until the dal is completely soft and has dissolved into a thick, porridge-like consistency. Season with salt. For the tadka (tempering), heat 1 tsp ghee in a small pan over medium-high heat until smoking. Add 0.5 tsp cumin seeds (they will pop immediately), 3 sliced garlic cloves, and 1 whole dried red chili. Stir and cook 30–60 seconds until the garlic is golden and everything is fragrant — watch carefully, it happens fast. Pour the sizzling tadka immediately over the dal. Stir in 1 tbsp lemon juice. Serve over 1 cup cooked basmati rice.",
     tags: ["vegetarian", "vegan", "gluten-free", "meal-prep"],
   },
   {
@@ -1532,7 +1532,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sliced red onion", qty: 0.25, unit: "cup" },
       { name: "Cucumber (julienned)", qty: 0.25, unit: "cup" },
     ],
-    instructions: "Marinate chicken in yogurt, tandoori masala, lemon juice 10 min. Grill or broil 6–8 min per side. Slice. Spread mint chutney on roti, layer chicken, onion, cucumber. Roll.",
+    instructions: "Combine 3 tbsp Greek yogurt, 1.5 tsp tandoori masala, and 1 tbsp lemon juice in a bowl. Add 5 oz chicken breast and turn to coat every surface. Marinate at room temperature for 10 minutes. Grill over medium-high heat or broil 6 inches from the element for 6–8 minutes per side until the exterior is charred in spots and the internal temperature reaches 165°F. Rest 4 minutes, then slice into thin strips. Warm 2 whole wheat rotis in a dry skillet, 30 seconds per side. Spread 1 tbsp mint chutney over each roti. Layer the sliced chicken, 2 tbsp sliced red onion, and 2 tbsp julienned cucumber across the center. Roll tightly and serve.",
     tags: ["high-protein", "no-dairy"],
   },
   {
@@ -1552,7 +1552,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Heavy cream", qty: 2, unit: "tbsp" },
       { name: "Whole wheat roti", qty: 2, unit: "pieces" },
     ],
-    instructions: "Blend cooked spinach with sautéed onion, garlic, ginger. Simmer with cumin, garam masala. Add paneer, cream. Simmer 5 min. Serve with roti.",
+    instructions: "If using fresh spinach, blanch 3 cups in boiling water for 1 minute then drain and cool; if using frozen, thaw and squeeze out all excess moisture. In a skillet over medium heat, sauté 0.5 whole onion (roughly chopped), 2 garlic cloves, and 0.5 tsp grated ginger for 5 minutes until the onion is golden. Transfer onion mixture and spinach to a blender and blend until smooth and vibrant green. Return to the skillet over medium heat. Add 0.5 tsp cumin and 0.5 tsp garam masala; stir and cook 2 minutes. Stir in 2 tbsp heavy cream. Add 4 oz paneer (cubed into 0.75-inch pieces) and fold gently into the sauce. Simmer over medium-low heat for 5 minutes until the paneer is heated through and has absorbed the sauce color. Season with salt. Serve with 2 warm whole wheat rotis.",
     tags: ["vegetarian", "gluten-free"],
   },
   {
@@ -1572,7 +1572,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Greek yogurt", qty: 0.25, unit: "cup" },
       { name: "Basmati rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Brown lamb in oil. Sauté onion, garlic, ginger. Add spices, yogurt, stir. Add lamb and water to cover. Pressure cook 30 min or simmer 60 min. Serve over basmati.",
+    instructions: "Pat 12 oz cubed lamb shoulder dry and season with salt. Heat 1 tbsp oil in a heavy pot over high heat. Brown the lamb in batches, 2–3 minutes per side, until deeply seared on all sides; do not crowd the pan. Remove and set aside. Reduce heat to medium. Add 1 whole onion (finely diced) and cook 8 minutes until golden-brown. Add 4 minced garlic cloves and 1 tbsp grated ginger; stir 1 minute. Add 1 tsp Kashmiri chili powder, 1 tsp ground coriander, and 1 tsp garam masala; stir 30 seconds until very fragrant. Add 0.25 cup Greek yogurt one tablespoon at a time, stirring continuously after each addition so it doesn't curdle. Return the lamb to the pot and add enough water to just barely cover the meat. Bring to a boil. Pressure cook 30 minutes on high pressure (or simmer covered over low heat for 60 minutes) until the lamb is completely tender and yielding when pressed with a spoon. Serve over 2 cups cooked basmati rice.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -1591,7 +1591,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Saffron in warm milk", qty: 2, unit: "tbsp" },
       { name: "Ghee", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Marinate chicken in yogurt, biryani masala. Parboil rice. Layer: chicken, fried onions, rice, mint, saffron milk, ghee. Seal and dum cook on low 25 min.",
+    instructions: "Combine 12 oz bone-in chicken thighs with 3 tbsp Greek yogurt and 1.5 tsp biryani masala; massage into the meat and marinate 20 minutes. Bring a large pot of salted water to a boil. Add 1 cup dry basmati rice and parboil for exactly 6 minutes — the grains should be 70% cooked (still slightly firm). Drain completely. In a heavy-bottomed pot with a tight lid, layer: the raw marinated chicken on the bottom, then 0.25 cup fried onions, then all the parboiled rice on top. Scatter 0.25 cup fresh mint leaves over the rice. Spoon 2 tbsp saffron-infused warm milk (a pinch of saffron dissolved in warm milk) over the surface. Drizzle 1 tbsp ghee over the top. Seal the pot tightly with a lid (place foil under the lid for a better seal). Cook on the lowest possible heat for 25 minutes. Rest off heat 5 minutes before gently mixing the layers from the bottom up with a wide spoon to serve.",
     tags: ["high-protein", "gluten-free", "bulk-friendly"],
   },
   {
@@ -1610,7 +1610,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Basmati rice (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Sauté onion, garlic, ginger in oil 5 min. Add spice blend 1 min. Add tomatoes, cook 5 min. Add chickpeas, simmer 15 min. Serve over rice.",
+    instructions: "Heat 1 tsp olive oil in a medium saucepan over medium heat. Add 0.5 whole onion (finely diced) and cook, stirring, for 5 minutes until golden and soft. Add 3 minced garlic cloves and 1 tsp grated ginger; cook 1 minute. Add 1.5 tsp chana masala spice blend and stir constantly for 1 minute until the raw spice smell blooms into a toasty fragrance. Add 0.75 cup crushed tomatoes and cook 5 minutes, stirring, until the oil separates and the sauce thickens and turns a deeper red. Add 1.5 cups drained chickpeas and stir to coat. Simmer over medium-low heat for 15 minutes, stirring occasionally, until the chickpeas have absorbed the flavors and the sauce is thick. Season with salt. Serve over 1 cup cooked basmati rice.",
     tags: ["vegan", "vegetarian", "gluten-free", "meal-prep"],
   },
   {
@@ -1625,7 +1625,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Chaat masala", qty: 0.5, unit: "tsp" },
       { name: "Cumin", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Dry chickpeas on paper towels. Toss with oil and spices. Roast at 400°F 25–30 min, shaking halfway, until crispy.",
+    instructions: "Drain and rinse 0.75 cup canned chickpeas. Spread on a layer of paper towels and pat completely dry — excess moisture prevents crispiness. Toss the dry chickpeas with 1 tsp olive oil, 0.5 tsp chaat masala, and 0.25 tsp cumin until evenly coated. Spread in a single layer on a baking sheet. Roast at 400°F for 25–30 minutes, shaking the pan at the halfway point, until the chickpeas are shrunken, deeply golden-brown, and audibly crunchy when you tap one with a spoon. They will crisp further as they cool. Let cool 5 minutes before eating.",
     tags: ["vegan", "gluten-free", "meal-prep"],
   },
   {
@@ -1641,7 +1641,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mint (fresh or dried)", qty: 1, unit: "tbsp" },
       { name: "Salt", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Squeeze excess moisture from cucumber. Mix with yogurt, cumin, mint, salt. Chill.",
+    instructions: "Grate 0.5 cup cucumber on the large holes of a box grater. Transfer to a clean kitchen towel or paper towels and squeeze firmly to remove as much liquid as possible — excess water will thin the raita. In a bowl, combine the squeezed cucumber with 0.75 cup 2% Greek yogurt, 0.25 tsp cumin powder, 1 tbsp fresh or dried mint, and 0.25 tsp salt. Stir until fully combined. Refrigerate for at least 10 minutes before serving to let the flavors meld.",
     tags: ["high-protein", "gluten-free", "vegetarian", "quick", "cut-friendly"],
   },
   {
@@ -1657,7 +1657,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Bell pepper (chunked)", qty: 0.5, unit: "whole" },
       { name: "Mint chutney", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Mix yogurt and tandoori masala. Marinate paneer and pepper 5 min. Skewer, grill or broil 4–5 min per side. Serve with mint chutney.",
+    instructions: "In a bowl, whisk 2 tbsp Greek yogurt with 1 tsp tandoori masala until combined. Add 3 oz paneer (cut into 1-inch cubes) and 0.5 whole bell pepper (cut into 1-inch chunks); toss gently to coat all sides. Marinate 5 minutes. Thread alternating paneer and pepper pieces onto 2 skewers. Grill over medium-high heat or broil 5 inches from the element for 4–5 minutes per side until the paneer develops dark char marks and the pepper is tender but still has slight snap. Serve with 2 tbsp mint chutney for dipping.",
     tags: ["gluten-free", "vegetarian"],
   },
   {
@@ -1673,7 +1673,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dates (pitted)", qty: 2, unit: "pieces" },
       { name: "Raisins", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Combine in a bowl.",
+    instructions: "Place 10 almonds, 8 cashews, 4 walnut halves, 2 pitted dates (torn in half), and 1 tbsp raisins into a small bowl. Toss once to mix the dried fruit evenly among the nuts. Serve immediately or portion into a container for on-the-go snacking.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 
@@ -1696,7 +1696,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
       { name: "Soy sauce", qty: 1, unit: "tsp" },
     ],
-    instructions: "Simmer rice in broth and ginger, stirring occasionally, 35–40 min until thick and creamy. Add chicken. Top with green onion, drizzle sesame oil and soy sauce.",
+    instructions: "Rinse 0.5 cup dry white rice once. Combine with 5 cups chicken broth and 4 slices fresh ginger in a medium pot. Bring to a boil over high heat, then reduce to a gentle simmer. Cook uncovered for 35–40 minutes, stirring every 5–10 minutes to prevent sticking and break up the grains, until the rice has completely dissolved into a thick, creamy porridge — it should slowly ooze and fall off the spoon. While congee cooks, poach 6 oz chicken breast in simmering water 15 minutes until opaque, then let cool slightly and shred into thin strands using two forks. Stir the shredded chicken into the congee and cook 2 more minutes. Season with salt. Divide into 2 bowls. Top each with 1.5 tbsp sliced green onion, drizzle 0.25 tsp sesame oil and 0.5 tsp soy sauce over each bowl.",
     tags: ["gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -1713,7 +1713,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
       { name: "Soy sauce", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Mix flour and water into thin batter. Heat oiled pan. Pour thin layer of batter, immediately pour beaten egg over, sprinkle green onion. Flip when egg sets, cook 30 sec. Roll, slice. Dip in soy and sesame oil.",
+    instructions: "Whisk 0.25 cup all-purpose flour with 3 tbsp water until completely smooth — no lumps. The batter should be thin and pourable like crêpe batter. Heat a 10-inch non-stick pan over medium heat and brush lightly with oil. Pour in a thin layer of the flour batter (about 2–3 tbsp) and tilt the pan immediately to spread it into a very thin, even round. Beat 3 large eggs with 0.5 tsp sesame oil. Before the batter fully sets, pour the beaten egg evenly over the surface. Scatter 2 tbsp chopped green onion over the wet egg. Let cook without touching for 1–2 minutes until the egg is set and no longer shiny on top. Flip gently and cook the egg side for 30 seconds. Slide onto a cutting board, roll into a cylinder, and slice into 1-inch rounds. Mix 1 tbsp soy sauce with a few drops of sesame oil as a dipping sauce.",
     tags: ["no-dairy", "vegetarian", "quick"],
   },
   {
@@ -1731,7 +1731,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mushrooms (sliced)", qty: 0.5, unit: "cup" },
       { name: "Baby bok choy", qty: 1, unit: "cup" },
     ],
-    instructions: "Press tofu, crumble. Stir-fry mushrooms and bok choy in sesame oil 3 min. Add tofu, turmeric, soy sauce. Cook 4 min, stirring. Top with green onion.",
+    instructions: "Drain 6 oz firm tofu and press between paper towels with a heavy object for 5 minutes to remove excess moisture. Crumble into rough, scrambled-egg-sized pieces with your hands. Heat 1 tsp sesame oil in a wide skillet over medium-high heat. Add 0.5 cup sliced mushrooms and 1 cup baby bok choy (halved or roughly chopped); stir-fry for 3 minutes until the mushrooms are golden and the bok choy is wilted but still has some crunch. Push to the edges. Add the crumbled tofu to the center of the pan, sprinkle 0.25 tsp turmeric over it, and let it cook undisturbed for 1 minute to develop a little color on the bottom. Add 1 tbsp soy sauce and stir everything together. Cook 3–4 more minutes over medium-high heat, stirring frequently, until the tofu is heated through and slightly golden. Taste and adjust soy sauce. Scatter 2 tbsp sliced green onion over the top.",
     tags: ["vegan", "gluten-free", "vegetarian", "quick"],
   },
   {
@@ -1752,7 +1752,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cornstarch", qty: 1, unit: "tsp" },
       { name: "White rice (cooked)", qty: 1.5, unit: "cups" },
     ],
-    instructions: "Marinate chicken in soy, cornstarch 5 min. Stir-fry on high with garlic and dried chili 3 min. Mix soy, vinegar, sesame oil for sauce. Add peanuts and green onion, pour sauce, toss 1 min. Serve over rice.",
+    instructions: "Toss 6 oz diced chicken breast (0.75-inch pieces) with 1 tbsp soy sauce and 1 tsp cornstarch; stir to coat and marinate 5 minutes. In a small bowl, stir together 1 tbsp soy sauce, 1 tbsp rice vinegar, and 1 tsp sesame oil to make the sauce; set aside. Heat a wok or large skillet over the highest heat possible until smoking. Add 1 tsp oil, then the chicken in a single layer. Let it sear undisturbed for 1 minute, then stir-fry for 2 more minutes until browned and cooked through. Add 2 minced garlic cloves and 4 whole dried red chilis; stir-fry vigorously for 30 seconds until fragrant and slightly charred. Add 2 tbsp unsalted peanuts and 3 stalks green onion (cut into 1-inch pieces); toss 30 seconds. Pour the sauce over everything and toss constantly for 1 minute until the sauce glazes the chicken and coats the peanuts. Serve immediately over 1.5 cups cooked white rice.",
     tags: ["high-protein", "no-dairy", "bulk-friendly"],
   },
   {
@@ -1772,7 +1772,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cornstarch", qty: 1, unit: "tsp" },
       { name: "White rice (cooked)", qty: 1.5, unit: "cups" },
     ],
-    instructions: "Marinate beef in soy, cornstarch, sesame oil. Stir-fry beef on high 2 min. Remove. Stir-fry broccoli with garlic and ginger 3 min. Add beef back, oyster sauce, toss. Serve over rice.",
+    instructions: "Combine 5 oz thin-sliced flank steak with 1 tbsp soy sauce, 1 tsp cornstarch, and 1 tsp sesame oil; toss and let sit 5 minutes. Heat a wok or large skillet over high heat until smoking. Add a thin film of oil, then the beef in a single layer — do not crowd. Stir-fry 2 minutes until browned and barely cooked through; remove to a plate. Return the wok to high heat and add a small splash of oil. Add 2 minced garlic cloves and 0.5 tsp grated ginger; stir 15 seconds. Add 2 cups broccoli florets and stir-fry 3 minutes until bright green and tender-crisp — a fork should pierce the stems with slight resistance. Return the beef to the wok. Add 2 tbsp oyster sauce and toss everything together over high heat for 1 minute until the sauce coats everything evenly. Serve over 1.5 cups cooked white rice.",
     tags: ["high-protein", "no-dairy", "quick"],
   },
   {
@@ -1791,7 +1791,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Dumpling wrappers", qty: 10, unit: "pieces" },
       { name: "Rice vinegar", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Salt cabbage, squeeze dry. Mix with pork, garlic, ginger, soy, sesame oil. Fill wrappers, pleat and seal. Pan fry in oiled pan 2 min. Add water, cover 5 min until water evaporates. Serve with soy-vinegar dip.",
+    instructions: "Finely chop 1 cup napa cabbage and toss with a big pinch of salt. Let sit 5 minutes, then squeeze firmly in your fist to remove all liquid — the cabbage should be very dry to prevent soggy dumplings. In a bowl, combine the squeezed cabbage with 4 oz ground pork, 2 minced garlic cloves, 1 tsp grated ginger, 1.5 tbsp soy sauce, and 1 tsp sesame oil. Mix well. Place a heaped teaspoon of filling in the center of each of 10 dumpling wrappers. Dip your finger in water and wet the edge of the wrapper halfway around. Fold the dry half over to meet the wet side. Pleat the edge by pinching and folding in small folds to seal, pressing firmly so no air pockets remain. Heat a thin film of oil in a lidded skillet over medium-high heat. Place dumplings flat-side down and fry 2 minutes until the bottoms are deep golden. Add 3 tbsp water to the pan and immediately cover with a lid. Steam for 5 minutes until the water evaporates completely and the tops look cooked through. Uncover and cook 30 more seconds to re-crisp the bottoms. Stir together 1 tbsp soy sauce and 1 tbsp rice vinegar for the dipping sauce.",
     tags: ["no-dairy", "bulk-friendly"],
   },
   {
@@ -1811,7 +1811,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cornstarch", qty: 1, unit: "tsp" },
       { name: "White rice (cooked)", qty: 1.5, unit: "cups" },
     ],
-    instructions: "Brown pork. Add garlic, ginger, doubanjiang, cook 2 min. Add broth and soy, bring to simmer. Add tofu gently, simmer 5 min. Thicken with cornstarch slurry. Drizzle sesame oil. Serve over rice.",
+    instructions: "Heat a wok or skillet over medium-high heat. Add 3 oz ground pork and cook, stirring, until browned and crumbled, about 3 minutes. Add 2 minced garlic cloves and 0.5 tsp grated ginger; stir 30 seconds. Add 1.5 tbsp doubanjiang (spicy bean paste) and stir-fry for 2 minutes until the oil turns red and the paste is fragrant and slightly caramelized. Add 0.5 cup chicken or vegetable broth and 1 tbsp soy sauce; bring to a simmer. Gently slide in 8 oz silken tofu cut into 1-inch cubes — do not stir vigorously or the tofu will fall apart. Simmer over medium-low heat for 5 minutes, spooning sauce over the tofu. Mix 1 tsp cornstarch with 2 tsp cold water to make a slurry. Pour into the simmering sauce and stir gently until the sauce thickens enough to coat a spoon, about 1 minute. Drizzle 0.5 tsp sesame oil over the top. Serve over 1.5 cups cooked white rice.",
     tags: ["no-dairy", "gluten-free"],
   },
   {
@@ -1829,7 +1829,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Baby bok choy", qty: 2, unit: "heads" },
       { name: "White rice (cooked)", qty: 1.25, unit: "cups" },
     ],
-    instructions: "Mix hoisin, soy, garlic, ginger. Coat tenderloin, roast at 425°F 20–25 min. Rest 5 min, slice. Steam bok choy. Serve over rice with extra glaze.",
+    instructions: "Preheat oven to 425°F. Whisk together 2 tbsp hoisin sauce, 1 tbsp soy sauce, 2 minced garlic cloves, and 0.5 tsp grated ginger in a small bowl. Pat 6 oz pork tenderloin dry and place in a small baking dish or on a rack-lined sheet pan. Brush the glaze all over the surface — top, bottom, and sides. Roast at 425°F for 20–25 minutes until the glaze is caramelized and sticky and the internal temperature reaches 145°F. Remove from oven and let rest 5 minutes — the temperature will rise a few more degrees. Slice into 0.5-inch medallions. While pork rests, halve 2 baby bok choy heads lengthwise and steam over boiling water for 3–4 minutes until tender and bright green. Serve pork over 1.25 cups cooked white rice with bok choy alongside and a drizzle of any remaining pan glaze.",
     tags: ["high-protein", "no-dairy"],
   },
   {
@@ -1848,7 +1848,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic", qty: 2, unit: "cloves" },
       { name: "Vegetable oil", qty: 1, unit: "tsp" },
     ],
-    instructions: "Stir-fry garlic and peas in hot wok 1 min. Push to side, scramble eggs. Add rice, break up. Add soy sauce, toss on high 3 min. Finish with sesame oil and green onion.",
+    instructions: "Use day-old cooked rice — freshly cooked rice is too moist and will clump. If using fresh, spread it on a sheet pan and refrigerate 30 minutes to dry out. Heat 1 tsp vegetable oil in a wok or large skillet over the highest heat possible until wisps of smoke appear. Add 2 minced garlic cloves and 0.5 cup frozen peas; stir-fry 1 minute until the peas are bright green and thawed. Push everything to the side of the wok. Crack 2 large eggs into the empty side and scramble with a spatula for 45 seconds until just set but still wet. Immediately add 2 cups day-old cooked white rice, breaking up any clumps with the spatula. Toss everything together on high heat. Pour 2 tbsp soy sauce around the edge of the wok (this flash-cooks the sauce for deeper flavor). Stir-fry continuously for 3 minutes until the rice is heated through, slightly dried, and beginning to toast in spots. Drizzle 1 tsp sesame oil and scatter 3 tbsp sliced green onion over the top, toss once more, and serve.",
     tags: ["no-dairy", "bulk-friendly", "quick"],
   },
   {
@@ -1866,7 +1866,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Neutral oil", qty: 0.5, unit: "tbsp" },
       { name: "Jasmine rice (cooked)", qty: 1.25, unit: "cups" },
     ],
-    instructions: "Poach chicken in salted water 15–18 min. Rest and slice. Place ginger and green onion on top. Heat neutral oil until smoking, pour over. Mix with soy and sesame oil for sauce. Serve over rice.",
+    instructions: "Bring a pot of salted water to a boil. Gently lower 6 oz chicken breast in, then immediately reduce heat to the lowest simmer — no bubbling. Poach for 15–18 minutes until the chicken is completely opaque throughout and an instant-read thermometer reads 165°F. Remove and rest on a cutting board for 5 minutes, then slice thinly against the grain. Arrange slices on a serving plate. Lay 1.5 tbsp julienned fresh ginger and 3 stalks of julienned green onion in a neat pile on top of the chicken. Heat 0.5 tbsp neutral oil in a small pan over high heat until it begins to smoke. Pour the smoking-hot oil directly and quickly over the ginger and green onion — it will sizzle and spit loudly, blooming their flavors. Whisk together 2 tbsp soy sauce and 0.5 tbsp sesame oil and pour over the chicken. Serve over 1.25 cups cooked jasmine rice.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -1884,7 +1884,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cucumber (julienned)", qty: 0.5, unit: "cup" },
       { name: "Carrot (julienned)", qty: 0.25, unit: "cup" },
     ],
-    instructions: "Cook and cool noodles. Whisk peanut butter, soy, vinegar, sesame oil with water to thin. Toss noodles with sauce. Top with cucumber and carrot.",
+    instructions: "Bring a pot of water to a boil. Cook 2 oz dry soba or spaghetti noodles according to package directions until tender. Drain and rinse immediately under cold water, tossing, until completely cool and no longer sticky. Shake off excess water. In a bowl, whisk together 1.5 tbsp peanut butter, 1 tbsp soy sauce, 1 tbsp rice vinegar, and 0.5 tsp sesame oil. Add 1–2 tbsp warm water and whisk until the sauce is smooth and pourable (it thickens as it sits). Toss the cold noodles in the sauce until every strand is coated. Transfer to a serving bowl and top with 0.5 cup julienned cucumber and 0.25 cup julienned carrot.",
     tags: ["vegan", "vegetarian", "quick"],
   },
   {
@@ -1899,7 +1899,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mirin", qty: 1, unit: "tbsp" },
       { name: "Water", qty: 0.25, unit: "cup" },
     ],
-    instructions: "Soft boil eggs 7 min, cool in ice water, peel. Marinate in soy, mirin, water mixture at least 30 min.",
+    instructions: "Bring a small pot of water to a full rolling boil. Lower 2 large eggs in gently with a spoon and cook exactly 7 minutes for a jammy, slightly runny yolk. Immediately transfer to a bowl of ice water and let cool for 5 minutes — this stops the cooking and makes peeling easier. Peel carefully. Stir together 2 tbsp soy sauce, 1 tbsp mirin, and 0.25 cup water in a small zip-lock bag or container. Add the peeled eggs and seal. Marinate at room temperature for at least 30 minutes or refrigerate up to 4 hours — the longer they marinate, the deeper the color and flavor penetration. The eggs are done when the exterior has turned a mahogany-brown.",
     tags: ["high-protein", "gluten-free", "no-dairy", "quick", "cut-friendly"],
   },
   {
@@ -1914,7 +1914,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Rice vinegar", qty: 1, unit: "tbsp" },
       { name: "Chili oil", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Steam dumplings 8–10 min. Mix soy, vinegar, chili oil for dip.",
+    instructions: "Place 5 frozen vegetable dumplings or gyoza in a steamer basket lined with parchment or napa cabbage leaves (to prevent sticking). Set over a pot of boiling water, cover, and steam for 8–10 minutes until the wrappers are translucent and tender and the filling is heated through. While the dumplings steam, stir together 1 tbsp soy sauce, 1 tbsp rice vinegar, and 0.25 tsp chili oil in a small dipping bowl. Serve the dumplings hot with the dipping sauce.",
     tags: ["vegan", "vegetarian", "quick"],
   },
 
@@ -1937,7 +1937,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Honey", qty: 1, unit: "tsp" },
       { name: "Vanilla extract", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Cook oats in coconut milk and water. Top with mango, toasted coconut, honey.",
+    instructions: "Combine 0.75 cup rolled oats, 0.75 cup light coconut milk, 0.5 cup water, and 0.25 tsp vanilla extract in a small saucepan. Bring to a simmer over medium heat, stirring occasionally. Reduce heat to low and cook, stirring frequently, for 5–7 minutes until the oats have absorbed the liquid and the mixture is thick and creamy. Transfer to a bowl. Top with 0.5 cup diced fresh mango, sprinkle 1 tbsp toasted shredded coconut over the top, and drizzle 1 tsp honey. Serve immediately.",
     tags: ["vegan", "gluten-free", "vegetarian", "bulk-friendly"],
   },
   {
@@ -1954,7 +1954,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Jasmine rice (cooked)", qty: 1, unit: "cup" },
       { name: "Sriracha", qty: 1, unit: "tsp" },
     ],
-    instructions: "Beat eggs with fish sauce and green onion. Heat oil until very hot. Pour egg mixture in one go — it should puff and crisp on edges. Fold, serve over rice with sriracha.",
+    instructions: "Beat 3 large eggs with 1 tsp fish sauce and 2 tbsp sliced green onion until the eggs are light and slightly frothy, about 30 seconds. Heat 1 tbsp oil in a small wok or skillet over high heat until the oil is visibly shimmering and a tiny drop of egg sizzles violently on contact. Pour the entire egg mixture into the pan in one go — the bottom should instantly puff up and set with crispy, bubbly edges. Do not stir. Reduce heat to medium and cook for 1–2 minutes until the center is set and only slightly wet on top. The edges should be deep golden and lacy-crisp. Fold one half over the other into a thick, puffy half-moon. Slide over 1 cup cooked jasmine rice and serve with 1 tsp sriracha on the side.",
     tags: ["high-protein", "gluten-free", "no-dairy", "quick"],
   },
   {
@@ -1970,7 +1970,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Coconut milk (light)", qty: 0.75, unit: "cup" },
       { name: "Ice", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Blend all ingredients until smooth.",
+    instructions: "Combine 1 large frozen banana (broken into pieces), 1 scoop vanilla protein powder, 1 tbsp peanut butter, 0.75 cup light coconut milk, and 0.5 cup ice in a blender. Blend on high for 45–60 seconds until completely smooth and no frozen banana chunks remain. Pour into a glass and serve immediately.",
     tags: ["high-protein", "gluten-free", "quick", "vegetarian"],
   },
   {
@@ -1992,7 +1992,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Peanuts (crushed)", qty: 1, unit: "tbsp" },
       { name: "Lime", qty: 1, unit: "whole" },
     ],
-    instructions: "Soak noodles in warm water 15 min. Stir-fry chicken on high 3 min. Push aside, scramble egg. Add noodles, tamarind, fish sauce, sugar, toss 2 min. Add sprouts and green onion. Top with peanuts and lime wedge.",
+    instructions: "Soak 3 oz flat dry rice noodles in warm (not boiling) water for 15 minutes until pliable but still firm — they'll finish cooking in the wok. Drain and set aside. Stir together 1.5 tbsp tamarind paste, 1 tbsp fish sauce, and 1 tsp sugar in a small bowl until the sugar dissolves; set aside. Heat a wok over high heat until smoking. Add a thin film of oil and 2 minced garlic cloves; stir 15 seconds. Add 5 oz thin-sliced chicken breast in a single layer; stir-fry 3 minutes until cooked through and lightly charred. Push the chicken to the edge. Pour in a tiny bit of oil in the empty space, crack in 1 large egg, and scramble for 30 seconds until just set. Toss the egg and chicken together. Add the drained noodles, pour the tamarind sauce over everything, and toss rapidly over high heat for 2 minutes until the noodles are tender and have absorbed the sauce. Add 1 cup bean sprouts and 2 stalks green onion (cut into 1-inch pieces); toss 30 seconds. Plate and top with 1 tbsp crushed peanuts and a wedge of lime to squeeze over.",
     tags: ["high-protein", "no-dairy", "gluten-free"],
   },
   {
@@ -2011,7 +2011,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Egg (fried)", qty: 1, unit: "large" },
       { name: "Jasmine rice (cooked)", qty: 1.5, unit: "cups" },
     ],
-    instructions: "Stir-fry garlic and chili 30 sec. Add chicken, break up and cook 4 min. Add fish sauce, oyster sauce, stir 1 min. Add basil, toss until wilted. Serve over rice topped with crispy fried egg.",
+    instructions: "Heat a wok over high heat until smoking. Add a thin film of oil, then 3 minced garlic cloves and 2 whole Thai bird chilies (bruised with the flat of a knife); stir-fry 30 seconds until the garlic is golden and extremely fragrant. Add 6 oz ground chicken, pressing and breaking it up into small crumbles. Cook over high heat for 4 minutes until cooked through and browned in spots. Add 1.5 tbsp fish sauce and 1 tbsp oyster sauce; stir-fry 1 minute until the sauce is absorbed. Remove from heat, add 1 cup Thai basil leaves, and toss quickly until wilted from the residual heat — about 30 seconds. In a separate small pan, fry 1 large egg in hot oil for 2 minutes until the white is fully set and crispy at the edges but the yolk is still runny. Serve the chicken over 1.5 cups cooked jasmine rice, top with the fried egg.",
     tags: ["high-protein", "no-dairy", "gluten-free", "quick"],
   },
   {
@@ -2031,7 +2031,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Bird chili", qty: 1, unit: "whole" },
       { name: "Peanuts", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Grill chicken, slice. Pound garlic and chili in mortar. Add papaya, beans, tomatoes, pound lightly. Season with fish sauce and lime. Toss with chicken, top with peanuts.",
+    instructions: "Season 5 oz chicken breast with salt and a drizzle of oil. Grill over medium-high heat 5–6 minutes per side until the internal temperature reaches 165°F. Rest 4 minutes, then slice thin against the grain. In a large mortar, add 1 garlic clove and 1 whole bird chili. Pound together until a rough paste forms, about 1 minute. Add 0.5 cup green beans (cut into 2-inch pieces) and 0.5 cup cherry tomatoes; pound gently to bruise (not mash) them and release juices. Add 2 cups shredded green papaya; use the pestle to bruise and toss the papaya rather than crushing it. Season with 1.5 tbsp fish sauce and 2 tbsp fresh lime juice; pound and toss briefly to combine. Taste and adjust: it should be sour, salty, and spicy. Transfer to a plate, arrange the sliced chicken alongside, and top with 1 tbsp peanuts.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -2050,7 +2050,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Thai basil", qty: 0.25, unit: "cup" },
       { name: "Jasmine rice (cooked)", qty: 1.5, unit: "cups" },
     ],
-    instructions: "Fry curry paste in pan 1 min. Add coconut milk, bring to simmer. Add chicken, eggplant, zucchini. Cook 12 min. Season with fish sauce. Add basil. Serve over rice.",
+    instructions: "Heat a medium saucepan or wok over medium heat. Add 1.5 tbsp green curry paste and fry, stirring constantly, for 1 minute until the paste is fragrant and sizzling in the pan — this blooms the aromatics. Pour in 0.75 cup light coconut milk and stir to combine. Bring to a simmer over medium heat. Add 5 oz sliced chicken breast (0.5-inch slices), 0.5 cup halved Thai eggplant, and 0.5 cup sliced zucchini. Cook at a steady simmer over medium heat for 12 minutes, stirring occasionally, until the chicken is cooked through (opaque throughout) and the eggplant is tender when pierced with a fork. Season with 1 tbsp fish sauce — taste and adjust. Remove from heat and stir in 0.25 cup Thai basil leaves until just wilted. Serve over 1.5 cups cooked jasmine rice.",
     tags: ["high-protein", "gluten-free", "no-dairy"],
   },
   {
@@ -2069,7 +2069,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Fish sauce", qty: 1, unit: "tbsp" },
       { name: "Jasmine rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Fry curry paste in pan. Add coconut milk, beef, potato, onion. Simmer 45–60 min until beef is tender. Add peanuts, fish sauce. Serve over jasmine rice.",
+    instructions: "Heat a Dutch oven or heavy pot over medium heat. Add 2 tbsp Massaman curry paste and fry, stirring, for 1 minute until fragrant. Add 1 cup coconut milk and stir to combine. Add 10 oz cubed beef chuck (1.5-inch pieces), 1 medium potato (cubed), and 0.5 whole onion (cut into wedges). Stir to coat everything in the curry. Bring to a simmer, then reduce heat to low. Cover and cook 45–60 minutes, stirring every 15 minutes, until the beef is completely tender and yields easily when pressed with a spoon and the potatoes are soft throughout. Add 2 tbsp peanuts and 1 tbsp fish sauce in the last 5 minutes. Taste and adjust seasoning. Divide over 2 cups cooked jasmine rice.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -2088,7 +2088,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Thai basil", qty: 0.5, unit: "cup" },
       { name: "Jasmine rice (cooked)", qty: 1.25, unit: "cups" },
     ],
-    instructions: "Stir-fry garlic on high 30 sec. Add shrimp, cook 2 min. Add snap peas and mushrooms, stir-fry 2 min. Add oyster sauce, soy, basil. Toss 1 min. Serve over rice.",
+    instructions: "Heat a wok or large skillet over high heat until smoking. Add a thin film of oil, then 2 minced garlic cloves; stir-fry for 30 seconds until golden and fragrant. Add 7 oz peeled, deveined shrimp in a single layer. Cook 1 minute per side until pink and opaque — do not overcook. Add 1 cup snap peas and 1 cup sliced mushrooms; stir-fry over high heat for 2 minutes until the snap peas are bright green and barely tender-crisp and the mushrooms are golden. Add 1.5 tbsp oyster sauce and 1 tbsp soy sauce; toss to coat everything. Add 0.5 cup Thai basil leaves and toss for 30–45 seconds until wilted. Serve immediately over 1.25 cups cooked jasmine rice.",
     tags: ["high-protein", "no-dairy", "quick"],
   },
   {
@@ -2105,7 +2105,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Chili flakes", qty: 0.25, unit: "tsp" },
       { name: "Shredded cooked chicken", qty: 2, unit: "oz" },
     ],
-    instructions: "Scoop out cucumber seeds. Mix peanut butter, soy, lime, chili flakes. Fill cucumber with chicken, drizzle peanut sauce.",
+    instructions: "Halve 1 large cucumber lengthwise. Use a spoon to scoop out the seeds and create a shallow trough in each half. In a small bowl, whisk together 1.5 tbsp peanut butter, 0.5 tsp soy sauce, 1 tsp lime juice, and 0.25 tsp chili flakes. Add 1–2 tsp warm water to loosen the sauce to a drizzleable consistency. Fill each cucumber half with 1 oz shredded cooked chicken. Drizzle the peanut sauce generously over the chicken in both halves. Serve immediately.",
     tags: ["high-protein", "gluten-free", "quick", "cut-friendly"],
   },
   {
@@ -2121,7 +2121,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame seeds", qty: 0.5, unit: "tsp" },
       { name: "Honey", qty: 1, unit: "tsp" },
     ],
-    instructions: "Warm sticky rice with coconut milk and honey. Serve alongside sliced mango. Sprinkle sesame seeds.",
+    instructions: "Place 0.5 cup cooked sticky rice in a small saucepan. Add 3 tbsp light coconut milk and 1 tsp honey. Stir over medium-low heat for 2–3 minutes until the coconut milk is absorbed and the rice is glossy and slightly sweet. The texture should be thick, cohesive, and sticky. Mound onto a plate. Arrange 0.75 cup sliced fresh mango alongside. Sprinkle 0.5 tsp sesame seeds over the rice and serve.",
     tags: ["vegan", "gluten-free", "vegetarian", "bulk-friendly"],
   },
   {
@@ -2136,7 +2136,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lime juice", qty: 1, unit: "tsp" },
       { name: "Chili flakes", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Cook edamame, drain. Toss with fish sauce, lime, chili flakes.",
+    instructions: "Bring a pot of water to a boil. Add 1.5 cups frozen edamame in pods and cook 4–5 minutes until the pods are bright green and the beans are tender. Drain in a colander and shake off excess water. Transfer to a bowl while still hot. Drizzle 0.5 tsp fish sauce and 1 tsp fresh lime juice over the pods. Sprinkle 0.25 tsp chili flakes on top. Toss well so the seasoning coats the pods. Serve immediately.",
     tags: ["gluten-free", "no-dairy", "quick"],
   },
 
@@ -2159,7 +2159,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
       { name: "Nori (crumbled)", qty: 1, unit: "sheet" },
     ],
-    instructions: "Fry eggs sunny-side up in butter. Place on hot rice. Drizzle soy sauce and sesame oil. Top with sesame seeds and nori.",
+    instructions: "Melt 1 tsp butter in a non-stick skillet over medium-low heat until foamy. Crack in 2 large eggs and cook sunny-side up, without flipping, for 2–3 minutes until the whites are fully set and opaque but the yolks are still runny and liquid when you press gently. Scoop 1.5 cups freshly cooked hot white rice into a bowl. Slide the fried eggs on top of the rice. Drizzle 1.5 tbsp soy sauce and 0.5 tsp sesame oil evenly over the eggs and rice. Sprinkle 1 tsp sesame seeds over the top. Crumble 1 nori sheet into rough pieces and scatter over everything. Break the yolks and mix everything together before eating.",
     tags: ["quick", "vegetarian", "bulk-friendly"],
   },
   {
@@ -2177,7 +2177,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion", qty: 3, unit: "tbsp" },
       { name: "Soy sauce", qty: 1, unit: "tsp" },
     ],
-    instructions: "Simmer rice with broth and garlic 30–35 min, stirring frequently, until very thick. Poach chicken separately, shred. Stir in chicken. Finish with sesame oil, soy. Top with green onion.",
+    instructions: "Rinse 0.5 cup short-grain rice once. Combine with 5 cups chicken broth and 2 minced garlic cloves in a medium pot. Bring to a boil over high heat, then reduce to a gentle simmer. Cook uncovered for 30–35 minutes, stirring every 5 minutes to prevent the rice from sticking and to help the grains break down, until the mixture is very thick — the spoon should leave a trail that fills slowly. While jook cooks, bring a separate small pot of water to a simmer. Lower 6 oz chicken breast in and poach at barely a simmer for 15 minutes. Remove, cool slightly, and shred into long strands using two forks. Stir the shredded chicken into the thick jook. Add 1 tsp sesame oil and 1 tsp soy sauce; stir to combine. Season with salt. Divide between 2 bowls and top each with 1.5 tbsp sliced green onion.",
     tags: ["gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -2194,7 +2194,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
       { name: "Sesame seeds", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Fry eggs in sesame oil. Serve over rice with kimchi on the side. Drizzle gochujang, sprinkle sesame seeds.",
+    instructions: "Heat 0.5 tsp sesame oil in a small non-stick skillet over medium heat. Crack in 2 large eggs and fry until the whites are fully set but yolks remain runny, about 2–3 minutes. Spoon 1.5 cups hot cooked white rice into a bowl. Slide the fried eggs on top. Spoon 3 tbsp kimchi alongside the eggs. Drizzle 0.5 tsp gochujang over the eggs. Sprinkle 0.5 tsp sesame seeds over everything. Serve immediately.",
     tags: ["quick", "gluten-free", "no-dairy"],
   },
   {
@@ -2215,7 +2215,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 1, unit: "tsp" },
       { name: "Soy sauce", qty: 1, unit: "tsp" },
     ],
-    instructions: "Season beef with soy and cook, set aside. Sauté each vegetable separately with sesame oil and salt. Arrange rice in bowl, top with vegetables, beef, fried egg. Mix gochujang with sesame oil for sauce. Mix before eating.",
+    instructions: "Season 4 oz ground beef (93/7) with 1 tsp soy sauce and cook in a skillet over medium-high heat, breaking it up, until fully browned, about 4 minutes. Set aside. In the same skillet with a few drops of sesame oil, sauté each topping separately over medium heat with a pinch of salt: 1 cup blanched spinach (squeeze dry, sauté 1 min), 0.5 cup bean sprouts (2 min), 0.5 cup julienned carrot (3 min), and 0.5 cup julienned zucchini (3 min) — keeping them distinct. In a clean small pan, fry 1 large egg sunny-side up in sesame oil until the white is set. Scoop 1.5 cups hot cooked white rice into a wide, deep bowl. Arrange each vegetable in a separate section around the bowl, add the beef in one section, and nestle the fried egg in the center. Mix 1.5 tbsp gochujang with 0.5 tsp sesame oil to make the sauce and drizzle over the bowl. Vigorously mix everything together before eating.",
     tags: ["high-protein", "no-dairy", "bulk-friendly"],
   },
   {
@@ -2236,7 +2236,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic", qty: 2, unit: "cloves" },
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Boil noodles 5–7 min, drain, toss with sesame oil. Stir-fry each ingredient separately. Combine all with soy, sugar, garlic, toss well. Top with sesame seeds.",
+    instructions: "Cook 2 oz dry glass noodles (dangmyeon) in boiling water for 5–7 minutes until translucent and soft. Drain, rinse briefly under cold water, and use scissors to cut into 6-inch lengths. Toss with 0.5 tbsp sesame oil to prevent sticking. In a skillet over medium-high heat, cook each ingredient separately with a small drizzle of sesame oil and a pinch of salt: 3 oz thin-sliced beef (2 min, until just cooked), 4 sliced shiitake mushrooms (3 min, until golden), 0.5 whole carrot (julienned, 3 min, until tender-crisp), and 2 cups spinach (2 min, until wilted — squeeze out excess liquid). Combine all cooked ingredients and the noodles in a large pan or bowl. Add 2 tbsp soy sauce, 0.5 tbsp remaining sesame oil, 1 tsp sugar, and 2 minced garlic cloves. Toss thoroughly with tongs for 1–2 minutes until everything is evenly seasoned. Top with 1 tsp sesame seeds.",
     tags: ["no-dairy", "gluten-free", "bulk-friendly"],
   },
   {
@@ -2255,7 +2255,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Kimchi", qty: 3, unit: "tbsp" },
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
     ],
-    instructions: "Mix gochujang, honey, soy, garlic. Bake chicken at 400°F 20 min, brush with glaze, bake 5 more min. Slice and serve in lettuce cups with kimchi and sesame seeds.",
+    instructions: "Preheat oven to 400°F. Whisk together 1.5 tbsp gochujang, 1 tbsp honey, 1 tbsp soy sauce, and 2 minced garlic cloves in a small bowl. Season 6 oz boneless chicken thighs with salt and place on a foil-lined baking sheet. Bake at 400°F for 20 minutes. Remove from the oven and brush generously with the gochujang glaze on both sides. Return to the oven and bake 5 more minutes until the glaze is caramelized, sticky, and beginning to char at the edges, and the internal temperature reaches 175°F. Let rest 3 minutes, then slice into strips. Arrange 4 butter lettuce leaves as cups on a plate. Divide the sliced chicken among the cups. Add 3 tbsp kimchi alongside the chicken in each cup. Scatter 1 tsp sesame seeds over the top.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -2274,7 +2274,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
       { name: "Green onion", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Sauté garlic and gochugaru in sesame oil 1 min. Add broth, bring to boil. Add tofu in chunks and seafood, cook 5 min. Crack egg in center, simmer 1 min. Top with green onion.",
+    instructions: "Heat 0.5 tsp sesame oil in a small, deep earthenware pot or saucepan over medium heat. Add 2 minced garlic cloves and 1.5 tbsp gochugaru; stir for 1 minute until the chili is fragrant and the oil turns bright red. Add 1.5 cups anchovy or chicken broth and bring to a rolling boil over high heat. Spoon 10 oz silken soft tofu directly into the boiling broth in large, rustic spoonfuls — do not pre-cut; it will break naturally. Add 3 oz clams or shrimp and cook over medium-high heat for 5 minutes until the seafood is cooked through (shrimp pink and opaque, clams open and discard any that don't). Crack 1 large egg directly into the center of the stew; do not stir. Simmer 1 minute until the white is barely set but the yolk is still very runny. Immediately drizzle 0.5 tsp sesame oil over the top and scatter 2 tbsp sliced green onion. Serve in the pot with rice on the side.",
     tags: ["high-protein", "gluten-free"],
   },
   {
@@ -2294,7 +2294,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame seeds", qty: 1, unit: "tsp" },
       { name: "Green onion", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Marinate beef in soy, sesame oil, sugar, garlic, pear 15 min. Cook in very hot pan or grill 2–3 min. Serve over rice, top with sesame seeds and green onion.",
+    instructions: "Combine 2 tbsp soy sauce, 1 tbsp sesame oil, 1 tsp sugar, 3 minced garlic cloves, and 2 tbsp grated Asian pear or apple in a bowl — the pear enzymes tenderize the meat. Add 6 oz thin-sliced beef ribeye and toss to coat every piece. Marinate at room temperature for 15 minutes. Heat a cast-iron skillet or grill pan over the highest possible heat until smoking. Cook the beef in batches — do not crowd the pan — spreading slices flat and cooking 1 minute per side until the edges caramelize and the beef is just cooked through. The sugar in the marinade will char slightly. Rest 1–2 minutes. Serve over 1.5 cups hot cooked white rice. Sprinkle 1 tsp sesame seeds and 2 tbsp sliced green onion over the beef.",
     tags: ["high-protein", "no-dairy", "bulk-friendly"],
   },
   {
@@ -2312,7 +2312,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "White rice (cooked)", qty: 1.25, unit: "cups" },
       { name: "Kimchi", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Grill pork belly on hot griddle 3–4 min per side. Cut into pieces with scissors. Wrap in lettuce with rice, garlic, ssamjang, kimchi.",
+    instructions: "Heat a heavy griddle or cast-iron skillet over high heat until smoking. Lay 6 oz sliced pork belly flat on the griddle without crowding. Cook 3–4 minutes per side until the fat is rendered, the edges are deeply caramelized, and the interior is cooked through (no pink). The fat should look crispy and golden, not pale and jiggly. Use kitchen scissors to cut the cooked pork directly on the griddle or plate into bite-sized pieces. Lay out 4 butter lettuce leaves. For each wrap, place a small spoonful of 1.25 cups cooked white rice in a leaf, add 2–3 pork pieces, 1 slice of garlic, a small amount of 3 tbsp kimchi, and 0.5 tsp ssamjang. Fold the leaf around the filling and eat in one bite.",
     tags: ["gluten-free", "no-dairy"],
   },
   {
@@ -2328,7 +2328,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame seeds", qty: 0.5, unit: "tsp" },
       { name: "Rice crackers", qty: 8, unit: "pieces" },
     ],
-    instructions: "Mix yogurt and kimchi. Drizzle sesame oil, sprinkle seeds. Serve with rice crackers.",
+    instructions: "Finely chop 3 tbsp kimchi. Add to 0.75 cup 2% Greek yogurt and stir to combine — the yogurt will take on a pink-orange hue. Drizzle 0.25 tsp sesame oil over the top and sprinkle 0.5 tsp sesame seeds. Serve with 8 rice crackers on the side for dipping.",
     tags: ["high-protein", "quick", "gluten-free", "vegetarian"],
   },
   {
@@ -2345,7 +2345,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Sesame oil", qty: 0.5, unit: "tsp" },
       { name: "Salt", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Season rice with sesame oil and salt. Lay nori on mat, spread rice, add tuna and cucumber. Roll tightly. Cut into bites.",
+    instructions: "Place 1 cup warm cooked sushi rice in a bowl. Add 0.5 tsp sesame oil and 0.25 tsp salt; fold gently until the rice is evenly seasoned. Lay 1 full nori sheet shiny-side down on a bamboo rolling mat or a clean surface. With wet hands, spread the rice evenly over the nori, leaving a 1-inch border at the far edge — press firmly so the rice adheres but do not smash the grains. Lay 2 oz drained canned tuna in a horizontal line across the center of the rice. Add 0.25 cup julienned cucumber alongside the tuna. Lift the near edge of the mat and roll the nori firmly away from you, pressing as you go. Seal the roll by dampening the bare nori border and pressing shut. Let rest 1 minute seam-side down. Using a sharp wet knife, cut into 6–8 equal rounds with a single, smooth motion. Serve immediately.",
     tags: ["no-dairy", "quick"],
   },
   {
@@ -2362,7 +2362,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green onion", qty: 1, unit: "tbsp" },
       { name: "Sesame seeds", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Beat eggs with broth and soy sauce. Pour into oven-safe bowl. Steam on low 10–12 min until just set. Finish with sesame oil, green onion, sesame seeds.",
+    instructions: "In a bowl, whisk together 2 large eggs, 3 tbsp chicken broth, and 0.5 tsp soy sauce until fully combined. Strain the mixture through a fine mesh sieve into a small oven-safe ceramic bowl to remove any bubbles — this creates a silky smooth custard. Skim any remaining bubbles from the surface with a spoon. Place the bowl in a steamer set over gently simmering water (medium-low heat — strong steam will create holes in the custard). Cover and steam for 10–12 minutes until the custard is just set around the edges but still trembles slightly in the very center when jiggled. Remove immediately. Drizzle 0.25 tsp sesame oil, scatter 1 tbsp sliced green onion, and sprinkle 0.25 tsp sesame seeds over the top. Serve in the bowl.",
     tags: ["high-protein", "gluten-free", "no-dairy", "quick"],
   },
 
@@ -2385,7 +2385,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cilantro", qty: 2, unit: "tbsp" },
       { name: "Pita bread", qty: 1, unit: "piece" },
     ],
-    instructions: "Warm beans with garlic and cumin 5 min. Mash lightly. Season with lemon juice, olive oil, salt. Serve with pita, garnish cilantro.",
+    instructions: "Drain 1 cup canned fava beans and add to a small saucepan with 2 minced garlic cloves and 0.5 tsp cumin. Heat over medium heat, stirring occasionally, for 5 minutes until the beans are heated through and the garlic is soft. Use the back of a spoon or a fork to lightly mash roughly half the beans directly in the pan — you want a textured mixture, not a smooth paste. Remove from heat. Stir in 2 tbsp lemon juice and 1 tbsp olive oil. Season with salt. Transfer to a shallow bowl, garnish with 2 tbsp chopped cilantro, and serve with 1 warmed pita torn into pieces.",
     tags: ["vegan", "vegetarian", "quick"],
   },
   {
@@ -2404,7 +2404,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Red pepper flakes", qty: 0.25, unit: "tsp" },
       { name: "Pita bread", qty: 1, unit: "piece" },
     ],
-    instructions: "Sauté onion and pepper in olive oil 4 min. Add tomatoes, cook 5 min. Add beaten eggs, scramble gently on low until creamy. Season with cumin and red pepper. Serve with pita.",
+    instructions: "Heat 1 tsp olive oil in a medium skillet over medium heat. Add 0.25 cup diced white onion and 0.5 whole diced green pepper. Cook, stirring occasionally, for 4 minutes until the vegetables are soft and the onion edges begin to brown. Add 1 diced Roma tomato and cook for 5 minutes, stirring frequently, until the tomatoes completely break down and most of the liquid evaporates — the mixture should look jammy. Beat 3 large eggs with 0.5 tsp cumin and 0.25 tsp red pepper flakes and a pinch of salt. Pour into the pan and reduce heat to the lowest setting. Stir very slowly and gently with a wooden spoon in lazy figure eights until the eggs just come together into large, creamy, soft curds — about 3–4 minutes. Remove from heat while still slightly wet; residual heat will finish them. Serve with 1 warm pita.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -2421,7 +2421,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Za'atar", qty: 0.5, unit: "tsp" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Toast bread, spread labneh, dust za'atar and sumac. Fry eggs, place on top.",
+    instructions: "Toast 2 slices sourdough bread until golden and firm throughout. Spread 1.5 tbsp labneh on each slice while still warm, going edge to edge. Dust 0.5 tsp za'atar and 0.5 tsp sumac evenly over both pieces. Heat 0.5 tsp olive oil in a small skillet over medium heat. Crack in 2 large eggs and fry for 2–3 minutes until the whites are fully set and opaque but the yolks remain soft and runny. Carefully slide one egg onto each toast. Serve immediately.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -2440,7 +2440,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Tabbouleh", qty: 0.5, unit: "cup" },
       { name: "Garlic sauce (toum)", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Marinate chicken in yogurt, shawarma spice, lemon 10 min. Grill or broil 7–8 min per side. Slice thin. Serve over rice with hummus, tabbouleh and toum.",
+    instructions: "Combine 2 tbsp Greek yogurt, 1.5 tsp shawarma spice blend, and 1 tbsp lemon juice in a bowl. Add 6 oz boneless chicken thighs, turning to coat all surfaces. Marinate at room temperature for 10 minutes. Grill over medium-high heat or broil 5–6 inches from the element for 7–8 minutes per side until charred at the edges and the internal temperature reaches 175°F. Rest 4 minutes, then slice very thin (shawarma-style) against the grain at a sharp angle. Fan the sliced chicken over 1 cup cooked basmati rice. Add 3 tbsp hummus, 0.5 cup tabbouleh, and 1 tbsp toum (garlic sauce) alongside.",
     tags: ["high-protein", "gluten-free"],
   },
   {
@@ -2460,7 +2460,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Tahini", qty: 1.5, unit: "tbsp" },
       { name: "Lemon juice", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Blend chickpeas, garlic, cumin, coriander, flour. Form balls, bake at 400°F 20 min. Make tahini sauce with tahini, lemon, water. Build bowl: quinoa, vegetables, falafel, drizzle tahini.",
+    instructions: "Drain and rinse 0.75 cup chickpeas, then spread on paper towels and pat very dry. Combine in a food processor with 2 garlic cloves, 0.5 tsp cumin, 0.5 tsp coriander, and 2 tbsp flour. Pulse 10–15 times until the mixture is finely ground and holds together when pressed — do not over-blend into a paste. Shape into 6–8 balls about 1.5 inches each, packing them firmly. Place on an oiled baking sheet. Bake at 400°F for 20 minutes until the outsides are crisp and golden-brown all over, turning once at 10 minutes. While falafel bakes, whisk 1.5 tbsp tahini with 1 tbsp lemon juice and enough water (1–3 tbsp) to reach a drizzleable consistency. Build the bowl: 1 cup cooked quinoa as the base, 1 cup roasted zucchini and peppers on one side, falafel on the other. Drizzle the tahini sauce over everything.",
     tags: ["vegan", "vegetarian"],
   },
   {
@@ -2479,7 +2479,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tbsp" },
       { name: "Baking powder", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Whisk eggs with herbs, walnuts, barberries, baking powder, salt. Bake in oiled dish at 350°F 25 min until set. Serve in wedges.",
+    instructions: "Preheat oven to 350°F. Finely chop 1 cup fresh parsley, 0.5 cup fresh dill, and 3 tbsp fresh chives until very fine — the herbs should be almost minced. Crack 6 large eggs into a bowl and whisk until uniform. Add the chopped herbs, 2 tbsp chopped walnuts, 1 tbsp barberries or dried cranberries, 0.25 tsp baking powder, and 0.75 tsp salt. Stir until fully combined. Grease an 8-inch baking dish or oven-safe skillet with 1 tbsp olive oil. Pour in the egg-herb mixture. Bake at 350°F for 25 minutes until the surface is set and springs back firmly when pressed in the center, and the edges are slightly pulling away from the dish. Let cool 5 minutes, then cut into wedges or squares. Serve warm or at room temperature.",
     tags: ["gluten-free", "vegetarian", "meal-prep"],
   },
   {
@@ -2498,7 +2498,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Saffron (pinch, in warm water)", qty: 1, unit: "pinch" },
       { name: "Greek yogurt", qty: 2, unit: "tbsp" },
     ],
-    instructions: "Mix lamb with onion, sumac, coriander, cumin, salt. Form onto skewers. Grill on high 5–6 min per side. Stir saffron water into rice. Serve kebabs over saffron rice with yogurt.",
+    instructions: "In a bowl, combine 6 oz ground lamb with 2 tbsp grated white onion, 0.5 tsp sumac, 0.5 tsp ground coriander, 0.5 tsp cumin, and 0.75 tsp salt. Knead together firmly for 1–2 minutes until the mixture becomes sticky and holds together well. Divide into 2 portions and press firmly onto flat metal skewers, shaping into 6-inch elongated sausages. Refrigerate 10 minutes if possible. Heat a grill or grill pan to high. Grill 5–6 minutes per side until the exterior is deeply charred and firm and the internal temperature reaches 160°F. While kebabs grill, stir a pinch of saffron dissolved in 1 tbsp warm water into 1.5 cups cooked basmati rice. Serve the kebabs over the saffron rice with 2 tbsp Greek yogurt alongside.",
     tags: ["high-protein", "gluten-free"],
   },
   {
@@ -2518,7 +2518,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Couscous (dry)", qty: 0.75, unit: "cup" },
       { name: "Cilantro", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Brown chicken. Sauté onion and garlic, add ras el hanout. Return chicken with broth, preserved lemon, olives. Braise 35 min. Serve over couscous made with boiling water, garnish cilantro.",
+    instructions: "Pat 12 oz bone-in chicken thighs dry and season with salt. Heat a Dutch oven or heavy pot over medium-high heat with a drizzle of oil. Sear chicken skin-side down for 4 minutes until deep golden, then flip and sear 2 minutes. Remove to a plate. In the same pot over medium heat, add 0.5 whole onion (sliced) and 3 minced garlic cloves; cook 3 minutes until softened. Add 1.5 tsp ras el hanout and stir 30 seconds until fragrant. Return chicken to the pot. Add 0.5 cup chicken broth, the rind of 0.5 preserved lemon (rinsed and thinly sliced), and 10 green olives. Bring to a simmer, cover, and braise over medium-low heat for 35 minutes until the chicken is cooked through and falling easily off the bone. While chicken braises, pour 0.75 cup boiling water over 0.75 cup dry couscous in a bowl; cover and steam 5 minutes, then fluff with a fork. Serve the chicken and braising sauce over the couscous, garnished with 3 tbsp chopped cilantro. Divide between 2 portions.",
     tags: ["high-protein", "no-dairy", "meal-prep"],
   },
   {
@@ -2536,7 +2536,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Coriander", qty: 0.5, unit: "tsp" },
       { name: "Greek yogurt", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Cook lentils. Cook rice. Slowly caramelize onions in olive oil 30 min until very dark. Mix half the onions with lentils, rice, spices. Top with remaining crispy onions. Serve with yogurt.",
+    instructions: "Cook 0.5 cup dry green or brown lentils in 2 cups salted water: bring to a boil, then simmer 20–25 minutes until tender. Drain any excess liquid. Cook 0.5 cup long grain rice in 1 cup salted water: bring to a boil, cover tightly, reduce to the lowest heat and cook 15 minutes; rest 5 minutes off heat. In a wide skillet, heat 2 tbsp olive oil over medium heat. Add 1.5 large onions (thinly sliced). Cook, stirring every 3–5 minutes, for 30 minutes — the onions must be truly caramelized, very dark brown and sweet (not just softened). Deglaze with a splash of water if they start to stick. Season with salt. Combine cooked lentils, cooked rice, half the caramelized onions, 1 tsp cumin, and 0.5 tsp coriander in a bowl; stir and season with salt. Divide between 2 bowls, top with the remaining crispy caramelized onions, and serve each with 1.5 tbsp Greek yogurt.",
     tags: ["vegetarian", "vegan", "gluten-free", "meal-prep"],
   },
   {
@@ -2552,7 +2552,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Paprika", qty: 0.25, unit: "tsp" },
       { name: "Olive oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Spread hummus on plate, drizzle olive oil, dust paprika. Serve with pita and sliced eggs.",
+    instructions: "Spread 0.5 cup hummus across a small plate in an even layer, using the back of a spoon to create a shallow well in the center. Drizzle 0.5 tsp olive oil into the well and dust 0.25 tsp paprika over the hummus. Slice 2 hard-boiled large eggs in half lengthwise and arrange around the plate. Halve 1 whole wheat pita and warm in a dry skillet 30 seconds per side. Serve alongside the hummus plate.",
     tags: ["vegetarian", "quick"],
   },
   {
@@ -2569,7 +2569,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Pita (toasted)", qty: 1, unit: "piece" },
     ],
-    instructions: "Char eggplant on flame or broil until collapsed, 20–25 min. Scoop flesh, mix with tahini, lemon, garlic. Drizzle olive oil. Serve with pita.",
+    instructions: "Place 1 medium eggplant directly over a high gas flame or under the broiler, turning with tongs every 5 minutes, for 20–25 minutes total until the skin is completely charred, black, and collapsed, and the eggplant feels completely deflated and very soft when squeezed gently. Transfer to a colander and let cool 10 minutes — juices will drain out. Peel away and discard all the charred skin. Chop the soft flesh coarsely on a cutting board and transfer to a bowl. Stir in 1 tbsp tahini, 1 tbsp lemon juice, and 1 minced garlic clove. Mix well and season with salt. Transfer to a small bowl and drizzle 1 tsp olive oil over the top. Serve with 1 toasted pita torn into pieces.",
     tags: ["vegan", "vegetarian", "gluten-free"],
   },
   {
@@ -2583,7 +2583,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Almond butter", qty: 1.5, unit: "tbsp" },
       { name: "Flaked sea salt", qty: 1, unit: "pinch" },
     ],
-    instructions: "Stuff each date with almond butter. Sprinkle sea salt.",
+    instructions: "Halve each of 3 large Medjool dates lengthwise and remove the pits. Use a small spoon or butter knife to fill each cavity generously with almond butter — use 0.5 tbsp per date, dividing the total 1.5 tbsp evenly. Pinch each date gently closed around the filling. Arrange on a plate and pinch a tiny flake of sea salt over each stuffed date. Serve immediately.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 
@@ -2607,7 +2607,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Olive oil", qty: 1, unit: "tsp" },
       { name: "Festival (fried dumpling) or hard dough bread", qty: 1, unit: "piece" },
     ],
-    instructions: "Soak and boil codfish to remove excess salt. Flake. Sauté onion, peppers, tomato in oil. Add codfish and ackee, cook gently 5 min. Serve with festival or bread.",
+    instructions: "Place 4 oz salted codfish in a bowl, cover with cold water, and soak for at least 30 minutes (or up to 8 hours in the fridge). Drain, transfer to a small saucepan, cover with fresh water, and bring to a boil. Simmer for 10 minutes to remove excess salt. Drain, cool, and flake into bite-sized pieces, removing any bones. Heat 1 tsp olive oil in a wide skillet over medium heat. Add 0.25 cup diced onion, 0.25 whole diced bell pepper, and 0.25 minced scotch bonnet (seed for less heat); cook, stirring, for 4 minutes until the vegetables are soft. Add 0.5 diced whole tomato and cook 2 minutes until softened. Add the flaked codfish and gently fold in 1 cup drained canned ackee. Cook over medium-low heat for 5 minutes, stirring carefully to avoid breaking up the ackee. Season with salt to taste. Serve with 1 piece festival or thick-sliced hard dough bread.",
     tags: ["high-protein", "gluten-free"],
   },
   {
@@ -2624,7 +2624,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Honey", qty: 1, unit: "tsp" },
       { name: "Lime zest", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Layer yogurt and fruits. Top with coconut flakes, honey, lime zest.",
+    instructions: "Spoon half of 1.5 cups 2% Greek yogurt into a bowl. Layer 0.25 cup diced pineapple and 0.25 cup diced mango over the yogurt. Spoon the remaining yogurt on top. Add another layer of 0.25 cup pineapple and 0.25 cup mango. Sprinkle 1 tbsp toasted coconut flakes evenly over the fruit. Drizzle 1 tsp honey in a thin stream across everything. Finish with 0.5 tsp lime zest scattered over the top. Serve immediately.",
     tags: ["high-protein", "gluten-free", "vegetarian", "quick"],
   },
   {
@@ -2640,7 +2640,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Salt", qty: 0.25, unit: "tsp" },
       { name: "Black pepper", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Fry plantain in coconut oil 2–3 min per side until golden. Scramble eggs in same pan. Serve together.",
+    instructions: "Slice 1 medium ripe plantain (the skin should be mostly black) on a slight diagonal into 0.5-inch rounds. Heat 1 tsp coconut oil in a medium non-stick skillet over medium heat until shimmering. Add the plantain slices in a single layer and cook 2–3 minutes per side until deep golden-brown, caramelized, and tender throughout — press one with your finger; it should yield completely. Transfer to a plate. Without wiping the pan, reduce heat to medium-low. Crack 3 large eggs into the pan, season with 0.25 tsp salt and 0.25 tsp black pepper, and scramble with a spatula in slow, wide folds for 2–3 minutes until the eggs are just set and slightly creamy — pull them off the heat while still glossy. Serve the scrambled eggs alongside the fried plantains.",
     tags: ["high-protein", "gluten-free", "no-dairy", "vegetarian", "quick"],
   },
   {
@@ -2658,7 +2658,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Scallion", qty: 2, unit: "stalks" },
       { name: "Thyme", qty: 1, unit: "sprig" },
     ],
-    instructions: "Coat chicken in jerk paste, marinate 15 min. Grill or roast at 425°F 25–30 min. Cook rice in coconut milk with beans, scallion, thyme, and water. Serve jerk chicken over rice.",
+    instructions: "Rub 2 tbsp jerk seasoning paste all over 8 oz bone-in chicken thighs, making sure to get under the skin. Marinate at room temperature for 15 minutes. Preheat oven to 425°F. Place chicken skin-side up on a rack-lined baking sheet. Roast 25–30 minutes until the skin is deeply charred and caramelized and an instant-read thermometer inserted into the thickest part (avoiding bone) reads 175°F. While chicken roasts, combine 0.5 cup dry long grain rice, 0.5 cup light coconut milk, 0.5 cup water, 0.5 cup drained kidney beans, 2 stalks scallion (bruised), 1 sprig thyme, and 0.25 tsp salt in a small saucepan. Bring to a boil over high heat, then reduce to the lowest possible simmer. Cover tightly and cook 18 minutes. Remove from heat and rest, covered, 5 minutes. Discard the thyme and scallion. Fluff with a fork. Serve the jerk chicken on top of or alongside the coconut rice and peas.",
     tags: ["high-protein", "gluten-free", "no-dairy", "bulk-friendly"],
   },
   {
@@ -2677,7 +2677,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Green seasoning (cilantro/culantro blend)", qty: 2, unit: "tbsp" },
       { name: "Scotch bonnet", qty: 0.25, unit: "whole" },
     ],
-    instructions: "Caramelize sugar in oil until dark. Add chicken, brown in caramel. Add garlic, green seasoning, peas, rice, coconut milk and water. Bring to boil, cover and cook 20–25 min.",
+    instructions: "In a heavy-bottomed pot or Dutch oven, heat 1 tsp oil over medium heat. Add 1 tbsp brown sugar and stir constantly for 2–3 minutes until the sugar melts, bubbles, and turns a deep amber-brown — it will smoke slightly. This is the browning (caramel) stage. Immediately add 10 oz boneless chicken thighs, turning to coat in the dark caramel; sear 2 minutes per side until the chicken takes on a deep mahogany color. Add 3 minced garlic cloves, 0.25 whole minced scotch bonnet, and 2 tbsp green seasoning (cilantro-culantro blend); stir 1 minute until fragrant. Add 0.75 cup dry long grain rice, 0.75 cup drained pigeon peas, 0.5 cup coconut milk, and 1 cup water. Stir to combine, then bring to a boil over high heat. Reduce to the lowest possible heat. Cover tightly and cook 20–25 minutes, without lifting the lid, until the rice has absorbed all liquid. Let rest off heat 5 minutes, then stir gently to distribute the chicken throughout. Divide between 2 bowls.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep", "bulk-friendly"],
   },
   {
@@ -2697,7 +2697,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Paprika", qty: 0.5, unit: "tsp" },
       { name: "Cilantro", qty: 3, unit: "tbsp" },
     ],
-    instructions: "Season fish with cumin and paprika. Grill 3–4 min per side. Mix mango, cabbage, jalapeño, lime, cilantro for slaw. Serve fish in warm tortillas topped with slaw.",
+    instructions: "Pat 6 oz tilapia fillet dry and season both sides with 0.5 tsp cumin, 0.5 tsp paprika, a generous pinch of salt, and a drizzle of oil. Heat a grill pan over medium-high until very hot. Grill the fish 3–4 minutes per side without moving it — the fillet should release cleanly when it's ready to flip and be opaque throughout with no translucent center. While fish grills, combine 0.5 cup diced mango, 0.5 cup shredded cabbage, 1 whole minced jalapeño, 2 tbsp fresh lime juice, and 2 tbsp chopped cilantro in a bowl; toss and season with a pinch of salt. Warm 3 corn tortillas in a dry skillet over medium heat 30 seconds per side until pliable. Break the cooked fish into large chunks and divide among the 3 tortillas. Pile the mango slaw over the fish and garnish with the remaining 1 tbsp cilantro. Serve with lime wedges.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -2718,7 +2718,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Garlic", qty: 3, unit: "cloves" },
       { name: "White rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Brown oxtail in batches. Add all remaining ingredients. Pressure cook 1.5 hrs or braise 3 hrs until tender and falling off bone. Serve over white rice.",
+    instructions: "Pat 14 oz oxtail pieces very dry and season generously with salt and pepper. Heat 1 tbsp oil in a heavy Dutch oven over high heat until smoking. Brown the oxtail in batches — do not crowd — 3 minutes per side until deeply seared and mahogany-brown on all cut faces. Transfer each batch to a plate. Pour off all but 1 tbsp fat. Add 3 minced garlic cloves and stir 30 seconds. Add 2 tbsp soy sauce, 1 tbsp brown sugar, 0.5 tsp allspice, 2 sprigs thyme, 0.25 whole scotch bonnet, and 2 cups beef broth. Return the oxtail to the pot, nestling it into the liquid — pieces should be at least half-submerged. Bring to a boil over high heat. Reduce to the lowest possible simmer. Cover tightly and braise for 2.5–3 hours, turning the oxtail every hour, until the meat is completely tender and falls from the bone when pressed with a spoon and the gravy is thick and glossy. Add 0.75 cup drained butter beans in the last 15 minutes and stir gently to warm through. Divide between 2 bowls over 2 cups cooked white rice, spooning the gravy over everything.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -2737,7 +2737,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Thyme", qty: 2, unit: "sprigs" },
       { name: "White rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Marinate goat in curry powder, garlic, onion, thyme, scotch bonnet. Brown in oil. Add water to cover, braise 75–90 min. Add potato last 20 min. Serve over rice.",
+    instructions: "In a large bowl, combine 12 oz bone-in goat meat (cubed) with 2 tbsp Jamaican curry powder, 3 minced garlic cloves, 0.5 whole onion (diced), 2 sprigs thyme (leaves stripped), 0.25 whole minced scotch bonnet, and 1 tsp salt. Massage the spices firmly into the meat. Marinate at room temperature for 15 minutes. Heat 1 tbsp oil in a heavy Dutch oven or pressure cooker over high heat until smoking. Add the marinated goat in a single layer and sear 3 minutes per side until browned and the curry powder crust is slightly charred. Add enough water to just cover the meat (about 2 cups). Bring to a boil, then reduce to a steady simmer. Cover and cook 70 minutes, checking the liquid level halfway through and adding 0.5 cup water if needed. Add 1 medium potato (cubed into 1-inch pieces) and continue cooking 20 minutes until the potato is completely tender and the goat pulls away from the bone easily when pressed. The gravy should be dark and thickened. Season with salt. Serve over 2 cups cooked white rice.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -2755,7 +2755,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Mango chutney", qty: 2, unit: "tbsp" },
       { name: "Coconut milk", qty: 0.25, unit: "cup" },
     ],
-    instructions: "Sauté onion, garlic with curry powder. Add chickpeas and coconut milk, simmer 12 min. Serve alongside roti with mango chutney.",
+    instructions: "Heat 1 tsp oil in a medium saucepan over medium heat. Add 0.25 cup diced onion and 2 minced garlic cloves; cook, stirring, for 3 minutes until the onion is soft and translucent. Add 1 tbsp curry powder and stir continuously for 1 minute until the raw spice smell gives way to a toasty fragrance. Add 1 cup drained canned chickpeas and 0.25 cup coconut milk; stir to coat. Add a splash of water if needed to loosen the mixture. Bring to a simmer, then cook over medium-low heat for 12 minutes, stirring occasionally, until the chickpeas are very tender and the sauce clings to them thickly. Season with salt. Warm 2 flour rotis in a dry skillet over medium heat 30 seconds per side until soft and pliable. Serve the curried chickpeas alongside the warm roti with 2 tbsp mango chutney on the side.",
     tags: ["vegan", "vegetarian"],
   },
   {
@@ -2771,7 +2771,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Lime juice", qty: 1, unit: "tsp" },
       { name: "Salt", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Slice plantain thin, toss in oil, bake at 375°F 18–20 min until crispy. Mash avocado with lime and salt. Serve together.",
+    instructions: "Preheat oven to 375°F. Peel 1 medium green plantain and slice very thin — about 1/16 inch — on a mandoline or with a sharp knife. Toss the slices with 1 tsp olive oil and a pinch of salt until evenly coated. Spread in a single layer on a parchment-lined baking sheet — do not overlap. Bake for 18–20 minutes, flipping the slices at the 10-minute mark, until deep golden and crisp throughout. They will firm up further as they cool. While the chips bake, halve 0.5 avocado and scoop the flesh into a small bowl. Add 1 tsp lime juice and 0.25 tsp salt. Mash with a fork until smooth with a few chunky bits remaining. Serve the guacamole in a small bowl alongside the cooled plantain chips.",
     tags: ["vegan", "gluten-free"],
   },
   {
@@ -2786,7 +2786,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Coconut water", qty: 1, unit: "cup" },
       { name: "Banana (frozen)", qty: 0.5, unit: "medium" },
     ],
-    instructions: "Blend all until smooth.",
+    instructions: "Combine 1 scoop vanilla protein powder, 0.75 cup frozen pineapple chunks, 0.5 medium frozen banana (broken into pieces), and 1 cup coconut water in a blender. Blend on high for 45–60 seconds until completely smooth and creamy with no frozen chunks remaining. Pour immediately into a glass and serve.",
     tags: ["high-protein", "gluten-free", "no-dairy", "quick"],
   },
   {
@@ -2801,7 +2801,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Almond butter", qty: 1, unit: "tbsp" },
       { name: "Rum extract", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Blend dates, almond butter, rum extract. Roll into balls, coat in coconut.",
+    instructions: "Pit 3 large Medjool dates and tear each into a few pieces. Place in a food processor along with 1 tbsp almond butter and 0.25 tsp rum extract. Process for 30–45 seconds, scraping down the sides once, until the mixture comes together into a sticky, uniform dough with no large date pieces remaining. Spread 3 tbsp shredded coconut on a flat plate. With slightly damp hands, divide the dough into 4 equal portions and roll each into a compact ball. Roll each ball in the shredded coconut, pressing lightly so it adheres on all sides. Place on a small plate and refrigerate for 10 minutes to firm up before eating.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 
@@ -2824,7 +2824,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Oil for frying", qty: 1, unit: "tbsp" },
       { name: "Ogi (pap/fermented corn porridge)", qty: 1, unit: "cup" },
     ],
-    instructions: "Blend beans with onion, pepper, egg white and salt to a paste. Beat until airy. Drop spoonfuls into hot oil, fry 3–4 min per side. Serve with ogi.",
+    instructions: "Drain 0.75 cup canned black-eyed peas thoroughly. Combine in a food processor with 2 tbsp diced onion, 0.25 whole minced scotch bonnet, 1 large egg white, and 0.25 tsp salt. Blend for 60–90 seconds, scraping down the sides, until completely smooth and no bean skins remain visible — the paste should be thick like hummus. Transfer to a bowl and beat vigorously with a wooden spoon or whisk for 2 minutes until the paste becomes lighter in color and slightly airy (incorporating air is key for a fluffy interior). Heat 1 tbsp oil in a deep skillet or pot over medium heat until a small drop of batter sizzles immediately on contact. Drop rounded tablespoons of the batter into the hot oil, spacing them apart. Fry 3–4 minutes per side, turning gently, until deep golden-brown and crispy on the outside and cooked through (a toothpick inserted comes out clean). Drain on paper towels. Serve alongside 1 cup warm ogi (fermented corn porridge).",
     tags: ["vegetarian", "gluten-free"],
   },
   {
@@ -2842,7 +2842,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Scotch bonnet", qty: 0.25, unit: "whole" },
       { name: "Palm oil or coconut oil", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Make pap by stirring cornmeal into boiling water until thick. Fry onion, pepper, tomato in oil 5 min. Add beaten eggs, scramble. Serve pap topped with egg sauce.",
+    instructions: "Prepare 1.5 cups pap: whisk 3 tbsp fine cornmeal with 3 tbsp cold water to form a slurry with no lumps. Bring 1.25 cups water to a boil in a small saucepan. Pour in the cornmeal slurry while whisking constantly. Reduce heat to low and continue stirring for 5–7 minutes until the pap thickens to a smooth, pourable porridge consistency — it should coat the back of a spoon. Cover and set aside. Heat 0.5 tsp palm or coconut oil in a medium skillet over medium heat. Add 0.25 cup finely diced onion and 0.25 whole diced bell pepper; cook, stirring, for 3 minutes until softened. Add 1 diced whole Roma tomato and 0.25 whole minced scotch bonnet; cook 3 more minutes, stirring frequently, until the tomato breaks down and the sauce thickens. Beat 3 large eggs with a pinch of salt. Pour into the pan and stir gently over medium-low heat for 2–3 minutes until the eggs form large, soft curds and are just set. Ladle the pap into a bowl and spoon the egg sauce over the top.",
     tags: ["vegetarian", "gluten-free"],
   },
   {
@@ -2861,7 +2861,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Vegetable broth", qty: 0.5, unit: "cup" },
       { name: "Palm oil or oil", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Blend beans, peppers, onion with broth until smooth. Add beaten eggs, fish, oil, salt. Pour into greased cups or foil pouches. Steam 40–45 min.",
+    instructions: "Drain 1 cup soaked, peeled black-eyed peas (soak overnight, then rub between your palms to remove the skins; rinse until skins float away). Combine the peeled peas in a blender with 0.5 whole onion (roughly chopped), 0.5 whole bell pepper, 0.5 whole scotch bonnet, and 0.5 cup vegetable broth. Blend 60–90 seconds until completely smooth and no grain remains — the batter should be light and pourable. Transfer to a large bowl. Add 2 large eggs (beaten), 3 oz drained and flaked canned sardines or tuna, 1 tbsp palm or neutral oil, and 0.75 tsp salt. Stir well until fully combined. Grease 4 ramekins or foil muffin cups (or the inside of small foil pouches) with oil. Fill each three-quarters full with the batter. Arrange in a steamer basket set over a pot of boiling water. Cover tightly and steam over medium heat for 40–45 minutes until the moi moi is completely set — a skewer inserted into the center should come out clean and the surface should feel firm and springy when pressed. Let cool 5 minutes before unmolding. Divide between 2 portions.",
     tags: ["gluten-free", "meal-prep"],
   },
   {
@@ -2881,7 +2881,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Jollof seasoning (bouillon, thyme, curry)", qty: 1, unit: "tsp" },
       { name: "Tomato paste", qty: 1, unit: "tbsp" },
     ],
-    instructions: "Season and brown chicken. Blend tomatoes, pepper, scotch bonnet. Fry onion, add paste, fry until deep red 15 min. Add rice, broth, seasoning. Place chicken on top, cover, cook on low 25–30 min until rice is done and bottom has socarrat.",
+    instructions: "Season 12 oz bone-in chicken thighs with 0.5 tsp salt and pepper on both sides. Heat 1 tbsp oil in a heavy, wide pot over high heat. Brown the chicken skin-side down for 4 minutes until deep golden, then flip and brown 2 minutes. Remove to a plate. In the same pot, blend 1 cup crushed tomatoes, 1 whole red bell pepper (roughly chopped), and 0.5 whole scotch bonnet or habanero until smooth; set aside. Add 1 whole onion (finely diced) to the pot over medium heat and cook 5 minutes until golden. Add 1 tbsp tomato paste; stir constantly for 2 minutes until the paste darkens. Pour in the blended tomato-pepper mixture, add 1 tsp jollof seasoning (bouillon, thyme, curry), and stir to combine. Cook uncovered over medium heat, stirring every 3–4 minutes, for 15 minutes until the stew has reduced, darkened significantly, and the oil separates around the edges. Add 1 cup dry long grain rice and 1.5 cups chicken broth; stir once to level the rice. Nestle the browned chicken pieces on top (do not stir). Bring to a boil over high heat. Reduce to the lowest possible heat, cover tightly (seal with foil under the lid if needed), and cook 25–30 minutes without lifting the lid. The rice is done when all liquid is absorbed and the bottom layer develops a golden, slightly smoky crust (socarrat). Divide between 2 bowls.",
     tags: ["high-protein", "gluten-free", "no-dairy", "bulk-friendly", "meal-prep"],
   },
   {
@@ -2900,7 +2900,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Bouillon cube", qty: 1, unit: "cube" },
       { name: "Pounded yam or fufu (cooked)", qty: 1, unit: "cup" },
     ],
-    instructions: "Brown meat, set aside. Fry egusi in palm oil 5 min. Add blended onion and scotch bonnet. Add broth and meat, simmer 20 min. Stir in spinach, cook 5 min. Serve with pounded yam.",
+    instructions: "Season 8 oz cubed goat or beef with salt and pepper. Heat 1 tbsp palm oil in a medium pot over high heat until shimmering. Brown the meat in batches for 3 minutes per batch, turning once, until deeply seared on all sides. Remove to a plate. Reduce heat to medium and add 0.5 cup ground egusi (melon seeds) directly to the remaining oil in the pot. Stir constantly for 4–5 minutes until the egusi turns golden and nutty-smelling and begins to clump — it should look like coarse, toasted meal. Blend 0.5 whole onion and 0.5 whole scotch bonnet with 0.25 cup water until smooth. Pour the blended mixture into the egusi; it will spatter, so reduce heat briefly. Cook for 3 minutes, stirring, until the liquid is absorbed. Crumble 1 bouillon cube into the pot. Return the browned meat and add 1.5 cups water. Stir to combine. Bring to a boil, then reduce to a steady simmer. Cook covered for 20 minutes, stirring every 5 minutes, until the meat is tender and the egusi has broken into chunks throughout. Add 2 cups chopped spinach and stir in; cook 5 more minutes until wilted and integrated into the stew. Season with salt. Divide between 2 portions and serve with 1 cup pounded yam or fufu.",
     tags: ["high-protein", "gluten-free"],
   },
   {
@@ -2919,7 +2919,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Cayenne", qty: 0.25, unit: "tsp" },
       { name: "Sliced tomato and onion", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Mix peanuts with all spices for suya spice. Coat beef strips, thread on skewers. Grill on high 3–4 min per side. Serve with fresh sliced tomatoes and onion.",
+    instructions: "In a shallow bowl, mix 2 tbsp finely ground unsalted peanuts with 1 tsp paprika, 0.5 tsp ginger powder, 0.5 tsp garlic powder, 0.5 tsp onion powder, and 0.25 tsp cayenne — this is the suya spice blend. Slice 6 oz beef sirloin against the grain into very thin strips (about 0.25 inch thick); thin slices are essential for the traditional chewy-yet-tender texture. Press each strip firmly into the suya spice on both sides to coat thoroughly. Thread the spiced strips lengthwise onto 2–3 metal skewers, weaving the meat onto the skewer rather than simply piercing it — this keeps the strips flat. Heat a grill or grill pan to high. Grill the skewers 3–4 minutes per side until the spice crust is charred and fragrant and the beef is cooked through with no pink visible. Serve immediately on a plate with 0.5 cup sliced fresh tomatoes and raw onion alongside.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -2938,7 +2938,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Scotch bonnet", qty: 0.5, unit: "whole" },
       { name: "White rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Brown chicken. Sauté onion, garlic, ginger. Add tomatoes, scotch bonnet, peanut butter thinned with water. Add chicken, simmer 30 min. Serve over white rice.",
+    instructions: "Pat 12 oz bone-in chicken thighs dry and season with salt and pepper. Heat 1 tbsp oil in a large pot over high heat until smoking. Sear chicken skin-side down for 4 minutes until deeply golden, then flip and sear 2 minutes. Remove to a plate. Reduce heat to medium. Add 0.5 whole onion (finely diced), 2 minced garlic cloves, and 1 tsp grated ginger to the pot; cook, stirring, for 4 minutes until the onion is golden. Add 0.75 cup crushed tomatoes and 0.5 whole minced scotch bonnet; stir and cook 5 minutes until the tomato darkens and the oil begins to separate. In a small bowl, whisk 3 tbsp natural peanut butter with 0.5 cup warm water until smooth and pourable. Pour the peanut butter mixture into the pot and stir to combine — the soup will turn a warm orange-brown. Return the chicken to the pot, nestling it in the liquid. Add 1 more cup water so the chicken is mostly submerged. Bring to a boil over high heat, then reduce to a steady simmer. Cook covered for 30 minutes, stirring occasionally, until the chicken is cooked through (175°F) and the broth has thickened to a creamy, deeply flavored soup. Season with salt. Divide between 2 bowls and serve over 2 cups cooked white rice.",
     tags: ["high-protein", "gluten-free", "no-dairy", "meal-prep"],
   },
   {
@@ -2955,7 +2955,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Jollof rice (cooked)", qty: 1.5, unit: "cups" },
       { name: "Fried plantain", qty: 0.5, unit: "cup" },
     ],
-    instructions: "Season fish with spices, lemon, garlic. Bake at 400°F 18–20 min. Serve over jollof rice with fried plantain.",
+    instructions: "Preheat oven to 400°F. Pat 7 oz tilapia fillet dry with paper towels. Combine 1 tsp Nigerian spice blend (thyme, curry, paprika), 0.5 tsp garlic powder, and 0.5 tsp salt; rub evenly over both sides of the fillet. Drizzle 1 tbsp lemon juice over the top. Place on a foil-lined baking sheet lightly greased with oil. Bake uncovered at 400°F for 18–20 minutes until the fish is opaque throughout, flakes cleanly when pressed at the thickest point with a fork, and the edges begin to turn golden. The internal temperature should reach 145°F. Serve immediately over 1.5 cups cooked jollof rice with 0.5 cup fried plantain alongside.",
     tags: ["high-protein", "gluten-free", "no-dairy", "cut-friendly"],
   },
   {
@@ -2974,7 +2974,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Scotch bonnet", qty: 0.25, unit: "whole" },
       { name: "White rice (cooked)", qty: 2, unit: "cups" },
     ],
-    instructions: "Brown beef, set aside. Sauté onion, garlic in palm oil. Add tomatoes and scotch bonnet, cook 10 min. Add beef and okra, simmer 20 min. Serve over rice.",
+    instructions: "Pat 8 oz cubed beef chuck dry and season with salt and pepper. Heat 1 tbsp palm oil in a medium pot over high heat until shimmering. Brown the beef in batches, 3 minutes per batch, turning once, until deeply seared on at least two sides; do not crowd. Remove to a plate. Reduce heat to medium. Add 0.5 whole onion (diced) and 2 minced garlic cloves to the pot; cook, stirring, for 4 minutes until golden. Add 0.5 cup crushed tomatoes and 0.25 whole minced scotch bonnet; stir and cook 8–10 minutes, stirring every 2 minutes, until the tomato paste darkens and the oil rises to the surface. Return the seared beef to the pot, add 1.5 cups water, and bring to a boil over high heat. Reduce to a steady simmer. Cover and cook 15 minutes until the beef is beginning to tenderize. Add 2 cups sliced okra (0.5-inch rounds) and stir in. Cook uncovered over medium heat for 20 minutes, stirring occasionally — the okra will release its natural thickener, making the stew rich and gelatinous. The stew is done when the okra is completely tender and the beef yields easily to a fork. Season with salt. Divide between 2 bowls over 2 cups cooked white rice.",
     tags: ["high-protein", "gluten-free", "meal-prep"],
   },
   {
@@ -2991,7 +2991,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Nutmeg", qty: 0.25, unit: "tsp" },
       { name: "Oil for frying", qty: 1, unit: "cup" },
     ],
-    instructions: "Mix flour, sugar, nutmeg, egg, coconut milk to stiff dough. Roll thin, cut into small pieces. Deep fry in batches at 325°F until golden, 4–5 min.",
+    instructions: "In a medium bowl, whisk together 1 large egg, 1 tbsp sugar, and 3 tbsp coconut milk. Add 0.75 cup all-purpose flour and 0.25 tsp ground nutmeg. Mix with a fork, then knead briefly by hand into a stiff, smooth dough — it should not be sticky; add a teaspoon of flour at a time if it is. Roll the dough out on a lightly floured surface to about 1/8-inch thickness. Using a knife or pastry wheel, cut into small strips or diamond shapes about 0.5 inch wide and 1 inch long. Pour 1 cup oil into a small saucepan and heat over medium heat to 325°F — a piece of dough dropped in should sizzle steadily and rise to the surface within 5 seconds. Fry in batches of 15–20 pieces for 4–5 minutes, stirring frequently, until deep golden-brown and very crispy throughout. Drain on paper towels. Let cool completely — they crisp further as they cool. Makes 2 servings.",
     tags: ["vegetarian"],
   },
   {
@@ -3005,7 +3005,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Salt", qty: 0.25, unit: "tsp" },
       { name: "Cayenne", qty: 0.1, unit: "tsp" },
     ],
-    instructions: "Toss peanuts with salt and cayenne. Roast at 325°F 10–12 min, shaking once.",
+    instructions: "Preheat oven to 325°F. Place 3 tbsp raw peanuts in a small bowl and toss with 0.25 tsp salt and 0.1 tsp cayenne until every nut is evenly coated. Spread in a single layer on a small baking sheet or piece of foil. Roast for 10–12 minutes, shaking the pan once at the halfway point, until the peanuts are lightly golden and fragrant — they will smell toasty and the skins will look slightly dry. They will continue to firm up as they cool. Let cool completely for 5 minutes before eating; they taste best at room temperature.",
     tags: ["vegan", "gluten-free", "vegetarian"],
   },
   {
@@ -3021,7 +3021,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Ginger powder", qty: 0.25, unit: "tsp" },
       { name: "Salt", qty: 0.25, unit: "tsp" },
     ],
-    instructions: "Mix all into stiff dough. Shape into small sticks or balls. Bake at 325°F 25 min until very dry and crunchy.",
+    instructions: "Preheat oven to 325°F. In a small bowl, combine 4 tbsp natural dry peanut butter (dry-roasted natural PB works best — not the oily kind), 1 tbsp flour, 0.25 tsp cayenne, 0.25 tsp ginger powder, and 0.25 tsp salt. Mix with a fork until a stiff, crumbly dough forms — add 1 tsp water at a time only if needed to bring it together; it should hold when pressed but not be moist. Roll into small cylinders about 0.5 inch thick and 2 inches long, or compact balls about 0.75 inch across. Place on a parchment-lined baking sheet. Bake at 325°F for 25–28 minutes until completely dry, deep golden-brown, and very hard when tapped with a fingernail — they should click, not flex. Let cool fully on the sheet; they harden further as they cool. Makes 2 servings.",
     tags: ["vegan", "vegetarian"],
   },
   {
@@ -3035,7 +3035,7 @@ export const recipeSeeds: RecipeSeed[] = [
       { name: "Peanut butter (natural)", qty: 1.5, unit: "tbsp" },
       { name: "Sesame seeds", qty: 0.5, unit: "tsp" },
     ],
-    instructions: "Slice banana. Dip in peanut butter. Sprinkle sesame seeds.",
+    instructions: "Peel 1 medium banana and slice on a slight diagonal into 0.5-inch rounds. Arrange the slices on a small plate. Spoon 1.5 tbsp natural peanut butter into a small bowl and set it alongside the banana for dipping, or drizzle it directly over the banana slices in thin ribbons. Sprinkle 0.5 tsp sesame seeds evenly over the banana slices. Serve immediately.",
     tags: ["vegan", "gluten-free", "quick"],
   },
 ];
