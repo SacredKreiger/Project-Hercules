@@ -31,8 +31,9 @@ export default function GroceryPage() {
   const [items,    setItems]   = useState<GroceryItem[]>([]);
   const [userId,   setUserId]  = useState<string | null>(null);
   const [loading,  setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [store,    setStore]   = useState<StoreId>("walmart");
+  const [expanded,      setExpanded]      = useState<Set<string>>(new Set());
+  const [store,         setStore]         = useState<StoreId>("walmart");
+  const [storePicker,   setStorePicker]   = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORE_KEY) as StoreId | null;
@@ -96,58 +97,68 @@ export default function GroceryPage() {
         <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
       </div>
 
-      {/* Store selector */}
-      {!loading && totalCount > 0 && (
-        <div className="glass widget-shadow rounded-2xl p-3">
-          <p className="text-xs text-muted-foreground font-medium px-1 mb-2">Shopping at</p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {STORES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => selectStore(s.id)}
-                className={`py-2 rounded-xl text-xs font-semibold transition-all press ${
-                  store === s.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-foreground/5 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Progress + cost */}
+      {/* Cost + progress + store (single card) */}
       {totalCount > 0 && !loading && (
         <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
-          {/* Cost row */}
-          <div className="flex items-center justify-between">
+
+          {/* Top row: total + remaining */}
+          <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Estimated total</p>
-              <p className="text-2xl font-bold tabular-nums tracking-tight mt-0.5">
-                ${totalCost.toFixed(2)}
-              </p>
+              <p className="text-2xl font-bold tabular-nums tracking-tight">${totalCost.toFixed(2)}</p>
+              {/* Store chip — tap to open picker */}
+              <button
+                type="button"
+                onClick={() => setStorePicker((v) => !v)}
+                className="flex items-center gap-1 mt-1 press"
+              >
+                <span className="text-xs text-muted-foreground">at {STORES.find((s) => s.id === store)?.label}</span>
+                <svg
+                  width="11" height="11" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  className={`text-muted-foreground transition-transform duration-200 ${storePicker ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
             </div>
             {checkedCount > 0 && checkedCount < totalCount && (
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Remaining</p>
-                <p className="text-lg font-semibold tabular-nums mt-0.5">${remainingCost.toFixed(2)}</p>
+                <p className="text-lg font-semibold tabular-nums">${remainingCost.toFixed(2)}</p>
               </div>
             )}
           </div>
 
+          {/* Inline store picker — only visible when open */}
+          {storePicker && (
+            <div className="grid grid-cols-4 gap-1.5 pt-0.5">
+              {STORES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { selectStore(s.id); setStorePicker(false); }}
+                  className={`py-1.5 rounded-xl text-[11px] font-semibold transition-all press ${
+                    store === s.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-foreground/5 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Progress bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between">
-              <span className="text-xs text-muted-foreground">Shopping progress</span>
+              <span className="text-xs text-muted-foreground">Progress</span>
               <span className="text-xs font-medium tabular-nums">{checkedCount} / {totalCount}</span>
             </div>
-            <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%` }}
+                style={{ width: `${(checkedCount / totalCount) * 100}%` }}
               />
             </div>
           </div>
