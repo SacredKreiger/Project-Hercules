@@ -80,7 +80,7 @@ export default function GroceryPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">4-week bulk plan</p>
+          <p className="text-sm text-muted-foreground mt-0.5">4-week shopping list</p>
         </div>
         {totalCount > 0 && !loading && (
           <button
@@ -134,7 +134,7 @@ export default function GroceryPage() {
         <div className="glass widget-shadow rounded-2xl px-4 py-8 text-center space-y-2">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-sm font-semibold">Building your grocery list…</p>
-          <p className="text-xs text-muted-foreground">Calculating bulk quantities across all 4 weeks</p>
+          <p className="text-xs text-muted-foreground">Calculating quantities across all 4 weeks</p>
         </div>
       )}
 
