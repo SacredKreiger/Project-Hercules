@@ -2,14 +2,9 @@
 
 import { useState, useEffect } from "react";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
+import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-// Calorie fraction per slot, mirrored from meal-plan.ts
-const CAL_SPLIT: Record<number, Record<number, number>> = {
-  3: { 1: 0.30, 2: 0.40, 3: 0.30 },
-  4: { 1: 0.25, 2: 0.35, 3: 0.30, 4: 0.10 },
-  5: { 1: 0.20, 2: 0.12, 3: 0.28, 4: 0.12, 5: 0.28 },
-};
 
 const SLOT_LABELS: Record<number, Record<number, string>> = {
   3: { 1: "Breakfast", 2: "Lunch", 3: "Dinner" },
@@ -68,15 +63,8 @@ function formatQty(qty: number): string {
   return String(qty);
 }
 
-function getMultiplier(dailyCalories: number, mealsPerDay: number, slot: number, recipeCal: number, isRestDay = false): number {
-  const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
-  const fraction = split[slot] ?? 0.25;
-  const calMultiplier = isRestDay ? 0.85 : 1.0;
-  const target = dailyCalories * fraction * calMultiplier;
-  if (!recipeCal) return 1;
-  // Clamp to sensible eating range (0.5×–4×); wider than before to avoid hiding bad recipe picks
-  return Math.round(Math.min(Math.max(target / recipeCal, 0.5), 4.0) * 10) / 10;
-}
+// Alias for readability in JSX
+const getMultiplier = getServingsMultiplier;
 
 function scaleQty(qty: number, multiplier: number): string {
   const scaled = qty * multiplier;
@@ -256,9 +244,9 @@ export default function MealPlanView({
                         const m = entry.recipes?.calories
                           ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories, isRestDay)
                           : 1;
-                        const scaledCal  = entry.recipes?.calories  ? Math.round(entry.recipes.calories  * m) : null;
-                        const scaledProt = entry.recipes?.protein_g ? Math.round(entry.recipes.protein_g * m) : null;
-                        const scaledCarb = entry.recipes?.carbs_g   ? Math.round(entry.recipes.carbs_g   * m) : null;
+                        const scaledCal  = entry.recipes?.calories  ? scaleMacro(entry.recipes.calories,  m) : null;
+                        const scaledProt = entry.recipes?.protein_g ? scaleMacro(entry.recipes.protein_g, m) : null;
+                        const scaledCarb = entry.recipes?.carbs_g   ? scaleMacro(entry.recipes.carbs_g,   m) : null;
                         return (
                           <>
                             <p className="text-sm font-semibold">{scaledCal ?? "—"} kcal</p>
@@ -363,10 +351,10 @@ export default function MealPlanView({
                 {recipe.calories > 0 && (() => {
                   const isRestDay = !trainingDays.includes(selected.day_of_week);
                   const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories, isRestDay);
-                  const goalCal  = Math.round(recipe.calories  * m);
-                  const goalProt = Math.round(recipe.protein_g * m);
-                  const goalCarb = Math.round(recipe.carbs_g   * m);
-                  const goalFat  = Math.round(recipe.fat_g     * m);
+                  const goalCal  = scaleMacro(recipe.calories,  m);
+                  const goalProt = scaleMacro(recipe.protein_g, m);
+                  const goalCarb = scaleMacro(recipe.carbs_g,   m);
+                  const goalFat  = scaleMacro(recipe.fat_g,     m);
                   return (
                     <div className="glass rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-between">

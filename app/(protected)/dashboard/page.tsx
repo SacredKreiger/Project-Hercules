@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
 import { MacroRing } from "@/components/MacroRing";
 
@@ -38,10 +39,27 @@ export default async function DashboardPage() {
     .from("progress_logs").select("*")
     .eq("user_id", user!.id).order("log_date", { ascending: false }).limit(1).single();
 
-  const loggedCal  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.calories  ?? 0), 0) ?? 0;
-  const loggedPro  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.protein_g ?? 0), 0) ?? 0;
-  const loggedCarb = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.carbs_g   ?? 0), 0) ?? 0;
-  const loggedFat  = todayMeals?.reduce((s: number, m: any) => s + (m.recipes?.fat_g     ?? 0), 0) ?? 0;
+  const mealsPerDay = todayMeals && todayMeals.length > 0
+    ? (Math.max(...todayMeals.map((m: any) => m.meal_slot)) as 3 | 4 | 5)
+    : 4;
+  const isRestDay = todayWorkout?.is_rest_day ?? false;
+
+  const loggedCal  = todayMeals?.reduce((s: number, m: any) => {
+    const mul = getServingsMultiplier(macros.calories, mealsPerDay, m.meal_slot, m.recipes?.calories ?? 0, isRestDay);
+    return s + scaleMacro(m.recipes?.calories ?? 0, mul);
+  }, 0) ?? 0;
+  const loggedPro  = todayMeals?.reduce((s: number, m: any) => {
+    const mul = getServingsMultiplier(macros.calories, mealsPerDay, m.meal_slot, m.recipes?.calories ?? 0, isRestDay);
+    return s + scaleMacro(m.recipes?.protein_g ?? 0, mul);
+  }, 0) ?? 0;
+  const loggedCarb = todayMeals?.reduce((s: number, m: any) => {
+    const mul = getServingsMultiplier(macros.calories, mealsPerDay, m.meal_slot, m.recipes?.calories ?? 0, isRestDay);
+    return s + scaleMacro(m.recipes?.carbs_g ?? 0, mul);
+  }, 0) ?? 0;
+  const loggedFat  = todayMeals?.reduce((s: number, m: any) => {
+    const mul = getServingsMultiplier(macros.calories, mealsPerDay, m.meal_slot, m.recipes?.calories ?? 0, isRestDay);
+    return s + scaleMacro(m.recipes?.fat_g ?? 0, mul);
+  }, 0) ?? 0;
 
   const currentWeight = latestLog?.weight_lbs ?? profile.current_weight_lbs;
   const progressPct = Math.min(100, Math.abs(
@@ -107,19 +125,24 @@ export default async function DashboardPage() {
         </div>
         <div className="divide-y divide-border">
           {todayMeals && todayMeals.length > 0 ? (
-            todayMeals.map((entry: any) => (
-              <div key={entry.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Meal {entry.meal_slot}</p>
-                  <p className="text-sm font-medium mt-0.5">{entry.recipes?.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{entry.recipes?.cuisine}</p>
+            todayMeals.map((entry: any) => {
+              const mul = getServingsMultiplier(macros.calories, mealsPerDay, entry.meal_slot, entry.recipes?.calories ?? 0, isRestDay);
+              const scaledCal  = scaleMacro(entry.recipes?.calories  ?? 0, mul);
+              const scaledProt = scaleMacro(entry.recipes?.protein_g ?? 0, mul);
+              return (
+                <div key={entry.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Meal {entry.meal_slot}</p>
+                    <p className="text-sm font-medium mt-0.5">{entry.recipes?.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{entry.recipes?.cuisine}</p>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-sm font-bold tabular-nums">{scaledCal}</p>
+                    <p className="text-[11px] text-muted-foreground">kcal · {scaledProt}g P</p>
+                  </div>
                 </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-bold tabular-nums">{entry.recipes?.calories}</p>
-                  <p className="text-[11px] text-muted-foreground">kcal · {entry.recipes?.protein_g}g P</p>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="px-4 py-6 text-center">
               <p className="text-sm text-muted-foreground">No meals planned yet.</p>
