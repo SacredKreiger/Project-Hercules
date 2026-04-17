@@ -1,47 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { regenerateGroceryList } from "@/lib/actions/grocery-list";
 import { Skeleton } from "@/components/Skeleton";
 
 type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean };
+
 const CATEGORY_ORDER = ["Protein", "Produce", "Dairy", "Grains & Carbs", "Pantry", "Other"];
 
-export default function GroceryPage() {
-  const [items, setItems] = useState<GroceryItem[]>([]);
-  const [weekNumber, setWeekNumber] = useState(1);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+const CATEGORY_ICONS: Record<string, string> = {
+  "Protein":        "🥩",
+  "Produce":        "🥦",
+  "Dairy":          "🥛",
+  "Grains & Carbs": "🌾",
+  "Pantry":         "🫙",
+  "Other":          "🛒",
+};
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
-      const { data: profile } = await supabase.from("profiles").select("program_start_date").eq("id", user.id).single();
-      if (!profile) { setLoading(false); return; }
-      const startDate = new Date(profile.program_start_date);
-      const now = new Date();
-      const week = Math.ceil((Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7);
-      setWeekNumber(week);
-      const { data: list } = await supabase.from("grocery_lists").select("*")
-        .eq("user_id", user.id).eq("week_number", week).single();
-      if (list) setItems(list.items as GroceryItem[]);
-      setLoading(false);
-    }
-    load();
-  }, []);
+export default function GroceryPage() {
+  const [items,    setItems]    = useState<GroceryItem[]>([]);
+  const [userId,   setUserId]   = useState<string | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
+
+  const [generating, startGenerating] = useTransition();
+
+  useEffect(() => { load(); }, []);
+
+  async function load() {
+    setLoading(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    setUserId(user.id);
+
+    // week_number = 0 is the monthly aggregated list
+    const { data: list } = await supabase
+      .from("grocery_lists").select("*")
+      .eq("user_id", user.id).eq("week_number", 0).single();
+    if (list) setItems(list.items as GroceryItem[]);
+    setLoading(false);
+  }
 
   async function toggle(index: number) {
     const updated = items.map((item, i) => i === index ? { ...item, checked: !item.checked } : item);
     setItems(updated);
-    // Persist checked state back to Supabase so it survives a page refresh
     if (!userId) return;
     const supabase = createClient();
     await supabase.from("grocery_lists")
       .update({ items: updated })
-      .eq("user_id", userId).eq("week_number", weekNumber);
+      .eq("user_id", userId).eq("week_number", 0);
+  }
+
+  function handleRegenerate() {
+    setError("");
+    startGenerating(async () => {
+      const result = await regenerateGroceryList();
+      if (result.error) {
+        setError(result.error);
+      } else {
+        await load();
+      }
+    });
   }
 
   const byCategory = CATEGORY_ORDER.reduce((acc, cat) => {
@@ -50,59 +71,142 @@ export default function GroceryPage() {
   }, {} as Record<string, GroceryItem[]>);
 
   const checkedCount = items.filter((i) => i.checked).length;
+  const totalCount   = items.length;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Grocery List</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber}</p>
+          <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">4-week bulk plan</p>
         </div>
-        {items.length > 0 && (
-          <span className="text-xs font-medium glass rounded-full px-3 py-1.5 widget-shadow">
-            {checkedCount}/{items.length}
-          </span>
+        {totalCount > 0 && !loading && (
+          <button
+            type="button"
+            onClick={handleRegenerate}
+            disabled={generating}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press mt-1 disabled:opacity-50"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={generating ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+            {generating ? "Generating…" : "Regenerate"}
+          </button>
         )}
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[0,1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
-        </div>
-      ) : items.length > 0 ? (
-        CATEGORY_ORDER.map((cat) => byCategory[cat].length > 0 && (
-          <div key={cat} className="glass widget-shadow rounded-2xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{cat}</p>
-            </div>
-            <div className="divide-y divide-border">
-              {byCategory[cat].map((item, i) => {
-                const globalIndex = items.indexOf(item);
-                return (
-                  <label key={i} className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
-                    onClick={() => toggle(globalIndex)}>
-                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${item.checked ? "border-primary bg-primary" : "border-border"}`}>
-                      {item.checked && (
-                        <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
-                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className={`text-sm flex-1 ${item.checked ? "line-through text-muted-foreground" : ""}`}>
-                      {item.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{item.qty} {item.unit}</span>
-                  </label>
-                );
-              })}
-            </div>
+      {/* Progress bar */}
+      {totalCount > 0 && !loading && (
+        <div className="glass widget-shadow rounded-2xl p-4 space-y-2.5">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold">Shopping progress</span>
+            <span className="text-xs font-medium tabular-nums glass rounded-full px-3 py-1 widget-shadow">
+              {checkedCount} / {totalCount}
+            </span>
           </div>
-        ))
-      ) : (
-        <div className="glass widget-shadow rounded-2xl px-4 py-12 text-center">
-          <p className="text-sm text-muted-foreground">No grocery list yet.</p>
-          <p className="text-xs text-muted-foreground mt-1">Generated from your meal plan.</p>
+          <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%` }}
+            />
+          </div>
+          {checkedCount === totalCount && totalCount > 0 && (
+            <p className="text-xs text-emerald-500 font-semibold">All items checked — you&apos;re all set!</p>
+          )}
         </div>
+      )}
+
+      {error && (
+        <p className="text-sm text-destructive px-1">{error}</p>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="space-y-3">
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+        </div>
+      )}
+
+      {/* Generating overlay */}
+      {generating && (
+        <div className="glass widget-shadow rounded-2xl px-4 py-8 text-center space-y-2">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-semibold">Building your grocery list…</p>
+          <p className="text-xs text-muted-foreground">Calculating bulk quantities across all 4 weeks</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !generating && items.length === 0 && (
+        <div className="glass widget-shadow rounded-2xl px-6 py-14 text-center space-y-3">
+          <p className="text-2xl">🛒</p>
+          <p className="font-semibold">No grocery list yet</p>
+          <p className="text-sm text-muted-foreground">
+            Generate your meal plan first, then come back to get your bulk shopping list.
+          </p>
+          <button
+            type="button"
+            onClick={handleRegenerate}
+            disabled={generating}
+            className="mt-1 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold press disabled:opacity-50"
+          >
+            {generating ? "Generating…" : "Generate from Meal Plan"}
+          </button>
+        </div>
+      )}
+
+      {/* Category sections */}
+      {!loading && !generating && items.length > 0 && (
+        CATEGORY_ORDER.map((cat) => {
+          const catItems = byCategory[cat];
+          if (!catItems?.length) return null;
+          return (
+            <div key={cat} className="glass widget-shadow rounded-2xl overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+                <span>{CATEGORY_ICONS[cat]}</span>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex-1">{cat}</p>
+                <span className="text-xs text-muted-foreground">
+                  {catItems.filter((i) => i.checked).length}/{catItems.length}
+                </span>
+              </div>
+              <div className="divide-y divide-border">
+                {catItems.map((item) => {
+                  const globalIndex = items.indexOf(item);
+                  return (
+                    <label
+                      key={globalIndex}
+                      onClick={() => toggle(globalIndex)}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
+                    >
+                      {/* Custom checkbox */}
+                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        item.checked ? "border-primary bg-primary" : "border-border"
+                      }`}>
+                        {item.checked && (
+                          <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Name */}
+                      <span className={`text-sm flex-1 capitalize transition-opacity ${item.checked ? "line-through text-muted-foreground opacity-50" : ""}`}>
+                        {item.name}
+                      </span>
+
+                      {/* Quantity badge */}
+                      <span className={`text-xs font-semibold tabular-nums glass px-2.5 py-1 rounded-full transition-opacity ${item.checked ? "opacity-40" : ""}`}>
+                        {item.qty} {item.unit}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   );

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { redirect } from "next/navigation";
+import { generateGroceryList } from "@/lib/actions/grocery-list";
 
 const DAY_TYPES: Record<number, "work" | "off" | "cook"> = {
   0: "off", 1: "work", 2: "work", 3: "work", 4: "work", 5: "work", 6: "cook",
@@ -242,6 +243,9 @@ export async function reconfigureMealPlan(formData: FormData) {
   });
 
   if (error) return { error };
+
+  // Auto-generate the monthly grocery list from the new plan
+  await generateGroceryList(user.id);
 
   redirect("/meals");
 }
