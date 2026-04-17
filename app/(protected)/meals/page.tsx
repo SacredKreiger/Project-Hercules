@@ -21,27 +21,14 @@ export default async function MealsPage() {
     .order("day_of_week")
     .order("meal_slot");
 
-  if (!mealPlan || mealPlan.length === 0) {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Meal Plan</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Week {weekNumber} · <span className="capitalize">{profile.phase}</span> phase</p>
-        </div>
-        <div className="glass widget-shadow rounded-2xl px-4 py-12 text-center">
-          <p className="text-muted-foreground text-sm">Your meal plan hasn&apos;t been generated yet.</p>
-          <a href="/meals/setup" className="text-xs text-primary font-semibold mt-1.5 inline-block press">Set up meal plan →</a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <MealPlanView
-      mealPlan={mealPlan}
+      mealPlan={mealPlan ?? []}
       weekNumber={weekNumber}
       phase={profile.phase}
       todayDow={todayDow}
+      savedCuisines={profile.cuisine_preferences ?? []}
+      savedRestrictions={profile.dietary_restrictions ?? []}
     />
   );
 }

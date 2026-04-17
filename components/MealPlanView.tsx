@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import { regenerateMealPlan } from "@/lib/actions/meal-plan";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { useState, useEffect } from "react";
+import ReconfigureSheet from "@/components/ReconfigureSheet";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const SLOT_LABEL: Record<number, string> = { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack" };
@@ -61,15 +60,18 @@ export default function MealPlanView({
   weekNumber,
   phase,
   todayDow,
+  savedCuisines = [],
+  savedRestrictions = [],
 }: {
   mealPlan: MealEntry[];
   weekNumber: number;
   phase: string;
   todayDow: number;
+  savedCuisines?: string[];
+  savedRestrictions?: string[];
 }) {
   const [selected, setSelected] = useState<MealEntry | null>(null);
-  const [regenPending, startRegen] = useTransition();
-  const [regenError, setRegenError] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   // Record<recipeId, stepIndex[]>
   const [checkedSteps, setCheckedSteps] = useState<Record<string, number[]>>({});
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, number[]>>({});
@@ -147,31 +149,28 @@ export default function MealPlanView({
           </div>
           <button
             type="button"
-            disabled={regenPending}
-            onClick={() => {
-              setRegenError(null);
-              startRegen(async () => {
-                try {
-                  const result = await regenerateMealPlan();
-                  if (result?.error) setRegenError(result.error);
-                } catch (err: unknown) {
-                  if (isRedirectError(err)) throw err;
-                  setRegenError("Something went wrong. Try again.");
-                }
-              });
-            }}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press disabled:opacity-50 mt-1"
+            onClick={() => setSheetOpen(true)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press mt-1"
           >
-            {regenPending ? (
-              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-            )}
-            {regenPending ? "Regenerating…" : "Regenerate"}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Reconfigure
           </button>
         </div>
-        {regenError && (
-          <p className="text-xs text-destructive glass rounded-2xl px-3 py-2">{regenError}</p>
+
+        {/* Empty state */}
+        {mealPlan.length === 0 && (
+          <div className="glass widget-shadow rounded-2xl px-6 py-14 text-center space-y-3">
+            <p className="text-2xl">🍽️</p>
+            <p className="font-semibold">No plan yet</p>
+            <p className="text-sm text-muted-foreground">Tell us how you want to eat and we&apos;ll build your week.</p>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="mt-1 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold press"
+            >
+              Set Up My Plan →
+            </button>
+          </div>
         )}
 
         {DAYS.map((day, dow) => (
@@ -219,6 +218,14 @@ export default function MealPlanView({
           </div>
         ))}
       </div>
+
+      {/* ── Reconfigure sheet ── */}
+      <ReconfigureSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        savedCuisines={savedCuisines}
+        savedRestrictions={savedRestrictions}
+      />
 
       {/* ── Recipe detail sheet ── */}
       {selected && (
