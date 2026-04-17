@@ -116,7 +116,7 @@ function toBulkDisplay(grams: number, groceryCategory: string, name: string): { 
   return { qty: Math.ceil(oz), unit: "oz" };
 }
 
-// ─── Price estimates (US avg retail, 2024) ────────────────────────────────────
+// ─── Price estimates (US avg retail, 2026) ────────────────────────────────────
 // Returns price per display unit (the same unit toBulkDisplay produces).
 
 function pricePerUnit(name: string, unit: string, category: string): number {
@@ -124,94 +124,95 @@ function pricePerUnit(name: string, unit: string, category: string): number {
 
   if (unit === "lbs") {
     // Proteins
-    if (n.includes("chicken breast"))                         return 4.99;
-    if (n.includes("chicken thigh"))                          return 3.99;
-    if (n.includes("ground chicken"))                         return 4.49;
-    if (n.includes("ground beef"))                            return 5.99;
-    if (n.includes("ground turkey"))                          return 5.49;
-    if (n.includes("turkey breast") || n.includes("turkey"))  return 5.99;
-    if (n.includes("salmon"))                                 return 8.99;
-    if (n.includes("tilapia"))                                return 5.49;
-    if (n.includes("tuna"))                                   return 4.99;
-    if (n.includes("shrimp"))                                 return 8.99;
-    if (n.includes("pork"))                                   return 4.99;
-    if (n.includes("beef") || n.includes("steak") || n.includes("sirloin")) return 7.99;
-    if (n.includes("lamb"))                                   return 9.99;
-    if (n.includes("tofu") || n.includes("tempeh"))           return 3.49;
+    if (n.includes("chicken breast"))                         return 5.49;
+    if (n.includes("chicken thigh"))                          return 4.49;
+    if (n.includes("ground chicken"))                         return 4.99;
+    if (n.includes("ground beef"))                            return 6.99;
+    if (n.includes("ground turkey"))                          return 5.99;
+    if (n.includes("turkey breast") || n.includes("turkey"))  return 6.49;
+    if (n.includes("salmon"))                                 return 9.99;
+    if (n.includes("tilapia"))                                return 5.99;
+    if (n.includes("tuna"))                                   return 5.49;
+    if (n.includes("shrimp"))                                 return 9.99;
+    if (n.includes("pork"))                                   return 5.49;
+    if (n.includes("beef") || n.includes("steak") || n.includes("sirloin")) return 8.99;
+    if (n.includes("lamb"))                                   return 10.99;
+    if (n.includes("tofu") || n.includes("tempeh"))           return 3.99;
     // Produce
-    if (n.includes("sweet potato"))  return 1.29;
-    if (n.includes("banana"))        return 0.59;
-    if (n.includes("apple"))         return 1.99;
-    if (n.includes("berr"))          return 3.99;
-    if (n.includes("orange"))        return 1.49;
-    if (n.includes("plantain"))      return 0.79;
-    if (n.includes("spinach") || n.includes("kale"))  return 3.99;
-    if (n.includes("broccoli"))      return 1.99;
-    if (n.includes("cabbage"))       return 0.89;
-    if (n.includes("carrot"))        return 1.29;
-    if (n.includes("zucchini"))      return 1.49;
-    if (n.includes("green bean"))    return 1.99;
+    if (n.includes("sweet potato"))  return 1.49;
+    if (n.includes("banana"))        return 0.69;
+    if (n.includes("apple"))         return 2.29;
+    if (n.includes("berr"))          return 4.49;
+    if (n.includes("orange"))        return 1.69;
+    if (n.includes("plantain"))      return 0.89;
+    if (n.includes("spinach") || n.includes("kale"))  return 4.49;
+    if (n.includes("broccoli"))      return 2.29;
+    if (n.includes("cabbage"))       return 0.99;
+    if (n.includes("carrot"))        return 1.49;
+    if (n.includes("zucchini"))      return 1.69;
+    if (n.includes("green bean"))    return 2.29;
     // Grains
-    if (n.includes("rice"))          return 1.49;
-    if (n.includes("oat"))           return 0.99;
-    if (n.includes("pasta") || n.includes("spaghetti") || n.includes("noodle")) return 1.49;
-    if (n.includes("quinoa"))        return 3.99;
-    if (n.includes("couscous"))      return 2.99;
-    if (n.includes("lentil") || n.includes("bean") || n.includes("chickpea")) return 1.99;
+    if (n.includes("rice"))          return 1.69;
+    if (n.includes("oat"))           return 1.19;
+    if (n.includes("pasta") || n.includes("spaghetti") || n.includes("noodle")) return 1.69;
+    if (n.includes("quinoa"))        return 4.49;
+    if (n.includes("couscous"))      return 3.29;
+    if (n.includes("lentil") || n.includes("bean") || n.includes("chickpea")) return 2.29;
     // Fallback by category
-    if (category === "Protein")        return 5.99;
-    if (category === "Produce")        return 1.99;
-    if (category === "Grains & Carbs") return 1.99;
-    return 2.99;
+    if (category === "Protein")        return 6.99;
+    if (category === "Produce")        return 2.29;
+    if (category === "Grains & Carbs") return 2.29;
+    return 3.49;
   }
 
   if (unit === "oz") {
-    if (n.includes("oil") || n.includes("ghee"))              return 0.40;
-    if (n.includes("peanut butter") || n.includes("almond butter")) return 0.31;
-    if (n.includes("cheddar") || n.includes("parmesan") || n.includes("cheese")) return 0.50;
-    if (n.includes("greek yogurt") || n.includes("yogurt"))   return 0.19;
-    if (n.includes("sour cream"))                             return 0.19;
-    if (n.includes("heavy cream") || n.includes("cream"))     return 0.25;
-    if (n.includes("tofu") || n.includes("tempeh"))           return 0.20;
-    if (n.includes("coconut milk"))                           return 0.30;
-    if (category === "Dairy")   return 0.30;
-    if (category === "Pantry")  return 0.35;
-    return 0.25;
+    if (n.includes("oil") || n.includes("ghee"))              return 0.45;
+    if (n.includes("peanut butter") || n.includes("almond butter")) return 0.35;
+    if (n.includes("cheddar") || n.includes("parmesan") || n.includes("cheese")) return 0.60;
+    if (n.includes("greek yogurt") || n.includes("yogurt"))   return 0.22;
+    if (n.includes("sour cream"))                             return 0.22;
+    if (n.includes("heavy cream") || n.includes("cream"))     return 0.30;
+    if (n.includes("tofu") || n.includes("tempeh"))           return 0.23;
+    if (n.includes("coconut milk"))                           return 0.35;
+    if (category === "Dairy")   return 0.35;
+    if (category === "Pantry")  return 0.40;
+    return 0.30;
   }
 
   if (unit === "ct") {
-    if (n.includes("egg"))                                    return 0.33; // $3.99/doz
-    if (n.includes("flour tortilla"))                         return 0.50; // $3.99 for 8
-    if (n.includes("corn tortilla"))                          return 0.25; // $2.99 for 12
-    if (n.includes("tortilla"))                               return 0.37;
-    if (n.includes("pita"))                                   return 0.75;
-    if (n.includes("naan"))                                   return 1.25;
-    if (n.includes("bread"))                                  return 0.22; // $3.49 for 16
-    if (n.includes("avocado"))                                return 1.00;
-    if (n.includes("onion"))                                  return 0.89;
-    if (n.includes("bell pepper") || n.includes("pepper"))   return 1.29;
-    if (n.includes("tomato"))                                 return 1.49;
-    return 0.50;
+    // Eggs elevated due to ongoing supply constraints (~$5.40/doz)
+    if (n.includes("egg"))                                    return 0.45;
+    if (n.includes("flour tortilla"))                         return 0.55; // ~$4.49 for 8
+    if (n.includes("corn tortilla"))                          return 0.28; // ~$3.29 for 12
+    if (n.includes("tortilla"))                               return 0.42;
+    if (n.includes("pita"))                                   return 0.85;
+    if (n.includes("naan"))                                   return 1.49;
+    if (n.includes("bread"))                                  return 0.25; // ~$3.99 for 16
+    if (n.includes("avocado"))                                return 1.25;
+    if (n.includes("onion"))                                  return 0.99;
+    if (n.includes("bell pepper") || n.includes("pepper"))   return 1.49;
+    if (n.includes("tomato"))                                 return 1.69;
+    return 0.60;
   }
 
-  if (unit === "cloves") return 0.10;
+  if (unit === "cloves") return 0.12;
 
   if (unit === "qt") {
-    if (n.includes("coconut milk"))                           return 2.99;
-    if (n.includes("broth") || n.includes("stock"))          return 2.49;
-    return 1.99; // regular milk
+    if (n.includes("coconut milk"))                           return 3.49;
+    if (n.includes("broth") || n.includes("stock"))          return 2.99;
+    return 2.49; // regular milk
   }
 
-  if (unit === "sticks") return 1.50; // butter ~$5.99/4 sticks
+  if (unit === "sticks") return 1.75; // butter ~$6.99/4 sticks
 
   if (unit === "tbsp") {
-    if (n.includes("honey"))  return 0.25;
-    if (n.includes("tahini")) return 0.30;
-    if (n.includes("oil"))    return 0.10;
-    return 0.10;
+    if (n.includes("honey"))  return 0.30;
+    if (n.includes("tahini")) return 0.35;
+    if (n.includes("oil"))    return 0.12;
+    return 0.12;
   }
 
-  return 0.30; // safe fallback
+  return 0.35; // safe fallback
 }
 
 // ─── Core generator ────────────────────────────────────────────────────────────
