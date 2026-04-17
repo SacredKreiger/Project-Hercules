@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/Skeleton";
 
-type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean };
+type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean; cost: number };
 
 const CATEGORY_ORDER = ["Protein", "Produce", "Dairy", "Grains & Carbs", "Pantry", "Other"];
 
@@ -61,8 +61,10 @@ export default function GroceryPage() {
     return acc;
   }, {} as Record<string, GroceryItem[]>);
 
-  const checkedCount = items.filter((i) => i.checked).length;
-  const totalCount   = items.length;
+  const checkedCount  = items.filter((i) => i.checked).length;
+  const totalCount    = items.length;
+  const totalCost     = items.reduce((s, i) => s + (i.cost ?? 0), 0);
+  const remainingCost = items.filter((i) => !i.checked).reduce((s, i) => s + (i.cost ?? 0), 0);
 
   return (
     <div className="space-y-4">
@@ -72,22 +74,40 @@ export default function GroceryPage() {
         <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress + cost */}
       {totalCount > 0 && !loading && (
-        <div className="glass widget-shadow rounded-2xl p-4 space-y-2.5">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold">Shopping progress</span>
-            <span className="text-xs font-medium tabular-nums glass rounded-full px-3 py-1 widget-shadow">
-              {checkedCount} / {totalCount}
-            </span>
+        <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
+          {/* Cost row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Estimated total</p>
+              <p className="text-2xl font-bold tabular-nums tracking-tight mt-0.5">
+                ${totalCost.toFixed(2)}
+              </p>
+            </div>
+            {checkedCount > 0 && checkedCount < totalCount && (
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Remaining</p>
+                <p className="text-lg font-semibold tabular-nums mt-0.5">${remainingCost.toFixed(2)}</p>
+              </div>
+            )}
           </div>
-          <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%` }}
-            />
+
+          {/* Progress bar */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-xs text-muted-foreground">Shopping progress</span>
+              <span className="text-xs font-medium tabular-nums">{checkedCount} / {totalCount}</span>
+            </div>
+            <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-500"
+                style={{ width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%` }}
+              />
+            </div>
           </div>
-          {checkedCount === totalCount && totalCount > 0 && (
+
+          {checkedCount === totalCount && (
             <p className="text-xs text-emerald-500 font-semibold">All items checked — you&apos;re all set!</p>
           )}
         </div>

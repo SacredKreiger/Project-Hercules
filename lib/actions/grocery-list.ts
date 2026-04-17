@@ -116,6 +116,104 @@ function toBulkDisplay(grams: number, groceryCategory: string, name: string): { 
   return { qty: Math.ceil(oz), unit: "oz" };
 }
 
+// ─── Price estimates (US avg retail, 2024) ────────────────────────────────────
+// Returns price per display unit (the same unit toBulkDisplay produces).
+
+function pricePerUnit(name: string, unit: string, category: string): number {
+  const n = name.toLowerCase();
+
+  if (unit === "lbs") {
+    // Proteins
+    if (n.includes("chicken breast"))                         return 4.99;
+    if (n.includes("chicken thigh"))                          return 3.99;
+    if (n.includes("ground chicken"))                         return 4.49;
+    if (n.includes("ground beef"))                            return 5.99;
+    if (n.includes("ground turkey"))                          return 5.49;
+    if (n.includes("turkey breast") || n.includes("turkey"))  return 5.99;
+    if (n.includes("salmon"))                                 return 8.99;
+    if (n.includes("tilapia"))                                return 5.49;
+    if (n.includes("tuna"))                                   return 4.99;
+    if (n.includes("shrimp"))                                 return 8.99;
+    if (n.includes("pork"))                                   return 4.99;
+    if (n.includes("beef") || n.includes("steak") || n.includes("sirloin")) return 7.99;
+    if (n.includes("lamb"))                                   return 9.99;
+    if (n.includes("tofu") || n.includes("tempeh"))           return 3.49;
+    // Produce
+    if (n.includes("sweet potato"))  return 1.29;
+    if (n.includes("banana"))        return 0.59;
+    if (n.includes("apple"))         return 1.99;
+    if (n.includes("berr"))          return 3.99;
+    if (n.includes("orange"))        return 1.49;
+    if (n.includes("plantain"))      return 0.79;
+    if (n.includes("spinach") || n.includes("kale"))  return 3.99;
+    if (n.includes("broccoli"))      return 1.99;
+    if (n.includes("cabbage"))       return 0.89;
+    if (n.includes("carrot"))        return 1.29;
+    if (n.includes("zucchini"))      return 1.49;
+    if (n.includes("green bean"))    return 1.99;
+    // Grains
+    if (n.includes("rice"))          return 1.49;
+    if (n.includes("oat"))           return 0.99;
+    if (n.includes("pasta") || n.includes("spaghetti") || n.includes("noodle")) return 1.49;
+    if (n.includes("quinoa"))        return 3.99;
+    if (n.includes("couscous"))      return 2.99;
+    if (n.includes("lentil") || n.includes("bean") || n.includes("chickpea")) return 1.99;
+    // Fallback by category
+    if (category === "Protein")        return 5.99;
+    if (category === "Produce")        return 1.99;
+    if (category === "Grains & Carbs") return 1.99;
+    return 2.99;
+  }
+
+  if (unit === "oz") {
+    if (n.includes("oil") || n.includes("ghee"))              return 0.40;
+    if (n.includes("peanut butter") || n.includes("almond butter")) return 0.31;
+    if (n.includes("cheddar") || n.includes("parmesan") || n.includes("cheese")) return 0.50;
+    if (n.includes("greek yogurt") || n.includes("yogurt"))   return 0.19;
+    if (n.includes("sour cream"))                             return 0.19;
+    if (n.includes("heavy cream") || n.includes("cream"))     return 0.25;
+    if (n.includes("tofu") || n.includes("tempeh"))           return 0.20;
+    if (n.includes("coconut milk"))                           return 0.30;
+    if (category === "Dairy")   return 0.30;
+    if (category === "Pantry")  return 0.35;
+    return 0.25;
+  }
+
+  if (unit === "ct") {
+    if (n.includes("egg"))                                    return 0.33; // $3.99/doz
+    if (n.includes("flour tortilla"))                         return 0.50; // $3.99 for 8
+    if (n.includes("corn tortilla"))                          return 0.25; // $2.99 for 12
+    if (n.includes("tortilla"))                               return 0.37;
+    if (n.includes("pita"))                                   return 0.75;
+    if (n.includes("naan"))                                   return 1.25;
+    if (n.includes("bread"))                                  return 0.22; // $3.49 for 16
+    if (n.includes("avocado"))                                return 1.00;
+    if (n.includes("onion"))                                  return 0.89;
+    if (n.includes("bell pepper") || n.includes("pepper"))   return 1.29;
+    if (n.includes("tomato"))                                 return 1.49;
+    return 0.50;
+  }
+
+  if (unit === "cloves") return 0.10;
+
+  if (unit === "qt") {
+    if (n.includes("coconut milk"))                           return 2.99;
+    if (n.includes("broth") || n.includes("stock"))          return 2.49;
+    return 1.99; // regular milk
+  }
+
+  if (unit === "sticks") return 1.50; // butter ~$5.99/4 sticks
+
+  if (unit === "tbsp") {
+    if (n.includes("honey"))  return 0.25;
+    if (n.includes("tahini")) return 0.30;
+    if (n.includes("oil"))    return 0.10;
+    return 0.10;
+  }
+
+  return 0.30; // safe fallback
+}
+
 // ─── Core generator ────────────────────────────────────────────────────────────
 
 export async function generateGroceryList(userId: string): Promise<{ error: string | null }> {
@@ -181,7 +279,7 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
   }
 
   // Convert accumulated data to grocery items
-  type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean };
+  type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean; cost: number };
   const items: GroceryItem[] = [];
 
   for (const [, data] of acc) {
@@ -190,21 +288,25 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     if (data.grams > 0) {
       const { qty, unit } = toBulkDisplay(data.grams, groceryCategory, data.displayName);
       if (qty <= 0) continue;
+      const roundedQty = Math.round(qty * 100) / 100;
+      const cost = Math.round(roundedQty * pricePerUnit(data.displayName, unit, groceryCategory) * 100) / 100;
       items.push({
         name:     data.displayName,
-        qty:      Math.round(qty * 100) / 100,
+        qty:      roundedQty,
         unit,
         category: groceryCategory,
         checked:  false,
+        cost,
       });
     } else if (data.qty && data.qty > 0) {
-      // Unknown ingredient — show rounded qty in original unit
+      const roundedQty = Math.ceil(data.qty);
       items.push({
         name:     data.displayName,
-        qty:      Math.ceil(data.qty),
+        qty:      roundedQty,
         unit:     data.unit ?? "unit",
         category: groceryCategory,
         checked:  false,
+        cost:     0,
       });
     }
   }
