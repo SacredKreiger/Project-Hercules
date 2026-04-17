@@ -68,12 +68,14 @@ function formatQty(qty: number): string {
   return String(qty);
 }
 
-function getMultiplier(dailyCalories: number, mealsPerDay: number, slot: number, recipeCal: number): number {
+function getMultiplier(dailyCalories: number, mealsPerDay: number, slot: number, recipeCal: number, isRestDay = false): number {
   const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
   const fraction = split[slot] ?? 0.25;
-  const target = dailyCalories * fraction;
+  const calMultiplier = isRestDay ? 0.85 : 1.0;
+  const target = dailyCalories * fraction * calMultiplier;
   if (!recipeCal) return 1;
-  return Math.round(Math.min(Math.max(target / recipeCal, 0.5), 3.0) * 10) / 10;
+  // Clamp to sensible eating range (0.5×–4×); wider than before to avoid hiding bad recipe picks
+  return Math.round(Math.min(Math.max(target / recipeCal, 0.5), 4.0) * 10) / 10;
 }
 
 function scaleQty(qty: number, multiplier: number): string {
@@ -93,6 +95,7 @@ export default function MealPlanView({
   phase,
   todayDow,
   dailyCalories = 2000,
+  mealsPerDay: mealsPerDayProp = 4,
   savedCuisines = [],
   savedRestrictions = [],
 }: {
@@ -101,12 +104,16 @@ export default function MealPlanView({
   phase: string;
   todayDow: number;
   dailyCalories?: number;
+  mealsPerDay?: 3 | 4 | 5;
   savedCuisines?: string[];
   savedRestrictions?: string[];
 }) {
   const [selected, setSelected] = useState<MealEntry | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [mealsPerDay, setMealsPerDay] = useState<3 | 4 | 5>(4);
+  // mealsPerDay comes from the server (derived from actual plan data) — localStorage is only a UI cache
+  const mealsPerDay = mealsPerDayProp;
+  // Training days from localStorage (saved by ReconfigureSheet) — used for rest-day calorie scaling
+  const [trainingDays, setTrainingDays] = useState<number[]>([1, 2, 3, 4, 5]);
   // Record<recipeId, stepIndex[]>
   const [checkedSteps, setCheckedSteps] = useState<Record<string, number[]>>({});
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, number[]>>({});
@@ -121,7 +128,7 @@ export default function MealPlanView({
       const config = localStorage.getItem(STORAGE_KEY);
       if (config) {
         const parsed = JSON.parse(config);
-        if (parsed.mealsPerDay) setMealsPerDay(parsed.mealsPerDay);
+        if (parsed.trainingDays) setTrainingDays(parsed.trainingDays);
       }
     } catch {}
   }, []);
@@ -245,8 +252,9 @@ export default function MealPlanView({
                     </div>
                     <div className="text-right shrink-0 ml-3">
                       {(() => {
+                        const isRestDay = !trainingDays.includes(dow);
                         const m = entry.recipes?.calories
-                          ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories)
+                          ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories, isRestDay)
                           : 1;
                         const scaledCal  = entry.recipes?.calories  ? Math.round(entry.recipes.calories  * m) : null;
                         const scaledProt = entry.recipes?.protein_g ? Math.round(entry.recipes.protein_g * m) : null;
@@ -353,7 +361,8 @@ export default function MealPlanView({
 
                 {/* For your goal */}
                 {recipe.calories > 0 && (() => {
-                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories);
+                  const isRestDay = !trainingDays.includes(selected.day_of_week);
+                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories, isRestDay);
                   const goalCal  = Math.round(recipe.calories  * m);
                   const goalProt = Math.round(recipe.protein_g * m);
                   const goalCarb = Math.round(recipe.carbs_g   * m);
@@ -411,7 +420,8 @@ export default function MealPlanView({
 
                 {/* Ingredients */}
                 {ingredients.length > 0 && (() => {
-                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories);
+                  const isRestDay = !trainingDays.includes(selected.day_of_week);
+                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories, isRestDay);
                   return (
                     <div>
                       <div className="flex items-center justify-between mb-3">

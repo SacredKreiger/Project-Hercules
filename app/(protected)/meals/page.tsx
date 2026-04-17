@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import MealPlanView from "@/components/MealPlanView";
+import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 
 export default async function MealsPage() {
   const supabase = await createClient();
@@ -21,12 +22,24 @@ export default async function MealsPage() {
     .order("day_of_week")
     .order("meal_slot");
 
+  const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
+  const tdee = calcTDEE(bmr, profile.activity_level);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+
+  // Derive mealsPerDay from actual plan data so it always matches what was generated
+  const plan = mealPlan ?? [];
+  const mealsPerDay = plan.length > 0
+    ? (Math.max(...plan.map((e) => e.meal_slot)) as 3 | 4 | 5)
+    : 4;
+
   return (
     <MealPlanView
-      mealPlan={mealPlan ?? []}
+      mealPlan={plan}
       weekNumber={weekNumber}
       phase={profile.phase}
       todayDow={todayDow}
+      dailyCalories={macros.calories}
+      mealsPerDay={mealsPerDay}
       savedCuisines={profile.cuisine_preferences ?? []}
       savedRestrictions={profile.dietary_restrictions ?? []}
     />
