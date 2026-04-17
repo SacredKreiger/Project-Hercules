@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
-import { solvePortions } from "@/lib/portion-calc";
 import { redirect } from "next/navigation";
 import { MacroRing } from "@/components/MacroRing";
 
@@ -45,27 +44,24 @@ export default async function DashboardPage() {
     : 4;
   const isRestDay = todayWorkout?.is_rest_day ?? false;
 
-  // Use the same Macro Correction Engine as the recipe sheet so numbers match
-  function slotTargets(slot: number) {
+  // Planned macros = sum of per-slot targets across today's meals.
+  // Since CAL_SPLIT fractions sum to 1.0, this always equals the daily targets
+  // when all meal slots are planned — no solver needed here.
+  function slotMacros(slot: number) {
     const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
     const f = (split[slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
     return {
       calories: Math.round(macros.calories * f),
-      protein:  Math.round(macros.protein  * f * 10) / 10,
-      carbs:    Math.round(macros.carbs    * f * 10) / 10,
-      fat:      Math.round(macros.fat      * f * 10) / 10,
+      protein:  Math.round(macros.protein  * f),
+      carbs:    Math.round(macros.carbs    * f),
+      fat:      Math.round(macros.fat      * f),
     };
   }
 
-  const mealSolutions = (todayMeals ?? []).map((m: any) => {
-    const ingredients = Array.isArray(m.recipes?.ingredients) ? m.recipes.ingredients : [];
-    return { entry: m, totals: solvePortions(ingredients, slotTargets(m.meal_slot)).totals };
-  });
-
-  const loggedCal  = mealSolutions.reduce((s, { totals }) => s + totals.calories, 0);
-  const loggedPro  = mealSolutions.reduce((s, { totals }) => s + totals.protein,  0);
-  const loggedCarb = mealSolutions.reduce((s, { totals }) => s + totals.carbs,    0);
-  const loggedFat  = mealSolutions.reduce((s, { totals }) => s + totals.fat,      0);
+  const loggedCal  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).calories, 0);
+  const loggedPro  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).protein,  0);
+  const loggedCarb = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).carbs,    0);
+  const loggedFat  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).fat,      0);
 
   const currentWeight = latestLog?.weight_lbs ?? profile.current_weight_lbs;
   const progressPct = Math.min(100, Math.abs(
@@ -97,7 +93,7 @@ export default async function DashboardPage() {
       <div className="glass widget-shadow rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold">Today&apos;s Macros</p>
-          <p className="text-xs text-muted-foreground">logged / target</p>
+          <p className="text-xs text-muted-foreground">planned / target</p>
         </div>
         <div className="grid grid-cols-4 gap-2 justify-items-center">
           <MacroRing label="Calories" logged={loggedCal}  target={macros.calories} unit="kcal" color="oklch(0.72 0.17 42)"  size={76} />
@@ -130,20 +126,23 @@ export default async function DashboardPage() {
           <h2 className="text-sm font-semibold">Today&apos;s Meals</h2>
         </div>
         <div className="divide-y divide-border">
-          {mealSolutions.length > 0 ? (
-            mealSolutions.map(({ entry, totals }) => (
-              <div key={entry.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Meal {entry.meal_slot}</p>
-                  <p className="text-sm font-medium mt-0.5">{entry.recipes?.name}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{entry.recipes?.cuisine}</p>
+          {todayMeals && todayMeals.length > 0 ? (
+            todayMeals.map((entry: any) => {
+              const m = slotMacros(entry.meal_slot);
+              return (
+                <div key={entry.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Meal {entry.meal_slot}</p>
+                    <p className="text-sm font-medium mt-0.5">{entry.recipes?.name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{entry.recipes?.cuisine}</p>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-sm font-bold tabular-nums">{m.calories} kcal</p>
+                    <p className="text-[11px] text-muted-foreground">{m.protein}g P · {m.carbs}g C · {m.fat}g F</p>
+                  </div>
                 </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-bold tabular-nums">{totals.calories}</p>
-                  <p className="text-[11px] text-muted-foreground">kcal · {totals.protein}g P</p>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="px-4 py-6 text-center">
               <p className="text-sm text-muted-foreground">No meals planned yet.</p>
