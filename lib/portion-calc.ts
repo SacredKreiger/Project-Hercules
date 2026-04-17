@@ -55,7 +55,7 @@ function ingredientsToFoods(
       caloriesPerGram:  info ? info.macros.kcal     / 100 : 0,
       minGrams:         bounds.min,
       maxGrams:         bounds.max,
-      stepGrams:        1,
+      stepGrams:        0.1,   // 0.1 g steps → snap pass reaches < 0.05 g error = exact match
     })
     initialGrams.push(Math.max(bounds.min, grams))
   }

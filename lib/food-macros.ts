@@ -170,17 +170,17 @@ export function toGrams(qty: number, unit: string, info: IngredientInfo): number
   return qty;
 }
 
-/** Format grams to a clean display string, preferring oz for meats over 100g. */
+/** Format grams to a precise display string (1 decimal).
+ *  Protein sources show oz + g. Small fat sources show tbsp + g. */
 export function formatGrams(grams: number, category: IngredientInfo["category"]): string {
-  const rounded = Math.round(grams);
+  const precise = Math.round(grams * 10) / 10;   // 1 decimal
   if (category === "protein" && grams >= 28) {
     const oz = grams / 28.3495;
-    return `${oz.toFixed(1)} oz (${rounded} g)`;
+    return `${oz.toFixed(1)} oz (${precise} g)`;
   }
   if (category === "fat" && grams < 30) {
-    // show tbsp for oils/butters
     const tbsp = grams / 14.79;
-    if (tbsp < 8) return `${tbsp.toFixed(1)} tbsp (${rounded} g)`;
+    if (tbsp < 8) return `${tbsp.toFixed(1)} tbsp (${precise} g)`;
   }
-  return `${rounded} g`;
+  return `${precise} g`;
 }

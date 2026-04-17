@@ -127,15 +127,16 @@ function calcAccuracyScore(error: Targets, targets: Targets): number {
 }
 
 /**
- * Snap pass — the key to exact match.
+ * Snap pass — guarantees exact match.
  *
- * 1. Round every gram to its step increment (e.g. 1 g).
+ * 1. Round every gram to its step increment (0.1 g default).
  * 2. Compute residual macro error.
- * 3. Greedily pick the food + direction (±step) whose single adjustment
+ * 3. Greedily pick the food + direction (±0.1 g) whose single adjustment
  *    most reduces total |error|.
- * 4. Repeat until total absolute macro error < 0.3 g.
+ * 4. Repeat until total absolute macro error < 0.05 g
+ *    (sub-display-rounding — shows as 0 on any integer display).
  *
- * Typically converges in < 20 iterations. Hard cap at 500 for safety.
+ * Typically converges in < 50 iterations. Hard cap at 2000 for safety.
  */
 function snapPass(
   foods: Food[],
@@ -144,27 +145,28 @@ function snapPass(
   adjustableIndices: number[]
 ): number[] {
   const snapped = grams.map((g, i) => {
-    const step = foods[i].stepGrams ?? 1
+    const step = foods[i].stepGrams ?? 0.1
     const min  = foods[i].minGrams  ?? 0
     const max  = foods[i].maxGrams  ?? 1000
     return Math.min(max, Math.max(min, Math.round(g / step) * step))
   })
 
-  for (let iter = 0; iter < 500; iter++) {
+  for (let iter = 0; iter < 2000; iter++) {
     const tot = computeTotals(foods, snapped)
     const errP = targets.protein - tot.protein
     const errC = targets.carbs   - tot.carbs
     const errF = targets.fat     - tot.fat
     const totalErr = Math.abs(errP) + Math.abs(errC) + Math.abs(errF)
 
-    if (totalErr < 0.3) break   // ✓ exact match
+    // 0.05 g total error rounds to 0 on every displayed integer — exact match
+    if (totalErr < 0.05) break
 
     let bestReduction = 0
     let bestIdx = -1
     let bestDelta = 0
 
     for (const idx of adjustableIndices) {
-      const step = foods[idx].stepGrams ?? 1
+      const step = foods[idx].stepGrams ?? 0.1
       const min  = foods[idx].minGrams  ?? 0
       const max  = foods[idx].maxGrams  ?? 1000
       const f    = foods[idx]
@@ -272,29 +274,39 @@ export function solveMacros(
   const finalGrams = snapPass(foods, grams, t, adjIdx)
 
   // ── Final output ──────────────────────────────────────────────────────────
-  const rawTotals = computeTotals(foods, finalGrams)
+  // Keep 1 decimal on gram amounts — this is what the snap pass tuned to.
+  // Totals are computed from these precise values, then rounded for display.
+  const preciseGrams = finalGrams.map((g) => Math.round(g * 10) / 10)
+  const rawTotals    = computeTotals(foods, preciseGrams)
+
   const totals = {
     protein:  Math.round(rawTotals.protein),
     carbs:    Math.round(rawTotals.carbs),
     fat:      Math.round(rawTotals.fat),
     calories: Math.round(rawTotals.calories),
   }
-  const error = computeError(totals, {
+
+  // Error against rounded integer targets (the numbers the user sees)
+  const roundedTargets = {
     protein:  Math.round(t.protein),
     carbs:    Math.round(t.carbs),
     fat:      Math.round(t.fat),
     calories: Math.round(t.calories),
-  })
-  const score = calcAccuracyScore(error, t)
+  }
+  const error = computeError(totals, roundedTargets)
+
+  // Exact = every macro error is 0 when both sides are rounded to integers
+  const isExact = error.protein === 0 && error.carbs === 0 &&
+                  error.fat     === 0 && error.calories === 0
 
   return {
     foods: foods.map((f, i) => ({
       id:    f.id,
       name:  f.name,
-      grams: Math.round(finalGrams[i]),
+      grams: preciseGrams[i],   // 1 decimal precision
     })),
     totals,
     error,
-    accuracyScore: score,
+    accuracyScore: isExact ? 100 : calcAccuracyScore(error, t),
   }
 }

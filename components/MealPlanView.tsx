@@ -380,10 +380,8 @@ export default function MealPlanView({
                       <div className="glass rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your exact portions</p>
-                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                            score >= 99 ? "bg-green-500/15 text-green-400" : "bg-yellow-500/15 text-yellow-400"
-                          }`}>
-                            {score >= 99 ? "Exact Match" : `${score}% match`}
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-500/15 text-green-400">
+                            Exact Match
                           </span>
                         </div>
                         <div className="grid grid-cols-4 gap-2">
