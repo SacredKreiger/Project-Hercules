@@ -31,7 +31,7 @@ export default function GroceryPage() {
   const [items,    setItems]   = useState<GroceryItem[]>([]);
   const [userId,   setUserId]  = useState<string | null>(null);
   const [loading,  setLoading] = useState(true);
-  const [expanded,      setExpanded]      = useState<Set<string>>(new Set());
+  const [expanded,      setExpanded]      = useState<Set<string>>(new Set(CATEGORY_ORDER));
   const [store,         setStore]         = useState<StoreId>("walmart");
   const [storePicker,   setStorePicker]   = useState(false);
 
@@ -235,7 +235,7 @@ export default function GroceryPage() {
                       <label
                         key={globalIndex}
                         onClick={() => toggle(globalIndex)}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer press active:bg-foreground/5 transition-colors"
                       >
                         <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                           item.checked ? "border-primary bg-primary" : "border-border"
@@ -249,7 +249,7 @@ export default function GroceryPage() {
                         <span className={`text-sm flex-1 capitalize transition-opacity ${item.checked ? "line-through text-muted-foreground opacity-50" : ""}`}>
                           {item.name}
                         </span>
-                        <span className={`text-xs font-semibold tabular-nums glass px-2.5 py-1 rounded-full transition-opacity ${item.checked ? "opacity-40" : ""}`}>
+                        <span className={`text-xs font-semibold tabular-nums bg-foreground/5 px-3 py-1.5 rounded-full transition-opacity ${item.checked ? "opacity-40" : ""}`}>
                           {item.qty} {item.unit}
                         </span>
                       </label>
