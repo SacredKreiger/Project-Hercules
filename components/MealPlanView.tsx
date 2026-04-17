@@ -4,7 +4,20 @@ import { useState, useEffect } from "react";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const SLOT_LABEL: Record<number, string> = { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack" };
+// Calorie fraction per slot, mirrored from meal-plan.ts
+const CAL_SPLIT: Record<number, Record<number, number>> = {
+  3: { 1: 0.30, 2: 0.40, 3: 0.30 },
+  4: { 1: 0.25, 2: 0.35, 3: 0.30, 4: 0.10 },
+  5: { 1: 0.20, 2: 0.12, 3: 0.28, 4: 0.12, 5: 0.28 },
+};
+
+const SLOT_LABELS: Record<number, Record<number, string>> = {
+  3: { 1: "Breakfast", 2: "Lunch", 3: "Dinner" },
+  4: { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack" },
+  5: { 1: "Breakfast", 2: "Morning Snack", 3: "Lunch", 4: "Afternoon Snack", 5: "Dinner" },
+};
+
+const STORAGE_KEY = "hc-meal-config";
 
 const TAG_COLORS: Record<string, string> = {
   "high-protein":   "bg-green-500/15 text-green-400",
@@ -55,11 +68,31 @@ function formatQty(qty: number): string {
   return String(qty);
 }
 
+function getMultiplier(dailyCalories: number, mealsPerDay: number, slot: number, recipeCal: number): number {
+  const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
+  const fraction = split[slot] ?? 0.25;
+  const target = dailyCalories * fraction;
+  if (!recipeCal) return 1;
+  return Math.round(Math.min(Math.max(target / recipeCal, 0.5), 3.0) * 10) / 10;
+}
+
+function scaleQty(qty: number, multiplier: number): string {
+  const scaled = qty * multiplier;
+  if (scaled === 0.25) return "¼";
+  if (scaled === 0.5)  return "½";
+  if (scaled === 0.75) return "¾";
+  if (scaled === 0.33) return "⅓";
+  if (scaled === 0.67) return "⅔";
+  const rounded = Math.round(scaled * 4) / 4; // round to nearest quarter
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, "");
+}
+
 export default function MealPlanView({
   mealPlan,
   weekNumber,
   phase,
   todayDow,
+  dailyCalories = 2000,
   savedCuisines = [],
   savedRestrictions = [],
 }: {
@@ -67,11 +100,13 @@ export default function MealPlanView({
   weekNumber: number;
   phase: string;
   todayDow: number;
+  dailyCalories?: number;
   savedCuisines?: string[];
   savedRestrictions?: string[];
 }) {
   const [selected, setSelected] = useState<MealEntry | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [mealsPerDay, setMealsPerDay] = useState<3 | 4 | 5>(4);
   // Record<recipeId, stepIndex[]>
   const [checkedSteps, setCheckedSteps] = useState<Record<string, number[]>>({});
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, number[]>>({});
@@ -83,6 +118,11 @@ export default function MealPlanView({
       const i = localStorage.getItem("hc-checked-ingredients");
       if (s) setCheckedSteps(JSON.parse(s));
       if (i) setCheckedIngredients(JSON.parse(i));
+      const config = localStorage.getItem(STORAGE_KEY);
+      if (config) {
+        const parsed = JSON.parse(config);
+        if (parsed.mealsPerDay) setMealsPerDay(parsed.mealsPerDay);
+      }
     } catch {}
   }, []);
 
@@ -199,15 +239,30 @@ export default function MealPlanView({
                     className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5 transition-colors"
                   >
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{SLOT_LABEL[entry.meal_slot]}</p>
+                      <p className="text-xs text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
                       <p className="text-sm font-medium mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <p className="text-sm font-semibold">{entry.recipes?.calories ?? "—"} kcal</p>
-                      <p className="text-xs text-muted-foreground">
-                        {entry.recipes?.protein_g ?? "—"}g P · {entry.recipes?.carbs_g ?? "—"}g C
-                      </p>
+                      {(() => {
+                        const m = entry.recipes?.calories
+                          ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories)
+                          : 1;
+                        const scaledCal  = entry.recipes?.calories  ? Math.round(entry.recipes.calories  * m) : null;
+                        const scaledProt = entry.recipes?.protein_g ? Math.round(entry.recipes.protein_g * m) : null;
+                        const scaledCarb = entry.recipes?.carbs_g   ? Math.round(entry.recipes.carbs_g   * m) : null;
+                        return (
+                          <>
+                            <p className="text-sm font-semibold">{scaledCal ?? "—"} kcal</p>
+                            <p className="text-xs text-muted-foreground">
+                              {scaledProt ?? "—"}g P · {scaledCarb ?? "—"}g C
+                            </p>
+                            {m !== 1 && (
+                              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{m}× serving</p>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </button>
                 ))}
@@ -242,7 +297,7 @@ export default function MealPlanView({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                    {SLOT_LABEL[selected.meal_slot]}{recipe?.cuisine ? ` · ${recipe.cuisine}` : ""}
+                    {SLOT_LABELS[mealsPerDay]?.[selected.meal_slot] ?? "Meal"}{recipe?.cuisine ? ` · ${recipe.cuisine}` : ""}
                   </p>
                   <h2 className="text-xl font-bold mt-1 leading-snug">{recipe?.name ?? "Recipe"}</h2>
                   {recipe?.description && (
@@ -296,6 +351,38 @@ export default function MealPlanView({
                   </div>
                 </div>
 
+                {/* For your goal */}
+                {recipe.calories > 0 && (() => {
+                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories);
+                  const goalCal  = Math.round(recipe.calories  * m);
+                  const goalProt = Math.round(recipe.protein_g * m);
+                  const goalCarb = Math.round(recipe.carbs_g   * m);
+                  const goalFat  = Math.round(recipe.fat_g     * m);
+                  return (
+                    <div className="glass rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">For your goal</p>
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                          {m}× {m === 1 ? "serving" : "servings"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Calories", value: String(goalCal), sub: "kcal" },
+                          { label: "Protein",  value: String(goalProt), sub: "g" },
+                          { label: "Carbs",    value: String(goalCarb), sub: "g" },
+                          { label: "Fat",      value: String(goalFat),  sub: "g" },
+                        ].map(({ label, value, sub }) => (
+                          <div key={label} className="bg-primary/5 rounded-xl p-2.5 text-center">
+                            <p className="text-sm font-bold leading-none text-primary">{value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{sub}</span></p>
+                            <p className="text-[10px] text-muted-foreground mt-1">{label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Time + servings */}
                 <div className="flex gap-5 text-sm">
                   {recipe.prep_time_min != null && (
@@ -323,46 +410,54 @@ export default function MealPlanView({
                 </div>
 
                 {/* Ingredients */}
-                {ingredients.length > 0 && (
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-                      Ingredients
-                    </p>
-                    <ul className="space-y-0.5">
-                      {ingredients.map((ing, i) => {
-                        const checked = ingsDone.includes(i);
-                        return (
-                          <li key={i}>
-                            <button
-                              type="button"
-                              onClick={() => toggleIngredient(recipe.id, i)}
-                              className="w-full flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 text-left"
-                            >
-                              {/* Checkbox */}
-                              <span className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                                checked ? "bg-primary border-primary" : "border-border"
-                              }`}>
-                                {checked && (
-                                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="2,6 5,9 10,3" />
-                                  </svg>
-                                )}
-                              </span>
-                              {/* Qty + unit */}
-                              <span className={`shrink-0 w-16 text-right text-sm font-semibold tabular-nums transition-opacity ${checked ? "opacity-40" : ""}`}>
-                                {formatQty(ing.qty)} <span className="font-normal text-muted-foreground">{ing.unit}</span>
-                              </span>
-                              {/* Name */}
-                              <span className={`text-sm transition-opacity ${checked ? "opacity-40 line-through" : ""}`}>
-                                {ing.name}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
+                {ingredients.length > 0 && (() => {
+                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories);
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          Ingredients
+                        </p>
+                        {m !== 1 && (
+                          <p className="text-[10px] text-muted-foreground">scaled to {m}× serving</p>
+                        )}
+                      </div>
+                      <ul className="space-y-0.5">
+                        {ingredients.map((ing, i) => {
+                          const checked = ingsDone.includes(i);
+                          return (
+                            <li key={i}>
+                              <button
+                                type="button"
+                                onClick={() => toggleIngredient(recipe.id, i)}
+                                className="w-full flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 text-left"
+                              >
+                                {/* Checkbox */}
+                                <span className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                  checked ? "bg-primary border-primary" : "border-border"
+                                }`}>
+                                  {checked && (
+                                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="2,6 5,9 10,3" />
+                                    </svg>
+                                  )}
+                                </span>
+                                {/* Qty + unit */}
+                                <span className={`shrink-0 w-16 text-right text-sm font-semibold tabular-nums transition-opacity ${checked ? "opacity-40" : ""}`}>
+                                  {scaleQty(ing.qty, m)} <span className="font-normal text-muted-foreground">{ing.unit}</span>
+                                </span>
+                                {/* Name */}
+                                <span className={`text-sm transition-opacity ${checked ? "opacity-40 line-through" : ""}`}>
+                                  {ing.name}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                })()}
 
                 {/* Instructions */}
                 {steps.length > 0 && (
