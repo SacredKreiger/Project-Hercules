@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { regenerateGroceryList } from "@/lib/actions/grocery-list";
 import { Skeleton } from "@/components/Skeleton";
 
 type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean };
@@ -19,12 +18,10 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export default function GroceryPage() {
-  const [items,    setItems]    = useState<GroceryItem[]>([]);
-  const [userId,   setUserId]   = useState<string | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-
-  const [generating, startGenerating] = useTransition();
+  const [items,    setItems]   = useState<GroceryItem[]>([]);
+  const [userId,   setUserId]  = useState<string | null>(null);
+  const [loading,  setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => { load(); }, []);
 
@@ -34,8 +31,6 @@ export default function GroceryPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     setUserId(user.id);
-
-    // week_number = 0 is the monthly aggregated list
     const { data: list } = await supabase
       .from("grocery_lists").select("*")
       .eq("user_id", user.id).eq("week_number", 0).single();
@@ -53,15 +48,11 @@ export default function GroceryPage() {
       .eq("user_id", userId).eq("week_number", 0);
   }
 
-  function handleRegenerate() {
-    setError("");
-    startGenerating(async () => {
-      const result = await regenerateGroceryList();
-      if (result.error) {
-        setError(result.error);
-      } else {
-        await load();
-      }
+  function toggleCategory(cat: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
     });
   }
 
@@ -77,24 +68,8 @@ export default function GroceryPage() {
     <div className="space-y-4">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">4-week shopping list</p>
-        </div>
-        {totalCount > 0 && !loading && (
-          <button
-            type="button"
-            onClick={handleRegenerate}
-            disabled={generating}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press mt-1 disabled:opacity-50"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={generating ? "animate-spin" : ""}>
-              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-            </svg>
-            {generating ? "Generating…" : "Regenerate"}
-          </button>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
       </div>
 
       {/* Progress bar */}
@@ -118,92 +93,94 @@ export default function GroceryPage() {
         </div>
       )}
 
-      {error && (
-        <p className="text-sm text-destructive px-1">{error}</p>
-      )}
-
       {/* Loading */}
       {loading && (
         <div className="space-y-3">
-          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
-        </div>
-      )}
-
-      {/* Generating overlay */}
-      {generating && (
-        <div className="glass widget-shadow rounded-2xl px-4 py-8 text-center space-y-2">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold">Building your grocery list…</p>
-          <p className="text-xs text-muted-foreground">Calculating quantities across all 4 weeks</p>
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
         </div>
       )}
 
       {/* Empty state */}
-      {!loading && !generating && items.length === 0 && (
+      {!loading && items.length === 0 && (
         <div className="glass widget-shadow rounded-2xl px-6 py-14 text-center space-y-3">
           <p className="text-2xl">🛒</p>
           <p className="font-semibold">No grocery list yet</p>
           <p className="text-sm text-muted-foreground">
-            Generate your meal plan first, then come back to get your bulk shopping list.
+            Set up your meal plan and your grocery list will appear here automatically.
           </p>
-          <button
-            type="button"
-            onClick={handleRegenerate}
-            disabled={generating}
-            className="mt-1 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold press disabled:opacity-50"
+          <a
+            href="/meals"
+            className="mt-1 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold press inline-block"
           >
-            {generating ? "Generating…" : "Generate from Meal Plan"}
-          </button>
+            Go to Meal Plan →
+          </a>
         </div>
       )}
 
-      {/* Category sections */}
-      {!loading && !generating && items.length > 0 && (
+      {/* Collapsible category sections */}
+      {!loading && items.length > 0 && (
         CATEGORY_ORDER.map((cat) => {
           const catItems = byCategory[cat];
           if (!catItems?.length) return null;
+          const isOpen    = expanded.has(cat);
+          const doneCount = catItems.filter((i) => i.checked).length;
+          const allDone   = doneCount === catItems.length;
+
           return (
             <div key={cat} className="glass widget-shadow rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-                <span>{CATEGORY_ICONS[cat]}</span>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex-1">{cat}</p>
-                <span className="text-xs text-muted-foreground">
-                  {catItems.filter((i) => i.checked).length}/{catItems.length}
+              {/* Category header — tap to expand/collapse */}
+              <button
+                type="button"
+                onClick={() => toggleCategory(cat)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left press active:bg-foreground/5 transition-colors"
+              >
+                <span className="text-base">{CATEGORY_ICONS[cat]}</span>
+                <span className={`text-sm font-semibold flex-1 ${allDone ? "line-through text-muted-foreground" : ""}`}>
+                  {cat}
                 </span>
-              </div>
-              <div className="divide-y divide-border">
-                {catItems.map((item) => {
-                  const globalIndex = items.indexOf(item);
-                  return (
-                    <label
-                      key={globalIndex}
-                      onClick={() => toggle(globalIndex)}
-                      className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
-                    >
-                      {/* Custom checkbox */}
-                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                        item.checked ? "border-primary bg-primary" : "border-border"
-                      }`}>
-                        {item.checked && (
-                          <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
-                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
+                <span className={`text-xs tabular-nums mr-1 ${allDone ? "text-emerald-500 font-semibold" : "text-muted-foreground"}`}>
+                  {doneCount}/{catItems.length}
+                </span>
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
 
-                      {/* Name */}
-                      <span className={`text-sm flex-1 capitalize transition-opacity ${item.checked ? "line-through text-muted-foreground opacity-50" : ""}`}>
-                        {item.name}
-                      </span>
-
-                      {/* Quantity badge */}
-                      <span className={`text-xs font-semibold tabular-nums glass px-2.5 py-1 rounded-full transition-opacity ${item.checked ? "opacity-40" : ""}`}>
-                        {item.qty} {item.unit}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
+              {/* Items — only shown when expanded */}
+              {isOpen && (
+                <div className="divide-y divide-border border-t border-border">
+                  {catItems.map((item) => {
+                    const globalIndex = items.indexOf(item);
+                    return (
+                      <label
+                        key={globalIndex}
+                        onClick={() => toggle(globalIndex)}
+                        className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
+                      >
+                        <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                          item.checked ? "border-primary bg-primary" : "border-border"
+                        }`}>
+                          {item.checked && (
+                            <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`text-sm flex-1 capitalize transition-opacity ${item.checked ? "line-through text-muted-foreground opacity-50" : ""}`}>
+                          {item.name}
+                        </span>
+                        <span className={`text-xs font-semibold tabular-nums glass px-2.5 py-1 rounded-full transition-opacity ${item.checked ? "opacity-40" : ""}`}>
+                          {item.qty} {item.unit}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })

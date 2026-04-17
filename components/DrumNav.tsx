@@ -217,7 +217,7 @@ export default function DrumNav() {
     <>
       {/* 6 indicator dots — same size, filled = current page, outline = inactive */}
       <div
-        className="md:hidden fixed right-2.5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-[10px] pointer-events-none"
+        className="md:hidden fixed right-0.5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-[10px] pointer-events-none"
         style={{ opacity: open ? 0 : 1, transition: `opacity 0.18s ${EASING}` }}
       >
         {NAV.map((_, i) => (
