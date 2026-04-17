@@ -47,8 +47,10 @@ export default function ProgressPage() {
     await load(); setSaving(false);
   }
 
+  // Append T12:00:00 so "YYYY-MM-DD" is parsed as local noon, not UTC midnight
+  // (avoids off-by-one day display in timezones west of UTC)
   const chartData = logs.map((l) => ({
-    date: new Date(l.log_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    date: new Date(l.log_date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     weight: l.weight_lbs,
   }));
 
@@ -154,7 +156,7 @@ export default function ProgressPage() {
             {[...logs].reverse().slice(0, 14).map((log) => (
               <div key={log.id} className="flex items-center justify-between px-4 py-3">
                 <span className="text-sm text-muted-foreground">
-                  {new Date(log.log_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                  {new Date(log.log_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                 </span>
                 <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
               </div>

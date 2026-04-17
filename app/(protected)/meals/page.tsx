@@ -14,11 +14,12 @@ export default async function MealsPage() {
   const weekNumber = Math.ceil((Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7);
   const todayDow = now.getDay();
 
+  // Load the full month (all 4 weeks) at once
   const { data: mealPlan } = await supabase
     .from("meal_plans")
     .select("*, recipes(*)")
     .eq("user_id", user!.id)
-    .eq("week_number", weekNumber)
+    .order("week_number")
     .order("day_of_week")
     .order("meal_slot");
 
@@ -26,7 +27,6 @@ export default async function MealsPage() {
   const tdee = calcTDEE(bmr, profile.activity_level);
   const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
 
-  // Derive mealsPerDay from actual plan data so it always matches what was generated
   const plan = mealPlan ?? [];
   const mealsPerDay = plan.length > 0
     ? (Math.max(...plan.map((e) => e.meal_slot)) as 3 | 4 | 5)
@@ -35,7 +35,7 @@ export default async function MealsPage() {
   return (
     <MealPlanView
       mealPlan={plan}
-      weekNumber={weekNumber}
+      weekNumber={Math.min(weekNumber, 4)}
       phase={profile.phase}
       todayDow={todayDow}
       dailyCalories={macros.calories}

@@ -10,27 +10,38 @@ const CATEGORY_ORDER = ["Protein", "Produce", "Dairy", "Grains & Carbs", "Pantry
 export default function GroceryPage() {
   const [items, setItems] = useState<GroceryItem[]>([]);
   const [weekNumber, setWeekNumber] = useState(1);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      if (!user) return;
+      setUserId(user.id);
+      const { data: profile } = await supabase.from("profiles").select("program_start_date").eq("id", user.id).single();
+      if (!profile) { setLoading(false); return; }
       const startDate = new Date(profile.program_start_date);
       const now = new Date();
       const week = Math.ceil((Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7);
       setWeekNumber(week);
       const { data: list } = await supabase.from("grocery_lists").select("*")
-        .eq("user_id", user!.id).eq("week_number", week).single();
+        .eq("user_id", user.id).eq("week_number", week).single();
       if (list) setItems(list.items as GroceryItem[]);
       setLoading(false);
     }
     load();
   }, []);
 
-  function toggle(index: number) {
-    setItems((prev) => prev.map((item, i) => i === index ? { ...item, checked: !item.checked } : item));
+  async function toggle(index: number) {
+    const updated = items.map((item, i) => i === index ? { ...item, checked: !item.checked } : item);
+    setItems(updated);
+    // Persist checked state back to Supabase so it survives a page refresh
+    if (!userId) return;
+    const supabase = createClient();
+    await supabase.from("grocery_lists")
+      .update({ items: updated })
+      .eq("user_id", userId).eq("week_number", weekNumber);
   }
 
   const byCategory = CATEGORY_ORDER.reduce((acc, cat) => {
@@ -68,9 +79,9 @@ export default function GroceryPage() {
               {byCategory[cat].map((item, i) => {
                 const globalIndex = items.indexOf(item);
                 return (
-                  <label key={i} className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors">
-                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${item.checked ? "border-primary bg-primary" : "border-border"}`}
-                      onClick={() => toggle(globalIndex)}>
+                  <label key={i} className="flex items-center gap-3 px-4 py-3 cursor-pointer press active:bg-foreground/5 transition-colors"
+                    onClick={() => toggle(globalIndex)}>
+                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${item.checked ? "border-primary bg-primary" : "border-border"}`}>
                       {item.checked && (
                         <svg className="h-2.5 w-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
                           <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

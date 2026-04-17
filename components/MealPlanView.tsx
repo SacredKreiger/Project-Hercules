@@ -5,7 +5,8 @@ import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 import { computeExactPortions, solvePortions } from "@/lib/portion-calc";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS       = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const SLOT_LABELS: Record<number, Record<number, string>> = {
   3: { 1: "Breakfast", 2: "Lunch", 3: "Dinner" },
@@ -49,23 +50,11 @@ type Recipe = {
 
 type MealEntry = {
   id: string;
+  week_number: number;
   day_of_week: number;
   meal_slot: number;
   recipes: Recipe | null;
 };
-
-function formatQty(qty: number): string {
-  if (qty === 0.25) return "¼";
-  if (qty === 0.5)  return "½";
-  if (qty === 0.75) return "¾";
-  if (qty === 0.33 || qty === 1 / 3) return "⅓";
-  if (qty === 0.67 || qty === 2 / 3) return "⅔";
-  if (Number.isInteger(qty)) return String(qty);
-  return String(qty);
-}
-
-// Alias for readability in JSX
-const getMultiplier = getServingsMultiplier;
 
 function scaleQty(qty: number, multiplier: number): string {
   const scaled = qty * multiplier;
@@ -74,9 +63,11 @@ function scaleQty(qty: number, multiplier: number): string {
   if (scaled === 0.75) return "¾";
   if (scaled === 0.33) return "⅓";
   if (scaled === 0.67) return "⅔";
-  const rounded = Math.round(scaled * 4) / 4; // round to nearest quarter
+  const rounded = Math.round(scaled * 4) / 4;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, "");
 }
+
+const getMultiplier = getServingsMultiplier;
 
 export default function MealPlanView({
   mealPlan,
@@ -99,17 +90,17 @@ export default function MealPlanView({
   savedCuisines?: string[];
   savedRestrictions?: string[];
 }) {
-  const [selected, setSelected] = useState<MealEntry | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  // mealsPerDay comes from the server (derived from actual plan data) — localStorage is only a UI cache
   const mealsPerDay = mealsPerDayProp;
-  // Training days from localStorage (saved by ReconfigureSheet) — used for rest-day calorie scaling
-  const [trainingDays, setTrainingDays] = useState<number[]>([1, 2, 3, 4, 5]);
-  // Record<recipeId, stepIndex[]>
-  const [checkedSteps, setCheckedSteps] = useState<Record<string, number[]>>({});
-  const [checkedIngredients, setCheckedIngredients] = useState<Record<string, number[]>>({});
 
-  // Load persisted state from localStorage on mount
+  const [view, setView]               = useState<"day" | "week" | "month">("week");
+  const [selectedWeek, setSelectedWeek] = useState(weekNumber);
+  const [selectedDow, setSelectedDow]   = useState(todayDow);
+  const [selected, setSelected]         = useState<MealEntry | null>(null);
+  const [sheetOpen, setSheetOpen]       = useState(false);
+  const [trainingDays, setTrainingDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [checkedSteps, setCheckedSteps]               = useState<Record<string, number[]>>({});
+  const [checkedIngredients, setCheckedIngredients]   = useState<Record<string, number[]>>({});
+
   useEffect(() => {
     try {
       const s = localStorage.getItem("hc-checked-steps");
@@ -135,49 +126,109 @@ export default function MealPlanView({
   function toggleStep(recipeId: string, idx: number) {
     setCheckedSteps((prev) => {
       const cur = prev[recipeId] ?? [];
-      const next = cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx];
-      return { ...prev, [recipeId]: next };
+      return { ...prev, [recipeId]: cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx] };
     });
   }
 
   function toggleIngredient(recipeId: string, idx: number) {
     setCheckedIngredients((prev) => {
       const cur = prev[recipeId] ?? [];
-      const next = cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx];
-      return { ...prev, [recipeId]: next };
+      return { ...prev, [recipeId]: cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx] };
     });
   }
 
-  const byDay: Record<number, MealEntry[]> = {};
-  mealPlan.forEach((entry) => {
-    if (!byDay[entry.day_of_week]) byDay[entry.day_of_week] = [];
-    byDay[entry.day_of_week].push(entry);
-  });
+  // ── Data grouping ──────────────────────────────────────────────────────────
+  // byWeekDay[week][dow] = MealEntry[]
+  const byWeekDay: Record<number, Record<number, MealEntry[]>> = {};
+  for (const entry of mealPlan) {
+    if (!byWeekDay[entry.week_number]) byWeekDay[entry.week_number] = {};
+    if (!byWeekDay[entry.week_number][entry.day_of_week]) byWeekDay[entry.week_number][entry.day_of_week] = [];
+    byWeekDay[entry.week_number][entry.day_of_week].push(entry);
+  }
 
-  const recipe = selected?.recipes ?? null;
-  const servings = recipe?.servings || 1;
-  const cal  = recipe ? Math.round(recipe.calories  / servings) : null;
-  const prot = recipe ? Math.round(recipe.protein_g / servings) : null;
-  const carb = recipe ? Math.round(recipe.carbs_g   / servings) : null;
-  const fat  = recipe ? Math.round(recipe.fat_g     / servings) : null;
+  const totalWeeks = Math.max(4, ...Object.keys(byWeekDay).map(Number));
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function dayCalories(entries: MealEntry[], dow: number): number {
+    return entries.reduce((sum, e) => {
+      if (!e.recipes) return sum;
+      const isRest = !trainingDays.includes(dow);
+      const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
+      return sum + Math.round((dailyMacros?.calories ?? dailyCalories) * (split[e.meal_slot] ?? 0.25) * (isRest ? 0.85 : 1.0));
+    }, 0);
+  }
+
+  function MealRow({ entry }: { entry: MealEntry }) {
+    const isRestDay = !trainingDays.includes(entry.day_of_week);
+    const m = entry.recipes?.calories
+      ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories, isRestDay)
+      : 1;
+    const scaledCal  = entry.recipes?.calories  ? scaleMacro(entry.recipes.calories,  m) : null;
+    const scaledProt = entry.recipes?.protein_g ? scaleMacro(entry.recipes.protein_g, m) : null;
+    const scaledCarb = entry.recipes?.carbs_g   ? scaleMacro(entry.recipes.carbs_g,   m) : null;
+    return (
+      <button
+        type="button"
+        onClick={() => setSelected(entry)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5 transition-colors"
+      >
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
+          <p className="text-sm font-medium mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
+        </div>
+        <div className="text-right shrink-0 ml-3">
+          <p className="text-sm font-semibold">{scaledCal ?? "—"} kcal</p>
+          <p className="text-xs text-muted-foreground">{scaledProt ?? "—"}g P · {scaledCarb ?? "—"}g C</p>
+          {m !== 1 && <p className="text-[10px] text-muted-foreground/60 mt-0.5">{m}× serving</p>}
+        </div>
+      </button>
+    );
+  }
+
+  function DayCard({ dow, entries, isToday }: { dow: number; entries: MealEntry[]; isToday: boolean }) {
+    return (
+      <div className={`glass widget-shadow rounded-2xl overflow-hidden ${isToday ? "ring-1 ring-primary/40" : ""}`}>
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <span className="text-sm font-semibold">{DAYS[dow]}</span>
+          {isToday && (
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-primary px-2 py-0.5 glass rounded-full">Today</span>
+          )}
+        </div>
+        {entries.length > 0 ? (
+          <div className="divide-y divide-border">
+            {entries.map((e) => <MealRow key={e.id} entry={e} />)}
+          </div>
+        ) : (
+          <p className="px-4 py-4 text-sm text-muted-foreground">No meals planned.</p>
+        )}
+      </div>
+    );
+  }
+
+  // ── Recipe sheet data ──────────────────────────────────────────────────────
+  const recipe      = selected?.recipes ?? null;
+  const servings    = recipe?.servings || 1;
+  const cal         = recipe ? Math.round(recipe.calories  / servings) : null;
+  const prot        = recipe ? Math.round(recipe.protein_g / servings) : null;
+  const carb        = recipe ? Math.round(recipe.carbs_g   / servings) : null;
+  const fat         = recipe ? Math.round(recipe.fat_g     / servings) : null;
   const ingredients = Array.isArray(recipe?.ingredients) ? recipe!.ingredients : [];
-  const steps = recipe?.instructions
-    ? recipe.instructions
-        .split(/\.\s+/)
-        .map((s) => s.replace(/\.$/, "").trim())
-        .filter(Boolean)
+  const steps       = recipe?.instructions
+    ? recipe.instructions.split(/\.\s+/).map((s) => s.replace(/\.$/, "").trim()).filter(Boolean)
     : [];
-  const tags = Array.isArray(recipe?.tags) ? recipe!.tags : [];
-  const totalTime = (recipe?.prep_time_min ?? 0) + (recipe?.cook_time_min ?? 0);
-
-  const stepsDone   = recipe ? (checkedSteps[recipe.id]   ?? []) : [];
+  const tags        = Array.isArray(recipe?.tags) ? recipe!.tags : [];
+  const totalTime   = (recipe?.prep_time_min ?? 0) + (recipe?.cook_time_min ?? 0);
+  const stepsDone   = recipe ? (checkedSteps[recipe.id]      ?? []) : [];
   const ingsDone    = recipe ? (checkedIngredients[recipe.id] ?? []) : [];
+
+  const isEmpty = mealPlan.length === 0;
 
   return (
     <>
-      {/* ── Week view ── */}
       <div className="space-y-4">
+
+        {/* ── Header ── */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Meal Plan</h1>
@@ -195,12 +246,32 @@ export default function MealPlanView({
           </button>
         </div>
 
-        {/* Empty state */}
-        {mealPlan.length === 0 && (
+        {/* ── View switcher ── */}
+        {!isEmpty && (
+          <div className="flex p-1 bg-foreground/5 rounded-xl">
+            {(["Day", "Week", "Month"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v.toLowerCase() as "day" | "week" | "month")}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  view === v.toLowerCase()
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {isEmpty && (
           <div className="glass widget-shadow rounded-2xl px-6 py-14 text-center space-y-3">
             <p className="text-2xl">🍽️</p>
             <p className="font-semibold">No plan yet</p>
-            <p className="text-sm text-muted-foreground">Tell us how you want to eat and we&apos;ll build your week.</p>
+            <p className="text-sm text-muted-foreground">Tell us how you want to eat and we&apos;ll build your month.</p>
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
@@ -211,66 +282,158 @@ export default function MealPlanView({
           </div>
         )}
 
-        {DAYS.map((day, dow) => (
-          <div
-            key={dow}
-            className={`glass widget-shadow rounded-2xl overflow-hidden ${
-              dow === todayDow ? "ring-1 ring-primary/40" : ""
-            }`}
-          >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-              <span className="text-sm font-semibold">{day}</span>
-              {dow === todayDow && (
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-primary px-2 py-0.5 glass rounded-full">
-                  Today
-                </span>
-              )}
+        {/* ── Day view ── */}
+        {!isEmpty && view === "day" && (
+          <>
+            {/* Day navigation */}
+            <div className="flex items-center justify-between px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDow === 0) {
+                    setSelectedDow(6);
+                    setSelectedWeek((w) => Math.max(1, w - 1));
+                  } else {
+                    setSelectedDow((d) => d - 1);
+                  }
+                }}
+                className="p-2 rounded-full glass widget-shadow press"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div className="text-center">
+                <p className="text-sm font-semibold">{DAYS[selectedDow]}</p>
+                <p className="text-xs text-muted-foreground">
+                  Week {selectedWeek}
+                  {selectedWeek === weekNumber && selectedDow === todayDow && " · Today"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedDow === 6) {
+                    setSelectedDow(0);
+                    setSelectedWeek((w) => Math.min(totalWeeks, w + 1));
+                  } else {
+                    setSelectedDow((d) => d + 1);
+                  }
+                }}
+                className="p-2 rounded-full glass widget-shadow press"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
 
-            {byDay[dow]?.length > 0 ? (
-              <div className="divide-y divide-border">
-                {byDay[dow].map((entry) => (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    onClick={() => setSelected(entry)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
-                      <p className="text-sm font-medium mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
-                    </div>
-                    <div className="text-right shrink-0 ml-3">
-                      {(() => {
-                        const isRestDay = !trainingDays.includes(dow);
-                        const m = entry.recipes?.calories
-                          ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories, isRestDay)
-                          : 1;
-                        const scaledCal  = entry.recipes?.calories  ? scaleMacro(entry.recipes.calories,  m) : null;
-                        const scaledProt = entry.recipes?.protein_g ? scaleMacro(entry.recipes.protein_g, m) : null;
-                        const scaledCarb = entry.recipes?.carbs_g   ? scaleMacro(entry.recipes.carbs_g,   m) : null;
-                        return (
-                          <>
-                            <p className="text-sm font-semibold">{scaledCal ?? "—"} kcal</p>
-                            <p className="text-xs text-muted-foreground">
-                              {scaledProt ?? "—"}g P · {scaledCarb ?? "—"}g C
-                            </p>
-                            {m !== 1 && (
-                              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{m}× serving</p>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </button>
-                ))}
+            <DayCard
+              dow={selectedDow}
+              entries={byWeekDay[selectedWeek]?.[selectedDow] ?? []}
+              isToday={selectedWeek === weekNumber && selectedDow === todayDow}
+            />
+          </>
+        )}
+
+        {/* ── Week view ── */}
+        {!isEmpty && view === "week" && (
+          <>
+            {/* Week navigation */}
+            <div className="flex items-center justify-between px-1">
+              <button
+                type="button"
+                onClick={() => setSelectedWeek((w) => Math.max(1, w - 1))}
+                disabled={selectedWeek <= 1}
+                className="p-2 rounded-full glass widget-shadow press disabled:opacity-30"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <div className="text-center">
+                <p className="text-sm font-semibold">Week {selectedWeek}</p>
+                {selectedWeek === weekNumber && (
+                  <p className="text-xs text-primary">Current week</p>
+                )}
               </div>
-            ) : (
-              <p className="px-4 py-4 text-sm text-muted-foreground">No meals planned.</p>
-            )}
+              <button
+                type="button"
+                onClick={() => setSelectedWeek((w) => Math.min(totalWeeks, w + 1))}
+                disabled={selectedWeek >= totalWeeks}
+                className="p-2 rounded-full glass widget-shadow press disabled:opacity-30"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+
+            {DAYS.map((_, dow) => (
+              <DayCard
+                key={dow}
+                dow={dow}
+                entries={byWeekDay[selectedWeek]?.[dow] ?? []}
+                isToday={selectedWeek === weekNumber && dow === todayDow}
+              />
+            ))}
+          </>
+        )}
+
+        {/* ── Month view ── */}
+        {!isEmpty && view === "month" && (
+          <div className="space-y-3">
+            {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => {
+              const weekData = byWeekDay[week] ?? {};
+              return (
+                <div key={week} className={`glass widget-shadow rounded-2xl overflow-hidden ${week === weekNumber ? "ring-1 ring-primary/30" : ""}`}>
+                  {/* Week header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Week {week}</span>
+                      {week === weekNumber && (
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-primary px-2 py-0.5 glass rounded-full">Current</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedWeek(week); setView("week"); }}
+                      className="text-xs text-primary font-semibold press"
+                    >
+                      View week →
+                    </button>
+                  </div>
+
+                  {/* Compact day rows */}
+                  <div className="divide-y divide-border">
+                    {DAYS.map((_, dow) => {
+                      const entries = weekData[dow] ?? [];
+                      const kcal    = dayCalories(entries, dow);
+                      const isToday = week === weekNumber && dow === todayDow;
+                      return (
+                        <button
+                          key={dow}
+                          type="button"
+                          onClick={() => { setSelectedWeek(week); setSelectedDow(dow); setView("day"); }}
+                          className="w-full flex items-center justify-between px-4 py-2.5 text-left active:bg-white/5 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm w-7 ${isToday ? "font-bold text-primary" : "text-muted-foreground"}`}>
+                              {DAYS_SHORT[dow]}
+                            </span>
+                            {isToday && (
+                              <span className="text-[10px] text-primary font-semibold">Today</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground">{entries.length} meals</span>
+                            {kcal > 0 && (
+                              <span className="text-xs font-semibold tabular-nums">{kcal} kcal</span>
+                            )}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
+
       </div>
 
       {/* ── Reconfigure sheet ── */}
@@ -355,8 +518,6 @@ export default function MealPlanView({
                   const isRestDay = !trainingDays.includes(selected.day_of_week);
                   const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
                   const fraction = (split[selected.meal_slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
-
-                  // Use real user macro targets, proportioned to this meal slot
                   const base = dailyMacros ?? {
                     calories: dailyCalories,
                     protein:  dailyCalories * 0.30 / 4,
@@ -369,14 +530,11 @@ export default function MealPlanView({
                     carbs:    Math.round(base.carbs    * fraction * 10) / 10,
                     fat:      Math.round(base.fat      * fraction * 10) / 10,
                   };
-
                   const portions = computeExactPortions(ingredients, slotTargets);
                   const result   = solvePortions(ingredients, slotTargets);
                   const totals   = result.totals;
-                  const score    = result.accuracyScore;
                   return (
                     <>
-                      {/* Exact macro panel */}
                       <div className="glass rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your exact portions</p>
@@ -386,10 +544,10 @@ export default function MealPlanView({
                         </div>
                         <div className="grid grid-cols-4 gap-2">
                           {[
-                            { label: "Calories", value: String(totals.calories), target: slotTargets.calories, sub: "kcal" },
-                            { label: "Protein",  value: String(totals.protein),  target: slotTargets.protein,  sub: "g" },
-                            { label: "Carbs",    value: String(totals.carbs),    target: slotTargets.carbs,    sub: "g" },
-                            { label: "Fat",      value: String(totals.fat),      target: slotTargets.fat,      sub: "g" },
+                            { label: "Calories", value: String(totals.calories), sub: "kcal" },
+                            { label: "Protein",  value: String(totals.protein),  sub: "g" },
+                            { label: "Carbs",    value: String(totals.carbs),    sub: "g" },
+                            { label: "Fat",      value: String(totals.fat),      sub: "g" },
                           ].map(({ label, value, sub }) => (
                             <div key={label} className="bg-primary/5 rounded-xl p-2.5 text-center">
                               <p className="text-sm font-bold leading-none text-primary">{value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{sub}</span></p>
@@ -482,7 +640,6 @@ export default function MealPlanView({
                               onClick={() => toggleStep(recipe.id, i)}
                               className="w-full flex gap-4 text-left"
                             >
-                              {/* Step circle */}
                               <span className={`shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
                                 done
                                   ? "bg-primary border-primary text-primary-foreground"
@@ -503,7 +660,6 @@ export default function MealPlanView({
                       })}
                     </ol>
 
-                    {/* Reset progress */}
                     {(stepsDone.length > 0 || ingsDone.length > 0) && (
                       <button
                         type="button"

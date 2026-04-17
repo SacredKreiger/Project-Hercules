@@ -100,6 +100,8 @@ type PlanConfig = {
   trainingDays: number[]; // 0=Sun … 6=Sat
 };
 
+const TOTAL_WEEKS = 4;
+
 async function generatePlan(config: PlanConfig) {
   const supabase = await createClient();
   const { userId, profile, cuisines, restrictions, mixAll, mealsPerDay, prepStyle, trainingDays } = config;
@@ -107,12 +109,6 @@ async function generatePlan(config: PlanConfig) {
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
   const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
-
-  const startDate = new Date(profile.program_start_date);
-  const now = new Date();
-  const weekNumber = Math.ceil(
-    (Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7
-  );
 
   const recipesQuery = supabase.from("recipes").select("id, name, meal_type, calories, protein_g, carbs_g, fat_g, tags");
   const { data: allRecipes } = mixAll
@@ -130,72 +126,86 @@ async function generatePlan(config: PlanConfig) {
   const byType: Record<string, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [], shake: [] };
   for (const r of finalRecipes) byType[r.meal_type]?.push(r);
 
-  await supabase.from("meal_plans").delete().eq("user_id", userId).eq("week_number", weekNumber);
+  // Delete the entire month plan for this user before regenerating
+  await supabase.from("meal_plans").delete().eq("user_id", userId);
 
   const { slots, calSplit } = MEAL_CONFIG[mealsPerDay];
-  const usedIds: Record<string, Set<string>> = Object.fromEntries(
+  const allEntries: any[] = [];
+
+  // Tracks recipes used in the previous week to maximise variety week-over-week
+  let lastWeekUsed: Record<string, Set<string>> = Object.fromEntries(
     Object.keys(byType).map((k) => [k, new Set<string>()])
   );
 
-  const entries: any[] = [];
+  for (let week = 1; week <= TOTAL_WEEKS; week++) {
+    // Seed this week's exclusion list with last week's picks
+    const usedIds: Record<string, Set<string>> = Object.fromEntries(
+      Object.keys(byType).map((k) => [k, new Set<string>(lastWeekUsed[k] ?? [])])
+    );
+    const thisWeekUsed: Record<string, Set<string>> = Object.fromEntries(
+      Object.keys(byType).map((k) => [k, new Set<string>()])
+    );
 
-  if (prepStyle === "daily") {
-    for (let dow = 0; dow < 7; dow++) {
-      const isTraining = trainingDays.includes(dow);
-      // Rest days: reduce calorie targets by 15% to naturally pull lower-cal recipes
-      const calMultiplier = isTraining ? 1.0 : 0.85;
+    if (prepStyle === "daily") {
+      for (let dow = 0; dow < 7; dow++) {
+        const isTraining = trainingDays.includes(dow);
+        const calMultiplier = isTraining ? 1.0 : 0.85;
+        for (const { slot, type } of slots) {
+          const pool = byType[type];
+          if (!pool?.length) continue;
+          const f = calSplit[slot] * calMultiplier;
+          const targets: SlotTargets = {
+            calories: macros.calories * f,
+            protein:  macros.protein  * f,
+            carbs:    macros.carbs    * f,
+            fat:      macros.fat      * f,
+          };
+          const recipe = pickRecipe(pool, targets, usedIds[type]);
+          usedIds[type].add(recipe.id);
+          thisWeekUsed[type].add(recipe.id);
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+        }
+      }
+    } else {
+      // Batch: pick 2 recipe sets per week, assign by day range
+      const switchDay = prepStyle === "batch_biweekly" ? 3 : 4;
+      const setA: Record<number, any> = {};
+      const setB: Record<number, any> = {};
+
       for (const { slot, type } of slots) {
         const pool = byType[type];
         if (!pool?.length) continue;
-        const f = calSplit[slot] * calMultiplier;
+        const f = calSplit[slot];
         const targets: SlotTargets = {
           calories: macros.calories * f,
           protein:  macros.protein  * f,
           carbs:    macros.carbs    * f,
           fat:      macros.fat      * f,
         };
-        const recipe = pickRecipe(pool, targets, usedIds[type]);
-        usedIds[type].add(recipe.id);
-        entries.push({ user_id: userId, week_number: weekNumber, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+        setA[slot] = pickRecipe(pool, targets, usedIds[type]);
+        usedIds[type].add(setA[slot].id);
+        thisWeekUsed[type].add(setA[slot].id);
+        setB[slot] = pickRecipe(pool, targets, usedIds[type]);
+        usedIds[type].add(setB[slot].id);
+        thisWeekUsed[type].add(setB[slot].id);
+      }
+
+      for (let dow = 0; dow < 7; dow++) {
+        const recipeSet = dow < switchDay ? setA : setB;
+        for (const { slot } of slots) {
+          const recipe = recipeSet[slot];
+          if (!recipe) continue;
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+        }
       }
     }
-  } else {
-    // Batch cooking: pick 2 recipe sets, assign by day range
-    // batch_weekly  → set A: days 0-3, set B: days 4-6  (cook Sunday, cook Wednesday)
-    // batch_biweekly → set A: days 0-2, set B: days 3-6  (cook twice, max freshness)
-    const switchDay = prepStyle === "batch_biweekly" ? 3 : 4;
-    const setA: Record<number, any> = {};
-    const setB: Record<number, any> = {};
 
-    for (const { slot, type } of slots) {
-      const pool = byType[type];
-      if (!pool?.length) continue;
-      const f = calSplit[slot];
-      const targets: SlotTargets = {
-        calories: macros.calories * f,
-        protein:  macros.protein  * f,
-        carbs:    macros.carbs    * f,
-        fat:      macros.fat      * f,
-      };
-      setA[slot] = pickRecipe(pool, targets, usedIds[type]);
-      usedIds[type].add(setA[slot].id);
-      setB[slot] = pickRecipe(pool, targets, usedIds[type]);
-      usedIds[type].add(setB[slot].id);
-    }
-
-    for (let dow = 0; dow < 7; dow++) {
-      const recipeSet = dow < switchDay ? setA : setB;
-      for (const { slot } of slots) {
-        const recipe = recipeSet[slot];
-        if (!recipe) continue;
-        entries.push({ user_id: userId, week_number: weekNumber, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
-      }
-    }
+    lastWeekUsed = thisWeekUsed;
   }
 
-  if (entries.length === 0) return { error: "No recipes found for your selections." };
+  if (allEntries.length === 0) return { error: "No recipes found for your selections." };
 
-  const { error: insertError } = await supabase.from("meal_plans").insert(entries);
+  const { error: insertError } = await supabase.from("meal_plans").insert(allEntries);
   if (insertError) return { error: "Failed to save meal plan: " + insertError.message };
 
   return { error: null };
