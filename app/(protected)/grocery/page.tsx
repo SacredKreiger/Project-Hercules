@@ -31,7 +31,7 @@ export default function GroceryPage() {
   const [items,    setItems]   = useState<GroceryItem[]>([]);
   const [userId,   setUserId]  = useState<string | null>(null);
   const [loading,  setLoading] = useState(true);
-  const [expanded,      setExpanded]      = useState<Set<string>>(new Set(CATEGORY_ORDER));
+  const [expanded,      setExpanded]      = useState<Set<string>>(new Set());
   const [store,         setStore]         = useState<StoreId>("walmart");
   const [storePicker,   setStorePicker]   = useState(false);
 
@@ -208,22 +208,35 @@ export default function GroceryPage() {
               <button
                 type="button"
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left press active:bg-foreground/5 transition-colors"
+                className="w-full flex items-start gap-3 px-4 py-4 text-left press active:bg-foreground/5 transition-colors"
               >
-                <span className="text-base">{CATEGORY_ICONS[cat]}</span>
-                <span className={`text-sm font-semibold flex-1 ${allDone ? "line-through text-muted-foreground" : ""}`}>
-                  {cat}
-                </span>
-                <span className={`text-xs tabular-nums mr-1 ${allDone ? "text-emerald-500 font-semibold" : "text-muted-foreground"}`}>
-                  {doneCount}/{catItems.length}
-                </span>
-                <svg
-                  width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                <span className="text-lg mt-0.5">{CATEGORY_ICONS[cat]}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-sm font-semibold ${allDone ? "line-through text-muted-foreground" : ""}`}>
+                      {cat}
+                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs tabular-nums ${allDone ? "text-emerald-500 font-semibold" : "text-muted-foreground"}`}>
+                        {doneCount}/{catItems.length}
+                      </span>
+                      <svg
+                        width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        className={`text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Preview chips — only when collapsed */}
+                  {!isOpen && (
+                    <p className="text-xs text-muted-foreground mt-1.5 truncate">
+                      {catItems.slice(0, 4).map((i) => i.name).join(" · ")}
+                      {catItems.length > 4 && <span className="opacity-60"> +{catItems.length - 4} more</span>}
+                    </p>
+                  )}
+                </div>
               </button>
 
               {/* Items — only shown when expanded */}
