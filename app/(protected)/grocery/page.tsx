@@ -17,11 +17,27 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Other":          "🛒",
 };
 
+const STORES = [
+  { id: "walmart",  label: "Walmart",    multiplier: 1.00 },
+  { id: "target",   label: "Target",     multiplier: 1.10 },
+  { id: "samsclub", label: "Sam's Club", multiplier: 0.80 },
+  { id: "costco",   label: "Costco",     multiplier: 0.75 },
+] as const;
+
+type StoreId = typeof STORES[number]["id"];
+const STORE_KEY = "hc-store-pref";
+
 export default function GroceryPage() {
   const [items,    setItems]   = useState<GroceryItem[]>([]);
   const [userId,   setUserId]  = useState<string | null>(null);
   const [loading,  setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [store,    setStore]   = useState<StoreId>("walmart");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORE_KEY) as StoreId | null;
+    if (saved && STORES.some((s) => s.id === saved)) setStore(saved);
+  }, []);
 
   useEffect(() => { load(); }, []);
 
@@ -61,10 +77,16 @@ export default function GroceryPage() {
     return acc;
   }, {} as Record<string, GroceryItem[]>);
 
-  const checkedCount  = items.filter((i) => i.checked).length;
-  const totalCount    = items.length;
-  const totalCost     = items.reduce((s, i) => s + (i.cost ?? 0), 0);
-  const remainingCost = items.filter((i) => !i.checked).reduce((s, i) => s + (i.cost ?? 0), 0);
+  const checkedCount   = items.filter((i) => i.checked).length;
+  const totalCount     = items.length;
+  const multiplier     = STORES.find((s) => s.id === store)?.multiplier ?? 1.0;
+  const totalCost      = items.reduce((s, i) => s + (i.cost ?? 0), 0) * multiplier;
+  const remainingCost  = items.filter((i) => !i.checked).reduce((s, i) => s + (i.cost ?? 0), 0) * multiplier;
+
+  function selectStore(id: StoreId) {
+    setStore(id);
+    localStorage.setItem(STORE_KEY, id);
+  }
 
   return (
     <div className="space-y-4">
@@ -73,6 +95,29 @@ export default function GroceryPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
       </div>
+
+      {/* Store selector */}
+      {!loading && totalCount > 0 && (
+        <div className="glass widget-shadow rounded-2xl p-3">
+          <p className="text-xs text-muted-foreground font-medium px-1 mb-2">Shopping at</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {STORES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => selectStore(s.id)}
+                className={`py-2 rounded-xl text-xs font-semibold transition-all press ${
+                  store === s.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-foreground/5 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Progress + cost */}
       {totalCount > 0 && !loading && (
