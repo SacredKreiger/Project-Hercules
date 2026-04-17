@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
+import { computeExactPortions, solvePortions } from "@/lib/portion-calc";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -83,6 +84,7 @@ export default function MealPlanView({
   phase,
   todayDow,
   dailyCalories = 2000,
+  dailyMacros,
   mealsPerDay: mealsPerDayProp = 4,
   savedCuisines = [],
   savedRestrictions = [],
@@ -92,6 +94,7 @@ export default function MealPlanView({
   phase: string;
   todayDow: number;
   dailyCalories?: number;
+  dailyMacros?: { calories: number; protein: number; carbs: number; fat: number };
   mealsPerDay?: 3 | 4 | 5;
   savedCuisines?: string[];
   savedRestrictions?: string[];
@@ -347,113 +350,121 @@ export default function MealPlanView({
                   </div>
                 </div>
 
-                {/* For your goal */}
-                {recipe.calories > 0 && (() => {
-                  const isRestDay = !trainingDays.includes(selected.day_of_week);
-                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories, isRestDay);
-                  const goalCal  = scaleMacro(recipe.calories,  m);
-                  const goalProt = scaleMacro(recipe.protein_g, m);
-                  const goalCarb = scaleMacro(recipe.carbs_g,   m);
-                  const goalFat  = scaleMacro(recipe.fat_g,     m);
-                  return (
-                    <div className="glass rounded-2xl p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">For your goal</p>
-                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                          {m}× {m === 1 ? "serving" : "servings"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {[
-                          { label: "Calories", value: String(goalCal), sub: "kcal" },
-                          { label: "Protein",  value: String(goalProt), sub: "g" },
-                          { label: "Carbs",    value: String(goalCarb), sub: "g" },
-                          { label: "Fat",      value: String(goalFat),  sub: "g" },
-                        ].map(({ label, value, sub }) => (
-                          <div key={label} className="bg-primary/5 rounded-xl p-2.5 text-center">
-                            <p className="text-sm font-bold leading-none text-primary">{value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{sub}</span></p>
-                            <p className="text-[10px] text-muted-foreground mt-1">{label}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Time + servings */}
-                <div className="flex gap-5 text-sm">
-                  {recipe.prep_time_min != null && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prep</p>
-                      <p className="font-semibold mt-0.5">{recipe.prep_time_min} min</p>
-                    </div>
-                  )}
-                  {recipe.cook_time_min != null && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cook</p>
-                      <p className="font-semibold mt-0.5">{recipe.cook_time_min} min</p>
-                    </div>
-                  )}
-                  {totalTime > 0 && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Total</p>
-                      <p className="font-semibold mt-0.5">{totalTime} min</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Serves</p>
-                    <p className="font-semibold mt-0.5">{servings}</p>
-                  </div>
-                </div>
-
-                {/* Ingredients */}
+                {/* Exact portions for your goal */}
                 {ingredients.length > 0 && (() => {
                   const isRestDay = !trainingDays.includes(selected.day_of_week);
-                  const m = getMultiplier(dailyCalories, mealsPerDay, selected.meal_slot, recipe.calories, isRestDay);
+                  const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
+                  const fraction = (split[selected.meal_slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
+
+                  // Use real user macro targets, proportioned to this meal slot
+                  const base = dailyMacros ?? {
+                    calories: dailyCalories,
+                    protein:  dailyCalories * 0.30 / 4,
+                    carbs:    dailyCalories * 0.40 / 4,
+                    fat:      dailyCalories * 0.30 / 9,
+                  };
+                  const slotTargets = {
+                    calories: Math.round(base.calories * fraction),
+                    protein:  Math.round(base.protein  * fraction * 10) / 10,
+                    carbs:    Math.round(base.carbs    * fraction * 10) / 10,
+                    fat:      Math.round(base.fat      * fraction * 10) / 10,
+                  };
+
+                  const portions = computeExactPortions(ingredients, slotTargets);
+                  const result   = solvePortions(ingredients, slotTargets);
+                  const totals   = result.totals;
+                  const score    = result.accuracyScore;
                   return (
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                          Ingredients
-                        </p>
-                        {m !== 1 && (
-                          <p className="text-[10px] text-muted-foreground">scaled to {m}× serving</p>
+                    <>
+                      {/* Exact macro panel */}
+                      <div className="glass rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your exact portions</p>
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                            score >= 99 ? "bg-green-500/15 text-green-400" : "bg-yellow-500/15 text-yellow-400"
+                          }`}>
+                            {score >= 99 ? "Exact Match" : `${score}% match`}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            { label: "Calories", value: String(totals.calories), target: slotTargets.calories, sub: "kcal" },
+                            { label: "Protein",  value: String(totals.protein),  target: slotTargets.protein,  sub: "g" },
+                            { label: "Carbs",    value: String(totals.carbs),    target: slotTargets.carbs,    sub: "g" },
+                            { label: "Fat",      value: String(totals.fat),      target: slotTargets.fat,      sub: "g" },
+                          ].map(({ label, value, sub }) => (
+                            <div key={label} className="bg-primary/5 rounded-xl p-2.5 text-center">
+                              <p className="text-sm font-bold leading-none text-primary">{value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{sub}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">{label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Time */}
+                      <div className="flex gap-5 text-sm">
+                        {recipe.prep_time_min != null && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prep</p>
+                            <p className="font-semibold mt-0.5">{recipe.prep_time_min} min</p>
+                          </div>
+                        )}
+                        {recipe.cook_time_min != null && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cook</p>
+                            <p className="font-semibold mt-0.5">{recipe.cook_time_min} min</p>
+                          </div>
+                        )}
+                        {totalTime > 0 && (
+                          <div>
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Total</p>
+                            <p className="font-semibold mt-0.5">{totalTime} min</p>
+                          </div>
                         )}
                       </div>
-                      <ul className="space-y-0.5">
-                        {ingredients.map((ing, i) => {
-                          const checked = ingsDone.includes(i);
-                          return (
-                            <li key={i}>
-                              <button
-                                type="button"
-                                onClick={() => toggleIngredient(recipe.id, i)}
-                                className="w-full flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 text-left"
-                              >
-                                {/* Checkbox */}
-                                <span className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                                  checked ? "bg-primary border-primary" : "border-border"
-                                }`}>
-                                  {checked && (
-                                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                      <polyline points="2,6 5,9 10,3" />
-                                    </svg>
-                                  )}
-                                </span>
-                                {/* Qty + unit */}
-                                <span className={`shrink-0 w-16 text-right text-sm font-semibold tabular-nums transition-opacity ${checked ? "opacity-40" : ""}`}>
-                                  {scaleQty(ing.qty, m)} <span className="font-normal text-muted-foreground">{ing.unit}</span>
-                                </span>
-                                {/* Name */}
-                                <span className={`text-sm transition-opacity ${checked ? "opacity-40 line-through" : ""}`}>
-                                  {ing.name}
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
+
+                      {/* Exact ingredient quantities */}
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                          Ingredients — exact amounts
+                        </p>
+                        <ul className="space-y-0.5">
+                          {portions.map((portion, i) => {
+                            const checked = ingsDone.includes(i);
+                            return (
+                              <li key={i}>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleIngredient(recipe.id, i)}
+                                  className="w-full flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 text-left"
+                                >
+                                  <span className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                    checked ? "bg-primary border-primary" : "border-border"
+                                  }`}>
+                                    {checked && (
+                                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="2,6 5,9 10,3" />
+                                      </svg>
+                                    )}
+                                  </span>
+                                  <span className={`shrink-0 text-right text-sm font-semibold tabular-nums transition-opacity min-w-[80px] ${checked ? "opacity-40" : ""}`}>
+                                    {portion.displayQty}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <span className={`text-sm transition-opacity ${checked ? "opacity-40 line-through" : ""}`}>
+                                      {portion.name}
+                                    </span>
+                                    {portion.adjusted && (
+                                      <span className="ml-1.5 text-[10px] text-primary font-semibold">adjusted</span>
+                                    )}
+                                  </div>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </>
                   );
                 })()}
 

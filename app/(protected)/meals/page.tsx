@@ -39,6 +39,7 @@ export default async function MealsPage() {
       phase={profile.phase}
       todayDow={todayDow}
       dailyCalories={macros.calories}
+      dailyMacros={macros}
       mealsPerDay={mealsPerDay}
       savedCuisines={profile.cuisine_preferences ?? []}
       savedRestrictions={profile.dietary_restrictions ?? []}
