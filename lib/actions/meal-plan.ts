@@ -57,12 +57,36 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function pickRecipe(pool: any[], targetCal: number, usedIds: Set<string>): any {
+type SlotTargets = { calories: number; protein: number; carbs: number; fat: number };
+
+/**
+ * Picks the best recipe for a meal slot using a weighted macro score.
+ * Protein is weighted highest (40%) since it's the critical fitness macro,
+ * followed by calories (35%), fat (15%), carbs (10%).
+ * Picks randomly from the top 3 matches to maintain daily variety.
+ */
+function pickRecipe(pool: any[], targets: SlotTargets, usedIds: Set<string>): any {
   const available = pool.filter((r) => !usedIds.has(r.id));
   const source = available.length > 0 ? available : pool;
-  const tolerance = targetCal * 0.25;
-  const goodEnough = source.filter((r) => Math.abs(r.calories - targetCal) <= tolerance);
-  return shuffle(goodEnough.length > 0 ? goodEnough : source)[0];
+
+  function proximity(actual: number, target: number) {
+    if (!target) return 1;
+    return Math.max(0, 1 - Math.abs(actual - target) / target);
+  }
+
+  const scored = source.map((r) => ({
+    recipe: r,
+    score:
+      0.40 * proximity(r.protein_g, targets.protein) +
+      0.35 * proximity(r.calories,  targets.calories) +
+      0.15 * proximity(r.fat_g,     targets.fat) +
+      0.10 * proximity(r.carbs_g,   targets.carbs),
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+  // Pick randomly from top 3 so the plan has variety while still hitting targets
+  const top = scored.slice(0, Math.min(3, scored.length));
+  return shuffle(top.map((s) => s.recipe))[0];
 }
 
 type PlanConfig = {
@@ -90,7 +114,7 @@ async function generatePlan(config: PlanConfig) {
     (Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7
   );
 
-  const recipesQuery = supabase.from("recipes").select("id, name, meal_type, calories, tags");
+  const recipesQuery = supabase.from("recipes").select("id, name, meal_type, calories, protein_g, carbs_g, fat_g, tags");
   const { data: allRecipes } = mixAll
     ? await recipesQuery
     : await recipesQuery.in("cuisine", cuisines);
@@ -123,7 +147,14 @@ async function generatePlan(config: PlanConfig) {
       for (const { slot, type } of slots) {
         const pool = byType[type];
         if (!pool?.length) continue;
-        const recipe = pickRecipe(pool, macros.calories * calSplit[slot] * calMultiplier, usedIds[type]);
+        const f = calSplit[slot] * calMultiplier;
+        const targets: SlotTargets = {
+          calories: macros.calories * f,
+          protein:  macros.protein  * f,
+          carbs:    macros.carbs    * f,
+          fat:      macros.fat      * f,
+        };
+        const recipe = pickRecipe(pool, targets, usedIds[type]);
         usedIds[type].add(recipe.id);
         entries.push({ user_id: userId, week_number: weekNumber, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
       }
@@ -139,10 +170,16 @@ async function generatePlan(config: PlanConfig) {
     for (const { slot, type } of slots) {
       const pool = byType[type];
       if (!pool?.length) continue;
-      const target = macros.calories * calSplit[slot];
-      setA[slot] = pickRecipe(pool, target, usedIds[type]);
+      const f = calSplit[slot];
+      const targets: SlotTargets = {
+        calories: macros.calories * f,
+        protein:  macros.protein  * f,
+        carbs:    macros.carbs    * f,
+        fat:      macros.fat      * f,
+      };
+      setA[slot] = pickRecipe(pool, targets, usedIds[type]);
       usedIds[type].add(setA[slot].id);
-      setB[slot] = pickRecipe(pool, target, usedIds[type]);
+      setB[slot] = pickRecipe(pool, targets, usedIds[type]);
       usedIds[type].add(setB[slot].id);
     }
 
