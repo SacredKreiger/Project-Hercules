@@ -102,28 +102,29 @@ function ExerciseCard({
               const log  = logs.find((l) => l.setNumber === i + 1);
               const done = log?.completed ?? false;
               return (
-                <div key={i} className={`flex items-center gap-2 px-4 py-3 transition-opacity ${done ? "opacity-50" : ""}`}>
+                <div key={i} className={`flex items-center gap-2 px-4 py-2.5 transition-opacity ${done ? "opacity-50" : ""}`}>
                   <span className="text-xs text-muted-foreground shrink-0 w-8">Set {i + 1}</span>
 
                   {isWeighted && (
-                    <>
-                      <input type="number" inputMode="decimal" placeholder="lbs"
-                        value={done ? (log?.actualWeight?.toString() ?? "") : drafts[i]?.weight}
-                        onChange={(e) => setDraft(i, "weight", e.target.value)}
-                        disabled={done}
-                        className="flex-1 min-w-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
-                      />
-                      <span className="text-xs text-muted-foreground shrink-0">×</span>
-                    </>
+                    <input type="number" inputMode="decimal" placeholder="lbs"
+                      value={done ? (log?.actualWeight?.toString() ?? "") : drafts[i]?.weight}
+                      onChange={(e) => setDraft(i, "weight", e.target.value)}
+                      disabled={done}
+                      className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                    />
                   )}
+
+                  {isWeighted && <span className="text-xs text-muted-foreground shrink-0">×</span>}
 
                   <input type="number" inputMode="numeric"
                     placeholder={exercise.reps === "AMRAP" ? "reps" : exercise.reps}
                     value={done ? (log?.actualReps?.toString() ?? "") : drafts[i]?.reps}
                     onChange={(e) => setDraft(i, "reps", e.target.value)}
                     disabled={done}
-                    className="flex-1 min-w-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                    className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
                   />
+
+                  <div className="flex-1" />
 
                   <button type="button" onClick={() => !done && handleCheck(i)} disabled={done}
                     className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 press transition-all ${
