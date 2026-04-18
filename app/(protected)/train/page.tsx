@@ -147,37 +147,6 @@ function ExerciseCard({
   );
 }
 
-// ── WeekStrip ─────────────────────────────────────────────────────────────
-
-function WeekStrip({ program, todayDow }: { program: Program; todayDow: number }) {
-  return (
-    <div className="glass widget-shadow rounded-2xl p-4">
-      <p className="text-xs text-muted-foreground mb-3">This week</p>
-      <div className="flex gap-1">
-        {Array.from({ length: 7 }).map((_, dow) => {
-          const day     = program.days.find((d) => d.dayOfWeek === dow);
-          const isToday = dow === todayDow;
-          const isRest  = !day || day.isRest;
-          return (
-            <div key={dow} className="flex-1 flex flex-col items-center gap-1">
-              <span className={`text-[10px] font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
-                {DOW_SHORT[dow]}
-              </span>
-              <div className={`w-full max-w-[36px] aspect-square rounded-full flex items-center justify-center text-[9px] font-semibold transition-all ${
-                isToday  ? "bg-primary text-primary-foreground"
-                : isRest ? "bg-foreground/5 text-muted-foreground"
-                         : "bg-foreground/10 text-foreground"
-              }`}>
-                {isRest ? "–" : day?.name?.slice(0, 2)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function TrainPage() {
@@ -290,29 +259,53 @@ export default function TrainPage() {
 
       {!loading && program && todayDay && (
         <>
-          {/* Day summary */}
-          <div className="glass widget-shadow rounded-2xl p-4">
+          {/* Day summary + week strip merged */}
+          <div className="glass widget-shadow rounded-2xl p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">Today</p>
                 <p className="text-xl font-bold">{todayDay.name}</p>
               </div>
-              {!todayDay.isRest && totalSets > 0 && (
+              {todayDay.isRest ? (
+                <span className="text-2xl">😴</span>
+              ) : totalSets > 0 ? (
                 <div className="text-right">
                   <p className="text-2xl font-bold tabular-nums">
                     {doneSets}<span className="text-base text-muted-foreground font-normal">/{totalSets}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">sets done</p>
                 </div>
-              )}
+              ) : null}
             </div>
             {!todayDay.isRest && totalSets > 0 && (
-              <div className="mt-3 h-1.5 bg-foreground/10 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
                 <div className="h-full bg-primary rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (doneSets / totalSets) * 100)}%` }}
                 />
               </div>
             )}
+            {/* Week strip */}
+            <div className="flex gap-1">
+              {Array.from({ length: 7 }).map((_, dow) => {
+                const day     = program.days.find((d) => d.dayOfWeek === dow);
+                const isToday = dow === todayDow;
+                const isRest  = !day || day.isRest;
+                return (
+                  <div key={dow} className="flex-1 flex flex-col items-center gap-1">
+                    <span className={`text-[10px] font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                      {DOW_SHORT[dow]}
+                    </span>
+                    <div className={`w-full max-w-[36px] aspect-square rounded-full flex items-center justify-center text-[9px] font-semibold transition-all ${
+                      isToday  ? "bg-primary text-primary-foreground"
+                      : isRest ? "bg-foreground/5 text-muted-foreground"
+                               : "bg-foreground/10 text-foreground"
+                    }`}>
+                      {isRest ? "–" : day?.name?.slice(0, 2)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {todayDay.isRest && (
@@ -352,7 +345,6 @@ export default function TrainPage() {
             </div>
           )}
 
-          <WeekStrip program={program} todayDow={todayDow} />
         </>
       )}
     </div>
