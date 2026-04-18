@@ -30,12 +30,7 @@ export default async function DashboardPage() {
     .eq("user_id", user!.id).eq("week_number", weekNumber).eq("day_of_week", dayOfWeek)
     .order("meal_slot");
 
-  const { data: activeProgram } = await supabase
-    .from("user_programs").select("id, name, structure")
-    .eq("user_id", user!.id).eq("is_active", true)
-    .maybeSingle();
-
-  const todayDay = (activeProgram?.structure as any)?.days?.find(
+  const todayDay = (profile?.training_program as any)?.days?.find(
     (d: any) => d.dayOfWeek === dayOfWeek,
   ) ?? null;
 
@@ -161,7 +156,7 @@ export default async function DashboardPage() {
         <div className="px-4 pt-4 pb-2.5 border-b border-border">
           <h2 className="text-sm font-semibold">Today&apos;s Training</h2>
         </div>
-        {activeProgram && todayDay ? (
+        {profile?.training_program && todayDay ? (
           todayDay.isRest ? (
             <div className="px-4 py-6 text-center">
               <p className="text-sm font-semibold">Rest Day</p>

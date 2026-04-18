@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TEMPLATES } from "@/lib/templates";
-import { createProgramFromTemplate } from "@/lib/actions/training";
+import { saveTrainingProgramFromTemplate } from "@/lib/actions/training";
 
 const TEMPLATE_ICONS: Record<string, string> = {
   runner:       "🏃",
@@ -12,25 +12,33 @@ const TEMPLATE_ICONS: Record<string, string> = {
 };
 
 const FOCUS_COLORS: Record<string, string> = {
-  "Endurance":          "text-sky-500",
-  "Bodyweight Strength":"text-emerald-500",
-  "Hypertrophy":        "text-violet-500",
+  "Endurance":           "text-sky-500",
+  "Bodyweight Strength": "text-emerald-500",
+  "Hypertrophy":         "text-violet-500",
 };
 
 export default function TrainSetupPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,    setError]    = useState<string | null>(null);
+  const [pending,  startTransition] = useTransition();
 
   function handleSelect(id: string) {
     setSelected((prev) => prev === id ? null : id);
+    setError(null);
   }
 
   function handleStart() {
     if (!selected) return;
+    setError(null);
     startTransition(async () => {
-      const { error } = await createProgramFromTemplate(selected);
-      if (!error) router.push("/train");
+      const result = await saveTrainingProgramFromTemplate(selected);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        router.push("/train");
+        router.refresh();
+      }
     });
   }
 
@@ -58,7 +66,6 @@ export default function TrainSetupPage() {
               isSelected ? "ring-2 ring-primary" : ""
             }`}
           >
-            {/* Header */}
             <div className="flex items-center gap-4 px-4 py-4">
               <div className="w-12 h-12 rounded-2xl bg-foreground/5 flex items-center justify-center text-2xl shrink-0">
                 {TEMPLATE_ICONS[t.id]}
@@ -72,7 +79,7 @@ export default function TrainSetupPage() {
               </span>
             </div>
 
-            {/* Day preview — only when selected */}
+            {/* Day preview when selected */}
             {isSelected && (
               <div className="border-t border-border px-4 pb-4 pt-3 space-y-1.5">
                 {t.days.map((day) => (
@@ -85,8 +92,9 @@ export default function TrainSetupPage() {
                     ) : (
                       <div className="flex-1 min-w-0">
                         <span className="text-xs font-medium">{day.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {day.exercises.map((e) => e.name).join(" · ")}
+                        <span className="text-xs text-muted-foreground ml-2 truncate">
+                          {day.exercises.slice(0, 3).map((e) => e.name).join(" · ")}
+                          {day.exercises.length > 3 ? ` +${day.exercises.length - 3}` : ""}
                         </span>
                       </div>
                     )}
@@ -112,6 +120,13 @@ export default function TrainSetupPage() {
           <p className="text-xs text-muted-foreground mt-0.5">Build your own week from scratch</p>
         </div>
       </button>
+
+      {/* Error */}
+      {error && (
+        <div className="glass rounded-2xl px-4 py-3 border border-red-500/30">
+          <p className="text-sm text-red-500">{error}</p>
+        </div>
+      )}
 
       {/* Start button */}
       {selected && (

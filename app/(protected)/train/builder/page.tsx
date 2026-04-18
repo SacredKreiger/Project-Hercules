@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EXERCISES, EXERCISE_CATEGORIES } from "@/lib/exercises";
-import { createProgram } from "@/lib/actions/training";
+import { saveTrainingProgram } from "@/lib/actions/training";
 import type { ProgramDay, ExerciseConfig } from "@/lib/templates";
 
 const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -234,8 +234,8 @@ export default function BuilderPage() {
       exercises: d.exercises.map(({ _key: _k, ...ex }) => ex),
     }));
     startTransition(async () => {
-      const { error } = await createProgram(planName, programDays);
-      if (!error) router.push("/train");
+      const { error } = await saveTrainingProgram(planName, programDays);
+      if (!error) { router.push("/train"); router.refresh(); }
     });
   }
 
