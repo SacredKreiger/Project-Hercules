@@ -181,13 +181,15 @@ function ExerciseCard({
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function TrainPage() {
-  const [program,    setProgram]    = useState<Program | null>(null);
-  const [prs,        setPrs]        = useState<Record<string, number>>({});
-  const [progress,   setProgress]   = useState<Record<string, { weight: number }>>({});
-  const [loading,    setLoading]    = useState(true);
-  const [setLogs,    setSetLogs]    = useState<Record<string, SetLog[]>>({});
-  const [expandedEx, setExpandedEx] = useState<string | null>(null);
-  const [completed,  setCompleted]  = useState(false);
+  const [program,      setProgram]      = useState<Program | null>(null);
+  const [prs,          setPrs]          = useState<Record<string, number>>({});
+  const [progress,     setProgress]     = useState<Record<string, { weight: number }>>({});
+  const [bodyweight,   setBodyweight]   = useState<number>(0);
+  const [gender,       setGender]       = useState<string>("male");
+  const [loading,      setLoading]      = useState(true);
+  const [setLogs,      setSetLogs]      = useState<Record<string, SetLog[]>>({});
+  const [expandedEx,   setExpandedEx]   = useState<string | null>(null);
+  const [completed,    setCompleted]    = useState(false);
   const [, startTransition] = useTransition();
 
   const todayDow = new Date().getDay();
@@ -200,15 +202,17 @@ export default function TrainPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("training_program, training_prs, training_progress")
+      .select("training_program, training_prs, training_progress, current_weight_lbs, gender")
       .eq("id", user.id)
       .single();
 
     if (profileError || !profile) { setLoading(false); return; }
 
-    if (profile?.training_program) setProgram(profile.training_program as Program);
-    if (profile?.training_prs)      setPrs(profile.training_prs as Record<string, number>);
-    if (profile?.training_progress) setProgress(profile.training_progress as Record<string, { weight: number }>);
+    if (profile?.training_program)  setProgram(profile.training_program as Program);
+    if (profile?.training_prs)       setPrs(profile.training_prs as Record<string, number>);
+    if (profile?.training_progress)  setProgress(profile.training_progress as Record<string, { weight: number }>);
+    if (profile?.current_weight_lbs) setBodyweight(profile.current_weight_lbs as number);
+    if (profile?.gender)             setGender(profile.gender as string);
 
     try {
       const saved = localStorage.getItem(todayKey());
@@ -369,7 +373,7 @@ export default function TrainPage() {
               onToggle={() => setExpandedEx((prev) => prev === ex.name ? null : ex.name)}
               onLogSet={(setNum, weight, reps) => handleLogSet(ex.name, setNum, weight, reps)}
               onUnlogSet={(setNum) => handleUnlogSet(ex.name, setNum)}
-              suggestedWeight={getSuggested(ex.name, progress, prs)}
+              suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
             />
           ))}
 
