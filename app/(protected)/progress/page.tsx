@@ -24,8 +24,8 @@ export default function ProgressPage() {
   async function load() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const { data: prof } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
-    setProfile(prof);
+    const { data: prof, error: profError } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+    if (!profError) setProfile(prof);
     const { data } = await supabase.from("progress_logs").select("*")
       .eq("user_id", user!.id).order("log_date", { ascending: true });
     setLogs(data ?? []);

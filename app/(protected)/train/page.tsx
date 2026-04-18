@@ -42,6 +42,14 @@ function ExerciseCard({
     })),
   );
 
+  // Sync weight drafts when suggestedWeight loads (async from DB)
+  useEffect(() => {
+    if (suggestedWeight == null) return;
+    setDrafts((prev) =>
+      prev.map((d) => d.weight === "" ? { ...d, weight: suggestedWeight.toString() } : d),
+    );
+  }, [suggestedWeight]);
+
   function setDraft(i: number, field: "weight" | "reps", val: string) {
     setDrafts((prev) => prev.map((d, idx) => idx === i ? { ...d, [field]: val } : d));
   }
@@ -167,11 +175,13 @@ export default function TrainPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("training_program, training_prs, training_progress")
       .eq("id", user.id)
       .single();
+
+    if (profileError || !profile) { setLoading(false); return; }
 
     if (profile?.training_program) setProgram(profile.training_program as Program);
     if (profile?.training_prs)      setPrs(profile.training_prs as Record<string, number>);
@@ -217,7 +227,8 @@ export default function TrainPage() {
     }
 
     startTransition(async () => {
-      await updateProgressAfterWorkout(completedData);
+      const result = await updateProgressAfterWorkout(completedData);
+      if (result?.error) console.error("Progress update failed:", result.error);
     });
   }
 

@@ -217,8 +217,8 @@ export async function reconfigureMealPlan(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-  if (!profile) redirect("/onboarding");
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  if (profileError || !profile) redirect("/onboarding");
 
   const mixAll = formData.get("mix") === "true";
   const cuisines = formData.getAll("cuisines") as string[];

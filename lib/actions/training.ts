@@ -62,13 +62,13 @@ export async function updateProgressAfterWorkout(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("training_progress, training_prs")
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (profileError || !profile) return { error: profileError?.message ?? "Profile not found" };
 
   const current: Record<string, { weight: number }> = (profile.training_progress as any) ?? {};
   const prs: Record<string, number> = (profile.training_prs as any) ?? {};

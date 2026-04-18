@@ -220,9 +220,9 @@ function pricePerUnit(name: string, unit: string, category: string): number {
 export async function generateGroceryList(userId: string): Promise<{ error: string | null }> {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles").select("*").eq("id", userId).single();
-  if (!profile) return { error: "Profile not found." };
+  if (profileError || !profile) return { error: profileError?.message ?? "Profile not found." };
 
   const bmr    = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee   = calcTDEE(bmr, profile.activity_level);

@@ -25,8 +25,8 @@ export default function ProfilePage() {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
-      setProfile(data);
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+      if (!error) setProfile(data);
     }
     load();
   }, []);
