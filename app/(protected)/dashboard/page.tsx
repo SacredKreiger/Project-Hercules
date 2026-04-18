@@ -30,10 +30,14 @@ export default async function DashboardPage() {
     .eq("user_id", user!.id).eq("week_number", weekNumber).eq("day_of_week", dayOfWeek)
     .order("meal_slot");
 
-  const { data: todayWorkout } = await supabase
-    .from("training_plans").select("*")
-    .eq("user_id", user!.id).eq("week_number", weekNumber).eq("day_of_week", dayOfWeek)
-    .single();
+  const { data: activeProgram } = await supabase
+    .from("user_programs").select("id, name, structure")
+    .eq("user_id", user!.id).eq("is_active", true)
+    .maybeSingle();
+
+  const todayDay = (activeProgram?.structure as any)?.days?.find(
+    (d: any) => d.dayOfWeek === dayOfWeek,
+  ) ?? null;
 
   const { data: latestLog } = await supabase
     .from("progress_logs").select("*")
@@ -42,7 +46,7 @@ export default async function DashboardPage() {
   const mealsPerDay = todayMeals && todayMeals.length > 0
     ? (Math.max(...todayMeals.map((m: any) => m.meal_slot)) as 3 | 4 | 5)
     : 4;
-  const isRestDay = todayWorkout?.is_rest_day ?? false;
+  const isRestDay = todayDay?.isRest ?? false;
 
   // Planned macros = sum of per-slot targets across today's meals.
   // Since CAL_SPLIT fractions sum to 1.0, this always equals the daily targets
@@ -157,8 +161,8 @@ export default async function DashboardPage() {
         <div className="px-4 pt-4 pb-2.5 border-b border-border">
           <h2 className="text-sm font-semibold">Today&apos;s Training</h2>
         </div>
-        {todayWorkout ? (
-          todayWorkout.is_rest_day ? (
+        {activeProgram && todayDay ? (
+          todayDay.isRest ? (
             <div className="px-4 py-6 text-center">
               <p className="text-sm font-semibold">Rest Day</p>
               <p className="text-xs text-muted-foreground mt-1">Recovery is part of the program.</p>
@@ -166,22 +170,25 @@ export default async function DashboardPage() {
           ) : (
             <div>
               <div className="px-4 py-3 border-b border-border">
-                <p className="text-sm font-semibold text-primary">{todayWorkout.workout_name}</p>
+                <p className="text-sm font-semibold text-primary">{todayDay.name}</p>
               </div>
               <div className="divide-y divide-border">
-                {(todayWorkout.exercises as any[])?.slice(0, 4).map((ex: any, i: number) => (
+                {(todayDay.exercises as any[])?.slice(0, 4).map((ex: any, i: number) => (
                   <div key={i} className="flex items-center justify-between px-4 py-3">
                     <span className="text-sm">{ex.name}</span>
                     <span className="text-xs font-semibold text-muted-foreground tabular-nums">{ex.sets}×{ex.reps}</span>
                   </div>
                 ))}
               </div>
+              <a href="/train" className="flex items-center justify-center px-4 py-3 text-xs text-primary font-semibold border-t border-border press">
+                Go to workout →
+              </a>
             </div>
           )
         ) : (
           <div className="px-4 py-6 text-center">
-            <p className="text-sm text-muted-foreground">No workout scheduled.</p>
-            <a href="/train" className="text-xs text-primary font-semibold mt-1.5 inline-block press">View training plan →</a>
+            <p className="text-sm text-muted-foreground">No training plan set up.</p>
+            <a href="/train/setup" className="text-xs text-primary font-semibold mt-1.5 inline-block press">Set up training →</a>
           </div>
         )}
       </div>
