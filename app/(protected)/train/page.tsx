@@ -20,25 +20,35 @@ function todayKey() {
 
 // ── ExerciseCard ──────────────────────────────────────────────────────────
 
+// Parse target reps into a prefill string: "8" → "8", "8-12" → "8", "AMRAP" → ""
+function parseTargetReps(reps: string): string {
+  if (!reps || reps === "AMRAP") return "";
+  const match = reps.match(/^(\d+)/);
+  return match ? match[1] : "";
+}
+
 function ExerciseCard({
-  exercise, logs, isExpanded, onToggle, onLogSet, suggestedWeight,
+  exercise, logs, isExpanded, onToggle, onLogSet, onUnlogSet, suggestedWeight,
 }: {
   exercise:        ExerciseConfig;
   logs:            SetLog[];
   isExpanded:      boolean;
   onToggle:        () => void;
   onLogSet:        (setNum: number, weight: number | null, reps: number | null) => void;
+  onUnlogSet:      (setNum: number) => void;
   suggestedWeight: number | null;
 }) {
-  const info      = getExerciseInfo(exercise.name);
+  const info       = getExerciseInfo(exercise.name);
   const isWeighted = info?.unit === "weight_reps";
   const isCardio   = info?.unit === "distance_time";
   const doneSets   = logs.filter((s) => s.completed).length;
 
+  const targetReps = parseTargetReps(exercise.reps);
+
   const [drafts, setDrafts] = useState(() =>
     Array.from({ length: exercise.sets }, () => ({
       weight: suggestedWeight?.toString() ?? "",
-      reps:   "",
+      reps:   targetReps,
     })),
   );
 
@@ -59,6 +69,13 @@ function ExerciseCard({
     const weight = isWeighted ? (parseFloat(d.weight) || null) : null;
     const reps   = isCardio   ? null : (parseInt(d.reps) || null);
     onLogSet(i + 1, weight, reps);
+  }
+
+  function handleUncheck(i: number, log: SetLog) {
+    // Restore draft from what was logged so user can edit and re-check
+    setDraft(i, "weight", log.actualWeight?.toString() ?? drafts[i]?.weight);
+    setDraft(i, "reps",   log.actualReps?.toString()   ?? drafts[i]?.reps);
+    onUnlogSet(i + 1);
   }
 
   return (
@@ -97,7 +114,8 @@ function ExerciseCard({
           {isCardio ? (
             <div className="flex items-center justify-between px-4 py-3.5">
               <span className="text-sm text-muted-foreground">{exercise.reps}</span>
-              <button type="button" onClick={() => onLogSet(1, null, null)}
+              <button type="button"
+                onClick={() => doneSets > 0 ? onUnlogSet(1) : onLogSet(1, null, null)}
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold press transition-all ${
                   doneSets > 0 ? "bg-primary/15 text-primary" : "bg-foreground/8 text-muted-foreground"
                 }`}
@@ -110,12 +128,12 @@ function ExerciseCard({
               const log  = logs.find((l) => l.setNumber === i + 1);
               const done = log?.completed ?? false;
               return (
-                <div key={i} className={`flex items-center gap-2 px-4 py-2.5 transition-opacity ${done ? "opacity-50" : ""}`}>
+                <div key={i} className={`flex items-center gap-2 px-4 py-2.5 transition-opacity ${done ? "opacity-60" : ""}`}>
                   <span className="text-xs text-muted-foreground shrink-0 w-8">Set {i + 1}</span>
 
                   {isWeighted && (
                     <input type="number" inputMode="decimal" placeholder="lbs"
-                      value={done ? (log?.actualWeight?.toString() ?? "") : drafts[i]?.weight}
+                      value={drafts[i]?.weight}
                       onChange={(e) => setDraft(i, "weight", e.target.value)}
                       disabled={done}
                       className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
@@ -126,7 +144,7 @@ function ExerciseCard({
 
                   <input type="number" inputMode="numeric"
                     placeholder={exercise.reps === "AMRAP" ? "reps" : exercise.reps}
-                    value={done ? (log?.actualReps?.toString() ?? "") : drafts[i]?.reps}
+                    value={drafts[i]?.reps}
                     onChange={(e) => setDraft(i, "reps", e.target.value)}
                     disabled={done}
                     className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
@@ -134,7 +152,8 @@ function ExerciseCard({
 
                   <div className="flex-1" />
 
-                  <button type="button" onClick={() => !done && handleCheck(i)} disabled={done}
+                  <button type="button"
+                    onClick={() => done ? (log && handleUncheck(i, log)) : handleCheck(i)}
                     className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 press transition-all ${
                       done ? "border-primary bg-primary" : "border-border"
                     }`}
@@ -205,6 +224,16 @@ export default function TrainPage() {
       const idx = existing.findIndex((s) => s.setNumber === setNum);
       const entry: SetLog = { setNumber: setNum, actualWeight: weight, actualReps: reps, completed: true };
       const updated = idx >= 0 ? existing.map((s, i) => i === idx ? entry : s) : [...existing, entry];
+      const next = { ...prev, [exercise]: updated };
+      try { localStorage.setItem(todayKey(), JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }
+
+  function handleUnlogSet(exercise: string, setNum: number) {
+    setSetLogs((prev) => {
+      const existing = prev[exercise] ?? [];
+      const updated = existing.map((s) => s.setNumber === setNum ? { ...s, completed: false } : s);
       const next = { ...prev, [exercise]: updated };
       try { localStorage.setItem(todayKey(), JSON.stringify(next)); } catch { /* ignore */ }
       return next;
@@ -335,6 +364,7 @@ export default function TrainPage() {
               isExpanded={expandedEx === ex.name}
               onToggle={() => setExpandedEx((prev) => prev === ex.name ? null : ex.name)}
               onLogSet={(setNum, weight, reps) => handleLogSet(ex.name, setNum, weight, reps)}
+              onUnlogSet={(setNum) => handleUnlogSet(ex.name, setNum)}
               suggestedWeight={getSuggested(ex.name, progress, prs)}
             />
           ))}
