@@ -270,18 +270,18 @@ export default function BuilderPage() {
         </div>
 
         {/* Day selector */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="flex gap-1">
           {days.map((d, dow) => (
             <button
               key={dow}
               type="button"
               onClick={() => setActiveDow(dow)}
-              className={`flex flex-col items-center gap-1 py-2 rounded-2xl press transition-all ${
+              className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl press transition-all ${
                 activeDow === dow ? "bg-primary text-primary-foreground" : "glass"
               }`}
             >
               <span className="text-[10px] font-semibold">{DOW_SHORT[dow]}</span>
-              <div className={`w-1.5 h-1.5 rounded-full ${
+              <div className={`w-1 h-1 rounded-full ${
                 d.isRest
                   ? (activeDow === dow ? "bg-primary-foreground/30" : "bg-foreground/15")
                   : (activeDow === dow ? "bg-primary-foreground" : "bg-primary")
