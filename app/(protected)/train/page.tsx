@@ -20,12 +20,13 @@ function todayKey() {
 
 // ── ExerciseCard ──────────────────────────────────────────────────────────
 
-// Parse target reps into a prefill string: "8" → "8", "8-12" → "8", "AMRAP" → ""
-function parseTargetReps(reps: string): string {
+function parseDefaultReps(reps: string): string {
   if (!reps || reps === "AMRAP") return "";
-  const match = reps.match(/^(\d+)/);
-  return match ? match[1] : "";
+  const m = reps.match(/^(\d+)/);
+  return m ? m[1] : "";
 }
+
+type Draft = { weight: string; reps: string };
 
 function ExerciseCard({
   exercise, logs, isExpanded, onToggle, onLogSet, onUnlogSet, suggestedWeight,
@@ -36,45 +37,49 @@ function ExerciseCard({
   onToggle:        () => void;
   onLogSet:        (setNum: number, weight: number | null, reps: number | null) => void;
   onUnlogSet:      (setNum: number) => void;
-  suggestedWeight: number | null;
+  suggestedWeight: number;
 }) {
   const info       = getExerciseInfo(exercise.name);
   const isWeighted = info?.unit === "weight_reps";
   const isCardio   = info?.unit === "distance_time";
   const doneSets   = logs.filter((s) => s.completed).length;
 
-  const targetReps = parseTargetReps(exercise.reps);
+  const defaultWeight = suggestedWeight.toString();
+  const defaultReps   = parseDefaultReps(exercise.reps);
 
-  const [drafts, setDrafts] = useState(() =>
-    Array.from({ length: exercise.sets }, () => ({
-      weight: suggestedWeight?.toString() ?? "",
-      reps:   targetReps,
-    })),
+  // Each set gets its own editable draft; pre-filled from suggested weight + target reps
+  const [drafts, setDrafts] = useState<Draft[]>(() =>
+    Array.from({ length: exercise.sets }, () => ({ weight: defaultWeight, reps: defaultReps })),
   );
 
-  // Sync weight drafts when suggestedWeight loads (async from DB)
+  // If suggestedWeight arrives after mount (e.g. slow DB), backfill any untouched fields
   useEffect(() => {
-    if (suggestedWeight == null) return;
     setDrafts((prev) =>
-      prev.map((d) => d.weight === "" ? { ...d, weight: suggestedWeight.toString() } : d),
+      prev.map((d) => ({
+        weight: d.weight === "" || d.weight === "45" ? defaultWeight : d.weight,
+        reps:   d.reps   === ""                      ? defaultReps   : d.reps,
+      })),
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggestedWeight]);
 
-  function setDraft(i: number, field: "weight" | "reps", val: string) {
+  function setDraft(i: number, field: keyof Draft, val: string) {
     setDrafts((prev) => prev.map((d, idx) => idx === i ? { ...d, [field]: val } : d));
   }
 
   function handleCheck(i: number) {
-    const d = drafts[i];
+    const d      = drafts[i];
     const weight = isWeighted ? (parseFloat(d.weight) || null) : null;
-    const reps   = isCardio   ? null : (parseInt(d.reps) || null);
+    const reps   = isCardio   ? null : (parseInt(d.reps, 10) || null);
     onLogSet(i + 1, weight, reps);
   }
 
-  function handleUncheck(i: number, log: SetLog) {
-    // Restore draft from what was logged so user can edit and re-check
-    setDraft(i, "weight", log.actualWeight?.toString() ?? drafts[i]?.weight);
-    setDraft(i, "reps",   log.actualReps?.toString()   ?? drafts[i]?.reps);
+  function handleUncheck(i: number) {
+    const log = logs.find((l) => l.setNumber === i + 1);
+    if (log) {
+      setDraft(i, "weight", log.actualWeight?.toString() ?? drafts[i].weight);
+      setDraft(i, "reps",   log.actualReps?.toString()   ?? drafts[i].reps);
+    }
     onUnlogSet(i + 1);
   }
 
@@ -88,7 +93,7 @@ function ExerciseCard({
           <p className="text-sm font-semibold truncate">{exercise.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {exercise.sets} × {exercise.reps}
-            {isWeighted && suggestedWeight && ` · ${suggestedWeight} lbs`}
+            {isWeighted && ` · ${suggestedWeight} lbs`}
             {exercise.restSeconds > 0 && ` · ${exercise.restSeconds}s`}
           </p>
         </div>
@@ -125,18 +130,17 @@ function ExerciseCard({
             </div>
           ) : (
             Array.from({ length: exercise.sets }).map((_, i) => {
-              const log  = logs.find((l) => l.setNumber === i + 1);
-              const done = log?.completed ?? false;
+              const done = logs.find((l) => l.setNumber === i + 1)?.completed ?? false;
               return (
                 <div key={i} className={`flex items-center gap-2 px-4 py-2.5 transition-opacity ${done ? "opacity-60" : ""}`}>
                   <span className="text-xs text-muted-foreground shrink-0 w-8">Set {i + 1}</span>
 
                   {isWeighted && (
                     <input type="number" inputMode="decimal" placeholder="lbs"
-                      value={drafts[i]?.weight}
+                      value={drafts[i]?.weight ?? defaultWeight}
                       onChange={(e) => setDraft(i, "weight", e.target.value)}
-                      disabled={done}
-                      className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                      readOnly={done}
+                      className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 read-only:opacity-60"
                     />
                   )}
 
@@ -144,16 +148,16 @@ function ExerciseCard({
 
                   <input type="number" inputMode="numeric"
                     placeholder={exercise.reps === "AMRAP" ? "reps" : exercise.reps}
-                    value={drafts[i]?.reps}
+                    value={drafts[i]?.reps ?? defaultReps}
                     onChange={(e) => setDraft(i, "reps", e.target.value)}
-                    disabled={done}
-                    className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                    readOnly={done}
+                    className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 read-only:opacity-60"
                   />
 
                   <div className="flex-1" />
 
                   <button type="button"
-                    onClick={() => done ? (log && handleUncheck(i, log)) : handleCheck(i)}
+                    onPointerUp={() => done ? handleUncheck(i) : handleCheck(i)}
                     className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 press transition-all ${
                       done ? "border-primary bg-primary" : "border-border"
                     }`}

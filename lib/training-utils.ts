@@ -15,8 +15,8 @@ export function getSuggested(
   exercise: string,
   progress: Record<string, { weight: number }>,
   prs: Record<string, number>,
-): number | null {
+): number {
   if (progress[exercise]?.weight) return progress[exercise].weight;
   if (prs[exercise] > 0) return Math.max(45, round5(prs[exercise] * 0.70));
-  return null;
+  return 45; // default to empty bar
 }
