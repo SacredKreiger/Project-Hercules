@@ -235,7 +235,7 @@ export default function BuilderPage() {
     }));
     startTransition(async () => {
       const { error } = await saveTrainingProgram(planName, programDays);
-      if (!error) { router.push("/train"); router.refresh(); }
+      if (!error) { window.location.href = "/train"; }
     });
   }
 

@@ -36,8 +36,7 @@ export default function TrainSetupPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/train");
-        router.refresh();
+        window.location.href = "/train";
       }
     });
   }
@@ -92,9 +91,8 @@ export default function TrainSetupPage() {
                     ) : (
                       <div className="flex-1 min-w-0">
                         <span className="text-xs font-medium">{day.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2 truncate">
-                          {day.exercises.slice(0, 3).map((e) => e.name).join(" · ")}
-                          {day.exercises.length > 3 ? ` +${day.exercises.length - 3}` : ""}
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {day.exercises.length} exercise{day.exercises.length !== 1 ? "s" : ""}
                         </span>
                       </div>
                     )}

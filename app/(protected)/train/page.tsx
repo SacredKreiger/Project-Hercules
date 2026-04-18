@@ -108,21 +108,20 @@ function ExerciseCard({
               const log  = logs.find((l) => l.setNumber === i + 1);
               const done = log?.completed ?? false;
               return (
-                <div key={i} className={`flex items-center gap-3 px-4 py-3 transition-opacity ${done ? "opacity-50" : ""}`}>
-                  <span className="text-xs text-muted-foreground w-10 shrink-0">Set {i + 1}</span>
+                <div key={i} className={`flex items-center gap-2 px-4 py-3 transition-opacity ${done ? "opacity-50" : ""}`}>
+                  <span className="text-xs text-muted-foreground w-8 shrink-0">Set {i + 1}</span>
 
                   {isWeighted && (
-                    <>
-                      <input
-                        type="number" inputMode="decimal" placeholder="lbs"
-                        value={done ? (log?.actualWeight?.toString() ?? "") : drafts[i]?.weight ?? ""}
-                        onChange={(e) => setDraft(i, "weight", e.target.value)}
-                        disabled={done}
-                        className="w-16 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
-                      />
-                      <span className="text-xs text-muted-foreground shrink-0">×</span>
-                    </>
+                    <input
+                      type="number" inputMode="decimal" placeholder="lbs"
+                      value={done ? (log?.actualWeight?.toString() ?? "") : drafts[i]?.weight ?? ""}
+                      onChange={(e) => setDraft(i, "weight", e.target.value)}
+                      disabled={done}
+                      className="flex-1 min-w-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                    />
                   )}
+
+                  {isWeighted && <span className="text-xs text-muted-foreground shrink-0">×</span>}
 
                   <input
                     type="number" inputMode="numeric"
@@ -130,10 +129,10 @@ function ExerciseCard({
                     value={done ? (log?.actualReps?.toString() ?? "") : drafts[i]?.reps ?? ""}
                     onChange={(e) => setDraft(i, "reps", e.target.value)}
                     disabled={done}
-                    className="w-16 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
+                    className="flex-1 min-w-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-60"
                   />
-                  <span className="text-xs text-muted-foreground shrink-0">reps</span>
-                  <div className="flex-1" />
+
+                  <div className="w-2" />
 
                   <button
                     type="button"
