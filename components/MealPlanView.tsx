@@ -150,22 +150,21 @@ export default function MealPlanView({
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function dayCalories(entries: MealEntry[], dow: number): number {
-    return entries.reduce((sum, e) => {
-      if (!e.recipes) return sum;
-      const isRest = !trainingDays.includes(dow);
-      const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
-      return sum + Math.round((dailyMacros?.calories ?? dailyCalories) * (split[e.meal_slot] ?? 0.25) * (isRest ? 0.85 : 1.0));
-    }, 0);
+    if (entries.length === 0) return 0;
+    const isRest = !trainingDays.includes(dow);
+    const base = dailyMacros?.calories ?? dailyCalories;
+    return Math.round(base * (isRest ? 0.85 : 1.0));
   }
 
   function MealRow({ entry }: { entry: MealEntry }) {
     const isRestDay = !trainingDays.includes(entry.day_of_week);
-    const m = entry.recipes?.calories
-      ? getMultiplier(dailyCalories, mealsPerDay, entry.meal_slot, entry.recipes.calories, isRestDay)
-      : 1;
-    const scaledCal  = entry.recipes?.calories  ? scaleMacro(entry.recipes.calories,  m) : null;
-    const scaledProt = entry.recipes?.protein_g ? scaleMacro(entry.recipes.protein_g, m) : null;
-    const scaledCarb = entry.recipes?.carbs_g   ? scaleMacro(entry.recipes.carbs_g,   m) : null;
+    const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
+    const fraction = (split[entry.meal_slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
+    const base = dailyMacros ?? { calories: dailyCalories, protein: 0, carbs: 0, fat: 0 };
+    // Show slot TARGETS — the exact portions solver always hits these values
+    const slotCal  = Math.round(base.calories * fraction);
+    const slotProt = Math.round(base.protein  * fraction);
+    const slotCarb = Math.round(base.carbs    * fraction);
     return (
       <button
         type="button"
@@ -178,9 +177,8 @@ export default function MealPlanView({
           <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
         </div>
         <div className="text-right shrink-0 ml-3">
-          <p className="text-sm font-semibold">{scaledCal ?? "—"} kcal</p>
-          <p className="text-xs text-muted-foreground">{scaledProt ?? "—"}g P · {scaledCarb ?? "—"}g C</p>
-          {m !== 1 && <p className="text-[10px] text-muted-foreground/60 mt-0.5">{m}× serving</p>}
+          <p className="text-sm font-semibold">{slotCal} kcal</p>
+          <p className="text-xs text-muted-foreground">{slotProt}g P · {slotCarb}g C</p>
         </div>
       </button>
     );
@@ -530,16 +528,21 @@ export default function MealPlanView({
                     carbs:    Math.round(base.carbs    * fraction * 10) / 10,
                     fat:      Math.round(base.fat      * fraction * 10) / 10,
                   };
-                  const portions = computeExactPortions(ingredients, slotTargets);
                   const result   = solvePortions(ingredients, slotTargets);
+                  const portions = computeExactPortions(ingredients, slotTargets);
                   const totals   = result.totals;
+                  const isExact  = result.accuracyScore === 100;
                   return (
                     <>
                       <div className="glass rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your exact portions</p>
-                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-500/15 text-green-400">
-                            Exact Match
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                            isExact
+                              ? "bg-green-500/15 text-green-400"
+                              : "bg-amber-500/15 text-amber-400"
+                          }`}>
+                            {isExact ? "Exact Match" : `${result.accuracyScore}% match`}
                           </span>
                         </div>
                         <div className="grid grid-cols-4 gap-2">
