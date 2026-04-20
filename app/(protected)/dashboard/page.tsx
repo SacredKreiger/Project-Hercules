@@ -13,6 +13,10 @@ const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> 
 
 const SLOT_LABEL = ["", "Breakfast", "Lunch", "Snack", "Dinner", "Late Night"];
 
+const P_COLOR = "oklch(0.68 0.20 15)";
+const C_COLOR = "oklch(0.78 0.16 80)";
+const F_COLOR = "oklch(0.68 0.16 235)";
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -23,7 +27,6 @@ function getGreeting() {
 function pct(n: number, total: number) {
   return total > 0 ? Math.min(100, (n / total) * 100) : 0;
 }
-// pct is still used by the goal + phase progress bars
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -73,8 +76,8 @@ export default async function DashboardPage() {
     };
   }
 
-  const currentWeight = latestLog?.weight_lbs ?? profile.current_weight_lbs;
-  const progressPct   = Math.min(100, Math.abs(
+  const currentWeight   = latestLog?.weight_lbs ?? profile.current_weight_lbs;
+  const progressPct     = Math.min(100, Math.abs(
     (currentWeight - profile.current_weight_lbs) /
     Math.max(1, profile.goal_weight_lbs - profile.current_weight_lbs)
   ) * 100);
@@ -86,101 +89,106 @@ export default async function DashboardPage() {
   const programDone     = activeInfo?.programDone ?? false;
   const programName     = rawProgram?.name ?? null;
 
+  // Macro split bar — each macro's share of total kcal
+  const pCals = macros.protein * 4;
+  const cCals = macros.carbs   * 4;
+  const fCals = macros.fat     * 9;
+  const sumCals = pCals + cCals + fCals;
+  const pBarPct = pct(pCals, sumCals);
+  const cBarPct = pct(cCals, sumCals);
+  const fBarPct = pct(fCals, sumCals);
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 h-full">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-1 shrink-0">
         <div>
-          <p className="text-xs text-muted-foreground tracking-wide">
+          <p className="text-xs text-muted-foreground">
             {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
-          <h1 className="text-2xl font-bold mt-0.5 tracking-tight">
+          <h1 className="text-xl font-bold tracking-tight mt-0.5">
             {getGreeting()}, {profile.name.split(" ")[0]}
           </h1>
         </div>
-        <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full ${dietPhase.bg} ${dietPhase.text}`}>
+        <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 ${dietPhase.bg} ${dietPhase.text}`}>
           {dietPhase.label}
         </span>
       </div>
 
-      {/* ── Daily targets ── */}
-      <div className="glass widget-shadow rounded-2xl p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-          Daily Targets
-        </p>
-
-        {/* Calorie hero */}
-        <div className="flex items-baseline gap-2 mb-5">
-          <span
-            className="text-5xl font-black tabular-nums tracking-tight leading-none"
-            style={{ color: "oklch(0.72 0.17 42)" }}>
-            {macros.calories}
-          </span>
-          <span className="text-sm text-muted-foreground font-medium">kcal</span>
+      {/* ── Daily Targets: macro split bar ── */}
+      <div className="glass widget-shadow rounded-2xl px-4 py-3.5 shrink-0">
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Daily Targets
+          </p>
+          <p className="text-sm font-black tabular-nums" style={{ color: "oklch(0.72 0.17 42)" }}>
+            {macros.calories.toLocaleString()} <span className="text-xs font-semibold text-muted-foreground">kcal</span>
+          </p>
         </div>
 
-        {/* P / C / F stat blocks */}
-        <div className="grid grid-cols-3 gap-2.5">
+        {/* Segmented bar: width of each segment = its share of total calories */}
+        <div className="flex h-2.5 rounded-full overflow-hidden mb-3" style={{ gap: "2px" }}>
+          <div style={{ width: `${pBarPct}%`, background: P_COLOR, borderRadius: "999px 0 0 999px" }} />
+          <div style={{ width: `${cBarPct}%`, background: C_COLOR }} />
+          <div style={{ width: `${fBarPct}%`, background: F_COLOR, borderRadius: "0 999px 999px 0" }} />
+        </div>
+
+        {/* Labels */}
+        <div className="flex justify-between">
           {([
-            { label: "Protein", value: macros.protein,  color: "oklch(0.68 0.20 15)"  },
-            { label: "Carbs",   value: macros.carbs,    color: "oklch(0.78 0.16 80)"  },
-            { label: "Fat",     value: macros.fat,       color: "oklch(0.68 0.16 235)" },
-          ] as const).map(({ label, value, color }) => (
-            <div key={label} className="bg-foreground/5 rounded-xl p-3 text-center">
-              <p className="text-2xl font-black tabular-nums leading-none" style={{ color }}>
-                {value}
-              </p>
-              <p className="text-[10px] font-semibold text-muted-foreground mt-1.5 uppercase tracking-wide">
-                {label}
-              </p>
-              <p className="text-[10px] text-muted-foreground">g</p>
+            { label: "Protein", g: macros.protein, color: P_COLOR },
+            { label: "Carbs",   g: macros.carbs,   color: C_COLOR },
+            { label: "Fat",     g: macros.fat,      color: F_COLOR },
+          ] as const).map(({ label, g, color }) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+              <span className="text-xs font-bold tabular-nums">{g}g</span>
+              <span className="text-[10px] text-muted-foreground">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Stats row: goal + program week ── */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* ── Stats row ── */}
+      <div className="grid grid-cols-2 gap-3 shrink-0">
 
-        {/* Goal progress */}
-        <div className="glass widget-shadow rounded-2xl p-4 flex flex-col gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Goal</p>
+        {/* Goal */}
+        <div className="glass widget-shadow rounded-2xl p-3.5 flex flex-col gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Goal</p>
           <div>
-            <p className="text-2xl font-black tabular-nums leading-none">
+            <p className="text-xl font-black tabular-nums leading-none">
               {Math.abs(currentWeight - profile.goal_weight_lbs).toFixed(1)}
-              <span className="text-sm font-medium text-muted-foreground ml-1">lbs</span>
+              <span className="text-xs font-medium text-muted-foreground ml-1">lbs left</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] text-muted-foreground mt-1">
               {currentWeight} → {profile.goal_weight_lbs}
             </p>
           </div>
-          <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden mt-auto">
+          <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all duration-700"
               style={{ width: `${progressPct}%` }} />
           </div>
         </div>
 
-        {/* Week / phase */}
-        <div className="glass widget-shadow rounded-2xl p-4 flex flex-col gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        {/* Phase / Week */}
+        <div className="glass widget-shadow rounded-2xl p-3.5 flex flex-col gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             {trainingPhase ? "Phase" : "Program"}
           </p>
           <div>
-            <p className="text-2xl font-black tabular-nums leading-none">
+            <p className="text-xl font-black tabular-nums leading-none">
               Week {weekInPhase ?? weekNumber}
-              {totalPhaseWeeks && (
-                <span className="text-sm font-medium text-muted-foreground ml-1">
-                  / {totalPhaseWeeks}
-                </span>
+              {totalPhaseWeeks != null && (
+                <span className="text-xs font-medium text-muted-foreground ml-1">/ {totalPhaseWeeks}</span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground mt-1 truncate">
+            <p className="text-[10px] text-muted-foreground mt-1 truncate">
               {trainingPhase?.name ?? programName ?? "No program"}
             </p>
           </div>
           {trainingPhase && weekInPhase != null && totalPhaseWeeks != null && (
-            <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden mt-auto">
+            <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full"
                 style={{ width: `${pct(weekInPhase, totalPhaseWeeks)}%` }} />
             </div>
@@ -188,41 +196,40 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Today's Training ── */}
-      <div className="glass widget-shadow rounded-2xl overflow-hidden">
-
-        <div className="px-4 pt-4 pb-3 flex items-start justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-              Today&apos;s Training
-            </p>
+      {/* ── Today's Training (flex-1 — fills remaining space) ── */}
+      <div className="glass widget-shadow rounded-2xl overflow-hidden flex-1 min-h-0 flex flex-col">
+        <div className="px-4 pt-3.5 pb-2.5 shrink-0 flex items-center justify-between border-b border-border">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Today&apos;s Training
+          </p>
+          <div className="flex items-center gap-1.5">
             {programName && (
-              <p className="text-xs text-muted-foreground">{programName}</p>
+              <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{programName}</span>
+            )}
+            {trainingPhase?.isDeload && (
+              <span className="text-[10px] font-bold uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                Deload
+              </span>
+            )}
+            {programDone && (
+              <span className="text-[10px] font-bold uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Done
+              </span>
             )}
           </div>
-          {trainingPhase?.isDeload && (
-            <span className="text-[10px] font-bold uppercase text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full mt-0.5">
-              Deload
-            </span>
-          )}
-          {programDone && (
-            <span className="text-[10px] font-bold uppercase text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full mt-0.5">
-              Complete
-            </span>
-          )}
         </div>
 
         {rawProgram && todayDay ? (
           todayDay.isRest ? (
-            <div className="px-4 pb-5 text-center space-y-1 pt-2">
-              <p className="text-4xl mb-2">😴</p>
-              <p className="text-base font-bold">Rest Day</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-1 px-4">
+              <p className="text-3xl">😴</p>
+              <p className="text-sm font-bold mt-1">Rest Day</p>
               <p className="text-xs text-muted-foreground">Recovery is part of the program.</p>
             </div>
           ) : (
-            <div className="px-4 pb-4 space-y-4">
-              <div className="border-t border-border pt-3">
-                <p className="text-xl font-black text-primary tracking-tight">{todayDay.name}</p>
+            <div className="flex flex-col flex-1 min-h-0 px-4 pt-3 pb-4 gap-3">
+              <div className="shrink-0">
+                <p className="text-lg font-black text-primary tracking-tight leading-tight">{todayDay.name}</p>
                 {trainingPhase && (
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {trainingPhase.name}
@@ -231,43 +238,42 @@ export default async function DashboardPage() {
                 )}
               </div>
 
-              {/* Exercise chips */}
-              <div className="flex flex-wrap gap-2">
-                {(todayDay.exercises as any[])?.slice(0, 6).map((ex: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2 bg-foreground/5 rounded-xl px-3 py-2">
+              <div className="flex flex-wrap gap-2 flex-1 content-start overflow-hidden">
+                {(todayDay.exercises as any[])?.slice(0, 5).map((ex: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 bg-foreground/5 rounded-xl px-3 py-2 h-fit">
                     <span className="text-xs font-medium">{ex.name}</span>
                     <span className="text-[10px] font-bold text-muted-foreground tabular-nums bg-foreground/8 px-1.5 py-0.5 rounded-full">
                       {ex.sets}×{ex.reps}
                     </span>
                   </div>
                 ))}
-                {(todayDay.exercises as any[])?.length > 6 && (
-                  <div className="flex items-center bg-foreground/5 rounded-xl px-3 py-2">
-                    <span className="text-xs text-muted-foreground font-medium">
-                      +{(todayDay.exercises as any[]).length - 6} more
+                {(todayDay.exercises as any[])?.length > 5 && (
+                  <div className="flex items-center bg-foreground/5 rounded-xl px-3 py-2 h-fit">
+                    <span className="text-xs text-muted-foreground">
+                      +{(todayDay.exercises as any[]).length - 5} more
                     </span>
                   </div>
                 )}
               </div>
 
               <a href="/train"
-                className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-primary-foreground text-sm font-semibold rounded-xl press">
+                className="shrink-0 flex items-center justify-center gap-2 w-full py-3 bg-primary text-primary-foreground text-sm font-semibold rounded-xl press">
                 Start Workout →
               </a>
             </div>
           )
         ) : rawProgram && !todayDay ? (
-          <div className="px-4 pb-5 pt-2 text-center space-y-1">
-            <p className="text-4xl mb-2">📅</p>
-            <p className="text-sm font-semibold">No workout today</p>
+          <div className="flex-1 flex flex-col items-center justify-center gap-1 px-4">
+            <p className="text-3xl">📅</p>
+            <p className="text-sm font-bold mt-1">No workout today</p>
             {trainingPhase && (
               <p className="text-xs text-muted-foreground">{trainingPhase.name}</p>
             )}
           </div>
         ) : (
-          <div className="px-4 pb-5 pt-2 text-center space-y-1">
+          <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-4">
             <p className="text-sm text-muted-foreground">No training plan set up.</p>
-            <a href="/train/setup" className="text-xs text-primary font-semibold inline-block press">
+            <a href="/train/setup" className="text-xs text-primary font-semibold press">
               Set up training →
             </a>
           </div>
@@ -275,44 +281,37 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Today's Meals ── */}
-      <div className="glass widget-shadow rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-3">
+      <div className="glass widget-shadow rounded-2xl overflow-hidden shrink-0">
+        <div className="px-4 pt-3 pb-2 border-b border-border">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Today&apos;s Meals
           </p>
         </div>
 
         {todayMeals && todayMeals.length > 0 ? (
-          <div className="px-4 pb-4 space-y-2">
-            {todayMeals.map((entry: any) => {
+          <div className="divide-y divide-border">
+            {todayMeals.slice(0, 4).map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
-                <div key={entry.id}
-                  className="flex items-center justify-between bg-foreground/4 rounded-xl px-4 py-3">
+                <div key={entry.id} className="flex items-center justify-between px-4 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
                     </p>
-                    <p className="text-sm font-semibold mt-0.5 truncate">{entry.recipes?.name}</p>
-                    {entry.recipes?.cuisine && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{entry.recipes.cuisine}</p>
-                    )}
+                    <p className="text-sm font-semibold truncate mt-0.5">{entry.recipes?.name}</p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="text-base font-black tabular-nums">{m.calories}</p>
-                    <p className="text-[10px] text-muted-foreground">kcal</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {m.protein}P · {m.carbs}C · {m.fat}F
-                    </p>
+                    <p className="text-sm font-black tabular-nums">{m.calories} <span className="text-[10px] font-normal text-muted-foreground">kcal</span></p>
+                    <p className="text-[10px] text-muted-foreground">{m.protein}P · {m.carbs}C · {m.fat}F</p>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="px-4 pb-5 pt-1 text-center">
+          <div className="px-4 py-4 text-center">
             <p className="text-sm text-muted-foreground">No meals planned yet.</p>
-            <a href="/meals" className="text-xs text-primary font-semibold mt-1.5 inline-block press">
+            <a href="/meals" className="text-xs text-primary font-semibold mt-1 inline-block press">
               Set up meal plan →
             </a>
           </div>
