@@ -99,8 +99,7 @@ export default async function DashboardPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-2.5 overflow-hidden"
-      style={{ height: "calc(100dvh - 2rem - max(1.5rem, env(safe-area-inset-bottom)))" }}>
+    <div className="flex flex-col gap-2.5">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between shrink-0">
@@ -125,7 +124,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="grid grid-cols-4 gap-1 justify-items-center">
-          <MacroRing label="Calories" logged={macros.calories} target={macros.calories} unit="kcal" color={CAL_COLOR} size={72} hideTarget />
+          <MacroRing label="Calories" logged={macros.calories} target={macros.calories} unit="" color={CAL_COLOR} size={72} hideTarget />
           <MacroRing label="Protein"  logged={macros.protein}  target={macros.protein}  unit="g"    color={P_COLOR}   size={72} hideTarget />
           <MacroRing label="Carbs"    logged={macros.carbs}    target={macros.carbs}    unit="g"    color={C_COLOR}   size={72} hideTarget />
           <MacroRing label="Fat"      logged={macros.fat}      target={macros.fat}      unit="g"    color={F_COLOR}   size={72} hideTarget />
