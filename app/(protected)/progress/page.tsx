@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/Skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from "recharts";
 
 type Log = { id: string; log_date: string; weight_lbs: number; notes: string | null };
 
@@ -115,6 +115,7 @@ export default function ProgressPage() {
                   fontSize: "12px",
                 }}
               />
+              <ReferenceLine y={profile?.goal_weight_lbs} stroke="oklch(0.68 0.18 150)" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "Goal", position: "insideTopRight", fontSize: 10, fill: "oklch(0.68 0.18 150)" }} />
               <Line type="monotone" dataKey="weight" stroke="oklch(0.60 0.18 255)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -155,9 +156,14 @@ export default function ProgressPage() {
           <div className="divide-y divide-border">
             {[...logs].reverse().slice(0, 14).map((log) => (
               <div key={log.id} className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-muted-foreground">
-                  {new Date(log.log_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                </span>
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(log.log_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                  </span>
+                  {log.notes && (
+                    <p className="text-xs text-muted-foreground/70 mt-0.5">{log.notes}</p>
+                  )}
+                </div>
                 <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
               </div>
             ))}

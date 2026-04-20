@@ -410,10 +410,10 @@ export default function TrainPage() {
             />
           ))}
 
-          {!todayDay.isRest && allDone && !completed && (
+          {!todayDay.isRest && doneSets > 0 && !completed && (
             <button type="button" onClick={handleCompleteWorkout}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm press">
-              Complete Workout ✓
+              {allDone ? "Complete Workout ✓" : `Finish Workout (${doneSets}/${totalSets} sets)`}
             </button>
           )}
 

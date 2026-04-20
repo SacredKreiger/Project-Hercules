@@ -39,6 +39,7 @@ export default function ProfilePage() {
     const { error } = await supabase.from("profiles").update(profile).eq("id", user!.id);
     if (error) { setError(error.message); setSaving(false); return; }
     setSaved(true); setSaving(false);
+    setTimeout(() => setSaved(false), 3000);
   }
 
   if (!profile) {
@@ -136,6 +137,12 @@ export default function ProfilePage() {
               <Label className="text-xs">Goal Weight (lbs)</Label>
               <Input type="number" step="0.1" value={profile.goal_weight_lbs}
                 onChange={(e) => setProfile({ ...profile, goal_weight_lbs: parseFloat(e.target.value) })}
+                className="rounded-xl bg-foreground/5 border-border h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Height (cm)</Label>
+              <Input type="number" step="1" value={profile.height_cm}
+                onChange={(e) => setProfile({ ...profile, height_cm: parseFloat(e.target.value) })}
                 className="rounded-xl bg-foreground/5 border-border h-10" />
             </div>
           </div>

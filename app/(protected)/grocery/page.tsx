@@ -65,6 +65,16 @@ export default function GroceryPage() {
       .eq("user_id", userId).eq("week_number", 0);
   }
 
+  async function clearChecked() {
+    const updated = items.map((item) => ({ ...item, checked: false }));
+    setItems(updated);
+    if (!userId) return;
+    const supabase = createClient();
+    await supabase.from("grocery_lists")
+      .update({ items: updated })
+      .eq("user_id", userId).eq("week_number", 0);
+  }
+
   function toggleCategory(cat: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -163,8 +173,19 @@ export default function GroceryPage() {
             </div>
           </div>
 
-          {checkedCount === totalCount && (
-            <p className="text-xs text-emerald-500 font-semibold">All items checked — you&apos;re all set!</p>
+          {checkedCount === totalCount ? (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-emerald-500 font-semibold">All items checked — you&apos;re all set!</p>
+              <button type="button" onClick={clearChecked} className="text-xs text-muted-foreground underline underline-offset-2 press">
+                Clear all
+              </button>
+            </div>
+          ) : checkedCount > 0 && (
+            <div className="flex justify-end">
+              <button type="button" onClick={clearChecked} className="text-xs text-muted-foreground underline underline-offset-2 press">
+                Clear checked
+              </button>
+            </div>
           )}
         </div>
       )}
