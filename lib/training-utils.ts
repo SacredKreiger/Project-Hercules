@@ -49,6 +49,7 @@ const BW_RATIOS: Record<string, { male: number; female: number }> = {
   "Dumbbell Press":       { male: 0.33, female: 0.17 },
   // Rows / pulls
   "Barbell Row":          { male: 0.85, female: 0.55 },
+  "Bent Over Row":        { male: 0.85, female: 0.55 },
   "Dumbbell Row":         { male: 0.48, female: 0.33 },
   "Lat Pulldown":         { male: 0.80, female: 0.55 },
   "Cable Row":            { male: 0.65, female: 0.43 },
@@ -59,7 +60,9 @@ const BW_RATIOS: Record<string, { male: number; female: number }> = {
   // Isolation / cables
   "Bicep Curl":           { male: 0.20, female: 0.13 },
   "Dumbbell Curl":        { male: 0.12, female: 0.08 },
+  "Bicep Cable Curl":     { male: 0.20, female: 0.13 },
   "Tricep Pushdown":      { male: 0.18, female: 0.10 },
+  "Tricep Pulldown":      { male: 0.18, female: 0.10 },
   "Cable Fly":            { male: 0.10, female: 0.06 },
   "Face Pull":            { male: 0.12, female: 0.07 },
   // Kettlebell

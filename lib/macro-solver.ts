@@ -214,7 +214,17 @@ export function solveMacros(
   targets: Targets,
   adjustableIds: string[]
 ): MealPlanResult {
-  const t = reconcileTargets(targets)
+  // Round macro targets to integers before solving.
+  // This aligns the snap-pass convergence threshold (< 0.05 g) with the
+  // integer-display check — avoids false "not exact" when the solver lands
+  // within 0.05 g of a fractional target that rounds differently than the achieved value.
+  const intTargets: Targets = {
+    protein:  Math.round(targets.protein),
+    carbs:    Math.round(targets.carbs),
+    fat:      Math.round(targets.fat),
+    calories: targets.calories,   // reconcileTargets re-derives this anyway
+  }
+  const t = reconcileTargets(intTargets)
 
   const adjIdx = foods
     .map((f, i) => (adjustableIds.includes(f.id) ? i : -1))

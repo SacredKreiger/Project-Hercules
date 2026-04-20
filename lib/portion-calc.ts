@@ -19,13 +19,15 @@ export type ExactPortion = {
   adjusted: boolean    // true = gram amount changed from original recipe
 }
 
-// ─── Realistic gram bounds per category ───────────────────────────────────────
+// ─── Gram bounds per category ─────────────────────────────────────────────────
+// Minimums are 0 so the linear solve is never clamped upward.
+// The snap pass keeps each food ≥ 0 and the Gaussian solution is the true optimum.
 const BOUNDS: Record<string, { min: number; max: number }> = {
-  protein:   { min: 30,  max: 450 },
-  carb:      { min: 20,  max: 600 },
-  fat:       { min: 2,   max: 80  },
-  vegetable: { min: 0,   max: 400 },
-  other:     { min: 0,   max: 200 },
+  protein:   { min: 0,  max: 600 },
+  carb:      { min: 0,  max: 800 },
+  fat:       { min: 0,  max: 200 },
+  vegetable: { min: 0,  max: 500 },
+  other:     { min: 0,  max: 300 },
 }
 
 /**
@@ -66,6 +68,10 @@ function ingredientsToFoods(
 /**
  * Identify which ingredient indices are adjustable (protein / carb / fat sources)
  * and order them [primary protein, primary carb, primary fat] for the 3×3 solver.
+ *
+ * Candidates are selected by ACTUAL macro contribution (grams × macro/gram),
+ * not by food category — this handles mixed-role foods like eggs (protein+fat)
+ * and ensures a 3rd adjustable is always found when one food spans two categories.
  */
 function buildAdjustableIds(
   ingredients: { name: string; qty: number; unit: string }[],
@@ -73,37 +79,42 @@ function buildAdjustableIds(
   initialGrams: number[]
 ): string[] {
   type Candidate = { id: string; contribution: number }
-  const proteinCandidates: Candidate[] = []
-  const carbCandidates:    Candidate[] = []
-  const fatCandidates:     Candidate[] = []
+  const byProtein: Candidate[] = []
+  const byCarbs:   Candidate[] = []
+  const byFat:     Candidate[] = []
 
   for (let i = 0; i < ingredients.length; i++) {
     const info = lookupIngredient(ingredients[i].name)
     if (!info) continue
     const g = initialGrams[i]
-    const contribution = {
-      protein:   g * foods[i].proteinPerGram,
-      carbs:     g * foods[i].carbsPerGram,
-      fat:       g * foods[i].fatPerGram,
-    }
-    if (info.category === "protein")   proteinCandidates.push({ id: String(i), contribution: contribution.protein })
-    if (info.category === "carb")      carbCandidates.push({    id: String(i), contribution: contribution.carbs   })
-    if (info.category === "fat")       fatCandidates.push({     id: String(i), contribution: contribution.fat     })
+    const cp = g * foods[i].proteinPerGram
+    const cc = g * foods[i].carbsPerGram
+    const cf = g * foods[i].fatPerGram
+    // Any food contributing > 0.5 g of a macro is a candidate for that macro,
+    // regardless of its primary category.  This lets eggs be a fat candidate,
+    // cheese be a protein candidate, etc.
+    if (cp > 0.5) byProtein.push({ id: String(i), contribution: cp })
+    if (cc > 0.5) byCarbs.push(  { id: String(i), contribution: cc })
+    if (cf > 0.5) byFat.push(    { id: String(i), contribution: cf })
   }
 
-  // Pick the top contributor in each category as the primary adjustable source
-  const pick = (candidates: Candidate[]) =>
-    candidates.sort((a, b) => b.contribution - a.contribution)[0]?.id
+  byProtein.sort((a, b) => b.contribution - a.contribution)
+  byCarbs.sort(  (a, b) => b.contribution - a.contribution)
+  byFat.sort(    (a, b) => b.contribution - a.contribution)
 
   const ids: string[] = []
-  const pId = pick(proteinCandidates)
-  const cId = pick(carbCandidates)
-  const fId = pick(fatCandidates)
 
-  // Order: protein first (most critical), then carb, then fat
+  // Primary protein source
+  const pId = byProtein[0]?.id
   if (pId !== undefined) ids.push(pId)
-  if (cId !== undefined && cId !== pId) ids.push(cId)
-  if (fId !== undefined && fId !== pId && fId !== cId) ids.push(fId)
+
+  // Primary carb source — skip if already chosen as protein
+  const cId = byCarbs.find(c => !ids.includes(c.id))?.id
+  if (cId !== undefined) ids.push(cId)
+
+  // Primary fat source — skip if already chosen above
+  const fId = byFat.find(f => !ids.includes(f.id))?.id
+  if (fId !== undefined) ids.push(fId)
 
   return ids
 }

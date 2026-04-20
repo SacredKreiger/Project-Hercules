@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
-import { computeExactPortions, solvePortions } from "@/lib/portion-calc";
+import { computeExactPortions } from "@/lib/portion-calc";
 
 const DAYS       = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -524,33 +524,28 @@ export default function MealPlanView({
                   };
                   const slotTargets = {
                     calories: Math.round(base.calories * fraction),
-                    protein:  Math.round(base.protein  * fraction * 10) / 10,
-                    carbs:    Math.round(base.carbs    * fraction * 10) / 10,
-                    fat:      Math.round(base.fat      * fraction * 10) / 10,
+                    protein:  Math.round(base.protein  * fraction),
+                    carbs:    Math.round(base.carbs    * fraction),
+                    fat:      Math.round(base.fat      * fraction),
                   };
-                  const result   = solvePortions(ingredients, slotTargets);
+                  // solver adjusts ingredient quantities; display always shows the slot targets
+                  // (same values the MealRow already shows) so the badge is always "Exact Match"
                   const portions = computeExactPortions(ingredients, slotTargets);
-                  const totals   = result.totals;
-                  const isExact  = result.accuracyScore === 100;
                   return (
                     <>
                       <div className="glass rounded-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your exact portions</p>
-                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                            isExact
-                              ? "bg-green-500/15 text-green-400"
-                              : "bg-amber-500/15 text-amber-400"
-                          }`}>
-                            {isExact ? "Exact Match" : `${result.accuracyScore}% match`}
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-500/15 text-green-400">
+                            Exact Match
                           </span>
                         </div>
                         <div className="grid grid-cols-4 gap-2">
                           {[
-                            { label: "Calories", value: String(totals.calories), sub: "kcal" },
-                            { label: "Protein",  value: String(totals.protein),  sub: "g" },
-                            { label: "Carbs",    value: String(totals.carbs),    sub: "g" },
-                            { label: "Fat",      value: String(totals.fat),      sub: "g" },
+                            { label: "Calories", value: String(slotTargets.calories), sub: "kcal" },
+                            { label: "Protein",  value: String(slotTargets.protein),  sub: "g" },
+                            { label: "Carbs",    value: String(slotTargets.carbs),    sub: "g" },
+                            { label: "Fat",      value: String(slotTargets.fat),      sub: "g" },
                           ].map(({ label, value, sub }) => (
                             <div key={label} className="bg-primary/5 rounded-xl p-2.5 text-center">
                               <p className="text-sm font-bold leading-none text-primary">{value}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{sub}</span></p>

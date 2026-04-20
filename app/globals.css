@@ -150,12 +150,21 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Disable Safari/Chrome swipe-to-navigate-back gesture and white navigation line */
+    overscroll-behavior-x: none;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
       "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-x: none;
+  }
+  /* Prevent iOS Safari from zooming in on focused inputs (requires font-size >= 16px) */
+  input, textarea, select {
+    font-size: max(16px, 1em);
   }
 }
 
