@@ -34,6 +34,11 @@ export default function GroceryPage() {
   const [expanded,      setExpanded]      = useState<Set<string>>(new Set());
   const [store,         setStore]         = useState<StoreId>("walmart");
   const [storePicker,   setStorePicker]   = useState(false);
+  const [addOpen,       setAddOpen]       = useState(false);
+  const [customName,    setCustomName]    = useState("");
+  const [customQty,     setCustomQty]     = useState("1");
+  const [customUnit,    setCustomUnit]    = useState("");
+  const [customCat,     setCustomCat]     = useState("Other");
 
   useEffect(() => {
     const saved = localStorage.getItem(STORE_KEY) as StoreId | null;
@@ -97,6 +102,28 @@ export default function GroceryPage() {
   function selectStore(id: StoreId) {
     setStore(id);
     localStorage.setItem(STORE_KEY, id);
+  }
+
+  async function addCustomItem(e: React.FormEvent) {
+    e.preventDefault();
+    const newItem: GroceryItem = {
+      name: customName.trim(),
+      qty: parseFloat(customQty) || 1,
+      unit: customUnit.trim() || "item",
+      category: customCat,
+      checked: false,
+      cost: 0,
+    };
+    const updated = [...items, newItem];
+    setItems(updated);
+    if (userId) {
+      const supabase = createClient();
+      await supabase.from("grocery_lists")
+        .update({ items: updated })
+        .eq("user_id", userId).eq("week_number", 0);
+    }
+    setCustomName(""); setCustomQty("1"); setCustomUnit(""); setCustomCat("Other");
+    setAddOpen(false);
   }
 
   return (
@@ -284,6 +311,77 @@ export default function GroceryPage() {
             </div>
           );
         })
+      )}
+
+      {/* Custom item */}
+      {!loading && items.length > 0 && (
+        <div className="space-y-2">
+          {addOpen && (
+            <form
+              onSubmit={addCustomItem}
+              className="glass widget-shadow rounded-2xl p-4 space-y-3"
+            >
+              <input
+                required
+                type="text"
+                placeholder="e.g. Greek yogurt"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="w-full rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={customQty}
+                  onChange={(e) => setCustomQty(e.target.value)}
+                  className="w-20 shrink-0 rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+                <input
+                  type="text"
+                  placeholder="e.g. container"
+                  value={customUnit}
+                  onChange={(e) => setCustomUnit(e.target.value)}
+                  className="flex-1 rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <select
+                value={customCat}
+                onChange={(e) => setCustomCat(e.target.value)}
+                className="w-full rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+              >
+                {CATEGORY_ORDER.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAddOpen(false)}
+                  className="flex-1 h-10 rounded-xl bg-foreground/5 text-sm font-semibold press"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold press"
+                >
+                  Add
+                </button>
+              </div>
+            </form>
+          )}
+          {!addOpen && (
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="w-full text-sm text-primary font-semibold press py-2"
+            >
+              + Add item
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

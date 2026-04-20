@@ -47,6 +47,12 @@ export default function ProgressPage() {
     await load(); setSaving(false);
   }
 
+  async function deleteLog(id: string) {
+    const supabase = createClient();
+    await supabase.from("progress_logs").delete().eq("id", id);
+    setLogs((prev) => prev.filter((l) => l.id !== id));
+  }
+
   // Append T12:00:00 so "YYYY-MM-DD" is parsed as local noon, not UTC midnight
   // (avoids off-by-one day display in timezones west of UTC)
   const chartData = logs.map((l) => ({
@@ -55,6 +61,7 @@ export default function ProgressPage() {
   }));
 
   const latestWeight = logs[logs.length - 1]?.weight_lbs ?? profile?.current_weight_lbs;
+  const startingWeight = logs[0]?.weight_lbs ?? profile?.current_weight_lbs;
 
   if (loading) {
     return (
@@ -85,7 +92,7 @@ export default function ProgressPage() {
       {profile && (
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Starting", value: profile.current_weight_lbs },
+            { label: "Starting", value: startingWeight },
             { label: "Current",  value: latestWeight ?? "—" },
             { label: "Goal",     value: profile.goal_weight_lbs },
           ].map(({ label, value }) => (
@@ -164,7 +171,22 @@ export default function ProgressPage() {
                     <p className="text-xs text-muted-foreground/70 mt-0.5">{log.notes}</p>
                   )}
                 </div>
-                <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
+                  <button
+                    onClick={() => deleteLog(log.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors press"
+                    aria-label="Delete entry"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>

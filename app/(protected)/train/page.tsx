@@ -65,6 +65,33 @@ function ExerciseCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggestedWeight]);
 
+  // ── Rest timer ───────────────────────────────────────────────────────────────
+  const [restSecondsLeft, setRestSecondsLeft] = useState(0);
+  const [restDone,        setRestDone]        = useState(false);
+  const restTotal = exercise.restSeconds ?? 0;
+
+  useEffect(() => {
+    if (restSecondsLeft <= 0) return;
+    const id = setInterval(() => {
+      setRestSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(id);
+          setRestDone(true);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [restSecondsLeft]);
+
+  // Hide "Ready" indicator after 2 s
+  useEffect(() => {
+    if (!restDone) return;
+    const id = setTimeout(() => setRestDone(false), 2000);
+    return () => clearTimeout(id);
+  }, [restDone]);
+
   function setDraft(i: number, field: keyof Draft, val: string) {
     setDrafts((prev) => prev.map((d, idx) => idx === i ? { ...d, [field]: val } : d));
   }
@@ -74,6 +101,10 @@ function ExerciseCard({
     const weight = isWeighted ? (parseFloat(d.weight) || null) : null;
     const reps   = isCardio   ? null : (parseInt(d.reps, 10) || null);
     onLogSet(i + 1, weight, reps);
+    if (restTotal > 0) {
+      setRestDone(false);
+      setRestSecondsLeft(restTotal);
+    }
   }
 
   function handleUncheck(i: number) {
@@ -114,6 +145,26 @@ function ExerciseCard({
 
       {isExpanded && (
         <div className="border-t border-border divide-y divide-border">
+          {/* Rest timer — shown when counting down or briefly at 0 ("Ready") */}
+          {restTotal > 0 && (restSecondsLeft > 0 || restDone) && (
+            <div className="px-4 py-3 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {restDone ? "Ready" : `Rest ${Math.floor(restSecondsLeft / 60)}:${String(restSecondsLeft % 60).padStart(2, "0")}`}
+                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {restDone ? "" : `/ ${Math.floor(restTotal / 60)}:${String(restTotal % 60).padStart(2, "0")}`}
+                </span>
+              </div>
+              <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ease-linear ${restDone ? "bg-emerald-500" : "bg-primary"}`}
+                  style={{ width: restDone ? "100%" : `${((restTotal - restSecondsLeft) / restTotal) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {isCardio ? (
             <div className="flex items-center justify-between px-4 py-3.5">
               <span className="text-sm text-muted-foreground">{exercise.reps}</span>
