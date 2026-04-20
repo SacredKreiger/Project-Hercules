@@ -404,8 +404,8 @@ export default function MealPlanView({
 
               <div className="glass widget-shadow rounded-2xl overflow-hidden">
                 {/* Day-of-week header */}
-                <div className="grid grid-cols-7 border-b border-border/60 bg-foreground/[0.02]">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                <div className="grid grid-cols-7 border-b border-border/60">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
                     <div key={d} className="py-3 text-center">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{d}</span>
                     </div>
@@ -414,58 +414,48 @@ export default function MealPlanView({
 
                 {/* Week rows */}
                 {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
-                  <div key={week} className={`grid grid-cols-7 border-b border-border/40 last:border-b-0 ${week === weekNumber ? "bg-primary/[0.03]" : ""}`}>
+                  <div key={week} className="grid grid-cols-7 border-b border-border/40 last:border-b-0">
                     {Array.from({ length: 7 }, (_, dow) => {
-                      const entries   = byWeekDay[week]?.[dow] ?? [];
-                      const isToday   = week === weekNumber && dow === todayDow;
-                      const date      = cellDate(week, dow);
-                      const dateNum   = date.getDate();
-                      const kcal      = dayCalories(entries, dow);
-                      const firstName = entries[0]?.recipes?.name ?? null;
-                      const extra     = entries.length - 1;
+                      const entries  = byWeekDay[week]?.[dow] ?? [];
+                      const isToday  = week === weekNumber && dow === todayDow;
+                      const date     = cellDate(week, dow);
+                      const dateNum  = date.getDate();
+                      const kcal     = dayCalories(entries, dow);
+                      const hasMeals = entries.length > 0;
 
                       return (
                         <button
                           key={dow}
                           type="button"
                           onClick={() => { setSelectedWeek(week); setSelectedDow(dow); setView("day"); }}
-                          className={`flex flex-col items-center px-0.5 pt-3 pb-3 gap-1.5 active:bg-foreground/5 transition-colors min-h-[86px] ${isToday ? "relative" : ""}`}
+                          className="flex flex-col items-center justify-center gap-2 py-5 active:bg-foreground/5 transition-colors"
                         >
                           {/* Date circle */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                            isToday ? "bg-primary shadow-sm" : ""
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isToday ? "bg-primary" : ""
                           }`}>
                             <span className={`text-sm leading-none ${
-                              isToday ? "font-bold text-primary-foreground" : "font-semibold text-foreground/80"
+                              isToday ? "font-bold text-primary-foreground" : "font-medium text-foreground/80"
                             }`}>
                               {dateNum}
                             </span>
                           </div>
 
-                          {/* Meal name */}
-                          {firstName ? (
-                            <div className="w-full space-y-0.5 px-0.5">
-                              <p className={`text-[9px] leading-tight text-center line-clamp-2 ${
-                                isToday ? "text-primary font-semibold" : "text-foreground/70"
-                              }`}>
-                                {firstName}
-                              </p>
-                              {extra > 0 && (
-                                <p className="text-[8px] text-center text-muted-foreground">+{extra} more</p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex-1" />
-                          )}
+                          {/* Single dot — meals planned */}
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            hasMeals
+                              ? isToday ? "bg-primary" : "bg-foreground/30"
+                              : "opacity-0"
+                          }`} />
 
                           {/* kcal */}
-                          {kcal > 0 && (
-                            <span className={`text-[9px] tabular-nums font-medium leading-none ${
-                              isToday ? "text-primary" : "text-muted-foreground"
-                            }`}>
-                              {kcal} kcal
-                            </span>
-                          )}
+                          <span className={`text-[9px] tabular-nums leading-none ${
+                            kcal > 0
+                              ? isToday ? "text-primary font-semibold" : "text-muted-foreground"
+                              : "opacity-0"
+                          }`}>
+                            {kcal > 0 ? `${kcal}` : "0"}
+                          </span>
                         </button>
                       );
                     })}
