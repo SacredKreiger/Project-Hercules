@@ -479,10 +479,24 @@ export default function BuilderPage() {
           </div>
           <div className="flex items-center justify-between px-4 py-3.5">
             <span className="text-sm text-muted-foreground">Deload week</span>
-            <button type="button" onClick={() => setDraft((p) => ({ ...p, isDeload: !p.isDeload }))}
-              className={`relative w-11 h-6 rounded-full transition-colors press ${draft.isDeload ? "bg-amber-500" : "bg-foreground/15"}`}>
-              <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
-                style={{ transform: draft.isDeload ? "translateX(22px)" : "translateX(2px)" }} />
+            <button
+              type="button"
+              role="switch"
+              aria-checked={draft.isDeload}
+              onClick={() => setDraft((p) => ({ ...p, isDeload: !p.isDeload }))}
+              style={{
+                background: draft.isDeload ? "#f59e0b" : "oklch(0 0 0 / 15%)",
+                transition: "background 0.2s ease",
+              }}
+              className="relative w-12 h-7 rounded-full flex-shrink-0"
+            >
+              <span
+                style={{
+                  transform: draft.isDeload ? "translateX(22px)" : "translateX(2px)",
+                  transition: "transform 0.2s ease",
+                }}
+                className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-md block"
+              />
             </button>
           </div>
         </div>
