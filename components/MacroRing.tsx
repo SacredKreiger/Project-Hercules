@@ -6,6 +6,7 @@ interface MacroRingProps {
   color: string; // CSS color string
   size?: number;
   strokeWidth?: number;
+  hideTarget?: boolean; // omit the /target sub-label (use when showing targets, not tracking)
 }
 
 export function MacroRing({
@@ -16,6 +17,7 @@ export function MacroRing({
   color,
   size = 88,
   strokeWidth = 7,
+  hideTarget = false,
 }: MacroRingProps) {
   const r = (size - strokeWidth * 2) / 2;
   const cx = size / 2;
@@ -61,7 +63,10 @@ export function MacroRing({
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="text-base font-bold leading-none tabular-nums">{logged}</span>
-          <span className="text-[9px] text-muted-foreground leading-none">/{target}{unit}</span>
+          {hideTarget
+            ? <span className="text-[9px] text-muted-foreground leading-none">{unit}</span>
+            : <span className="text-[9px] text-muted-foreground leading-none">/{target}{unit}</span>
+          }
         </div>
       </div>
 

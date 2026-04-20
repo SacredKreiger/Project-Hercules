@@ -3,6 +3,7 @@ import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
+import { MacroRing } from "@/components/MacroRing";
 import type { AnyProgram } from "@/lib/program";
 
 const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> = {
@@ -214,13 +215,6 @@ export default async function DashboardPage() {
     ? (isV2(rawProgram) && trainingPhase ? trainingPhase.days : (rawProgram as any).days ?? [])
     : [];
 
-  const pods = [
-    { label: "Calories", value: macros.calories.toLocaleString(), unit: "kcal", color: CAL_COLOR },
-    { label: "Protein",  value: macros.protein.toString(),        unit: "g",    color: P_COLOR   },
-    { label: "Carbs",    value: macros.carbs.toString(),          unit: "g",    color: C_COLOR   },
-    { label: "Fat",      value: macros.fat.toString(),            unit: "g",    color: F_COLOR   },
-  ];
-
   return (
     <div className="flex flex-col gap-2.5 h-full overflow-hidden">
 
@@ -239,23 +233,19 @@ export default async function DashboardPage() {
         </span>
       </div>
 
-      {/* ── Daily Targets — 2×2 pods ── */}
-      <div className="glass widget-shadow rounded-2xl p-3 shrink-0">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2.5">
-          Daily Targets
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {pods.map(({ label, value, unit, color }) => (
-            <div key={label} className="bg-foreground/5 rounded-xl px-3 py-2.5 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-                <p className="text-xl font-black tabular-nums leading-tight mt-0.5" style={{ color }}>
-                  {value}
-                </p>
-              </div>
-              <span className="text-xs text-muted-foreground font-medium self-end pb-0.5">{unit}</span>
-            </div>
-          ))}
+      {/* ── Daily Targets — macro rings ── */}
+      <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-4 shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Daily Targets
+          </p>
+          <p className="text-[11px] text-muted-foreground">target</p>
+        </div>
+        <div className="grid grid-cols-4 gap-1 justify-items-center">
+          <MacroRing label="Calories" logged={macros.calories} target={macros.calories} unit="kcal" color={CAL_COLOR} size={72} hideTarget />
+          <MacroRing label="Protein"  logged={macros.protein}  target={macros.protein}  unit="g"    color={P_COLOR}   size={72} hideTarget />
+          <MacroRing label="Carbs"    logged={macros.carbs}    target={macros.carbs}    unit="g"    color={C_COLOR}   size={72} hideTarget />
+          <MacroRing label="Fat"      logged={macros.fat}      target={macros.fat}      unit="g"    color={F_COLOR}   size={72} hideTarget />
         </div>
       </div>
 
