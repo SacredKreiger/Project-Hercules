@@ -249,3 +249,95 @@ export async function reconfigureMealPlan(formData: FormData) {
 
   redirect("/meals");
 }
+
+export async function swapMealSlot(params: {
+  weekNumber: number;
+  dayOfWeek: number;
+  mealSlot: number;
+  currentRecipeId: string;
+}): Promise<{ error: string | null; newRecipeId?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: profile } = await supabase.from("profiles")
+    .select("current_weight_lbs, height_cm, age, gender, activity_level, phase, cuisine_preferences, dietary_restrictions")
+    .eq("id", user.id).single();
+  if (!profile) return { error: "Profile not found" };
+
+  // Determine meal type from the existing meal_plans row
+  const { data: existingEntry } = await supabase
+    .from("meal_plans")
+    .select("*, recipes(id, name, meal_type)")
+    .eq("user_id", user.id)
+    .eq("week_number", params.weekNumber)
+    .eq("day_of_week", params.dayOfWeek)
+    .eq("meal_slot", params.mealSlot)
+    .single();
+
+  if (!existingEntry) return { error: "Meal not found" };
+  const mealType = (existingEntry.recipes as any)?.meal_type ?? "lunch";
+
+  // Find cuisines to query
+  const cuisines: string[] = profile.cuisine_preferences ?? [];
+  const restrictions: string[] = profile.dietary_restrictions ?? [];
+
+  const recipesQuery = supabase.from("recipes")
+    .select("id, name, meal_type, calories, protein_g, carbs_g, fat_g, tags")
+    .eq("meal_type", mealType);
+
+  const { data: candidates } = cuisines.length > 0
+    ? await recipesQuery.in("cuisine", cuisines)
+    : await recipesQuery;
+
+  if (!candidates?.length) return { error: "No alternative recipes found" };
+
+  // Apply dietary restrictions
+  const requiredTags = restrictions
+    .map((r: string) => ({ vegetarian: "vegetarian", vegan: "vegan", "gluten-free": "gluten-free", "dairy-free": "dairy-free", "nut-free": "nut-free", halal: "halal" }[r])
+    ).filter(Boolean) as string[];
+
+  let pool = requiredTags.length > 0
+    ? candidates.filter((r: any) => requiredTags.every((tag: string) => Array.isArray(r.tags) && r.tags.includes(tag)))
+    : candidates;
+  if (!pool.length) pool = candidates;
+
+  // Exclude current recipe
+  const excluding = new Set([params.currentRecipeId]);
+  const available = pool.filter((r: any) => !excluding.has(r.id));
+  const finalPool = available.length > 0 ? available : pool;
+
+  // Calculate slot targets
+  const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
+  const tdee = calcTDEE(bmr, profile.activity_level);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+
+  // Determine meals per day from existing plan
+  const { data: dayMeals } = await supabase.from("meal_plans")
+    .select("meal_slot").eq("user_id", user.id)
+    .eq("week_number", params.weekNumber).eq("day_of_week", params.dayOfWeek);
+  const mealsPerDay = Math.max(...(dayMeals ?? []).map((m: any) => m.meal_slot), 4) as 3 | 4 | 5;
+  const calSplit = MEAL_CONFIG[mealsPerDay]?.calSplit ?? MEAL_CONFIG[4].calSplit;
+  const f = calSplit[params.mealSlot] ?? 0.25;
+
+  const targets = {
+    calories: macros.calories * f,
+    protein:  macros.protein  * f,
+    carbs:    macros.carbs    * f,
+    fat:      macros.fat      * f,
+  };
+
+  const picked = pickRecipe(finalPool, targets, excluding);
+  if (!picked) return { error: "Could not find a suitable recipe" };
+
+  // Update just this one meal_plans row
+  const { error: updateError } = await supabase.from("meal_plans")
+    .update({ recipe_id: picked.id })
+    .eq("user_id", user.id)
+    .eq("week_number", params.weekNumber)
+    .eq("day_of_week", params.dayOfWeek)
+    .eq("meal_slot", params.mealSlot);
+
+  if (updateError) return { error: updateError.message };
+  return { error: null, newRecipeId: picked.id };
+}

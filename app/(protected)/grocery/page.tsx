@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/Skeleton";
+import { regenerateGroceryList } from "@/lib/actions/grocery-list";
 
 type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean; cost: number };
 
@@ -32,6 +33,7 @@ export default function GroceryPage() {
   const [userId,   setUserId]  = useState<string | null>(null);
   const [loading,  setLoading] = useState(true);
   const [expanded,      setExpanded]      = useState<Set<string>>(new Set());
+  const [regenerating,  setRegenerating]  = useState(false);
   const [store,         setStore]         = useState<StoreId>("walmart");
   const [storePicker,   setStorePicker]   = useState(false);
   const [addOpen,       setAddOpen]       = useState(false);
@@ -104,6 +106,13 @@ export default function GroceryPage() {
     localStorage.setItem(STORE_KEY, id);
   }
 
+  async function handleRegenerate() {
+    setRegenerating(true);
+    const { error } = await regenerateGroceryList();
+    if (!error) await load();
+    setRegenerating(false);
+  }
+
   async function addCustomItem(e: React.FormEvent) {
     e.preventDefault();
     const newItem: GroceryItem = {
@@ -130,8 +139,20 @@ export default function GroceryPage() {
     <div className="space-y-4">
 
       {/* Header */}
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
+        <button
+          type="button"
+          onClick={handleRegenerate}
+          disabled={regenerating}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press disabled:opacity-50"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className={regenerating ? "animate-spin" : ""}>
+            <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          </svg>
+          {regenerating ? "Rebuilding..." : "Regenerate"}
+        </button>
       </div>
 
       {/* Cost + progress + store (single card) */}

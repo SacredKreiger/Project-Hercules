@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 import { computeExactPortions } from "@/lib/portion-calc";
+import { swapMealSlot } from "@/lib/actions/meal-plan";
 
 const DAYS       = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -100,6 +101,8 @@ export default function MealPlanView({
   const [trainingDays, setTrainingDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [checkedSteps, setCheckedSteps]               = useState<Record<string, number[]>>({});
   const [checkedIngredients, setCheckedIngredients]   = useState<Record<string, number[]>>({});
+  const [eatenIds, setEatenIds] = useState<Set<string>>(new Set());
+  const [swappingId, setSwappingId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -107,6 +110,9 @@ export default function MealPlanView({
       const i = localStorage.getItem("hc-checked-ingredients");
       if (s) setCheckedSteps(JSON.parse(s));
       if (i) setCheckedIngredients(JSON.parse(i));
+      const todayDate = new Date().toISOString().split("T")[0];
+      const eaten = localStorage.getItem(`hc-eaten-${todayDate}`);
+      if (eaten) setEatenIds(new Set(JSON.parse(eaten)));
       const config = localStorage.getItem(STORAGE_KEY);
       if (config) {
         const parsed = JSON.parse(config);
@@ -127,6 +133,16 @@ export default function MealPlanView({
     setCheckedSteps((prev) => {
       const cur = prev[recipeId] ?? [];
       return { ...prev, [recipeId]: cur.includes(idx) ? cur.filter((i) => i !== idx) : [...cur, idx] };
+    });
+  }
+
+  function toggleEaten(id: string) {
+    const todayDate = new Date().toISOString().split("T")[0];
+    setEatenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem(`hc-eaten-${todayDate}`, JSON.stringify([...next])); } catch {}
+      return next;
     });
   }
 
@@ -165,22 +181,68 @@ export default function MealPlanView({
     const slotCal  = Math.round(base.calories * fraction);
     const slotProt = Math.round(base.protein  * fraction);
     const slotCarb = Math.round(base.carbs    * fraction);
+    const isEaten = eatenIds.has(entry.id);
+    const isToday = selectedWeek === weekNumber && selectedDow === todayDow;
     return (
-      <button
-        type="button"
-        onClick={() => setSelected(entry)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5 transition-colors"
-      >
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
-          <p className="text-sm font-medium mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
-        </div>
-        <div className="text-right shrink-0 ml-3">
-          <p className="text-sm font-semibold">{slotCal} kcal</p>
-          <p className="text-xs text-muted-foreground">{slotProt}g P · {slotCarb}g C</p>
-        </div>
-      </button>
+      <div className="flex items-center">
+        {isToday && (
+          <button
+            type="button"
+            onClick={() => toggleEaten(entry.id)}
+            className="shrink-0 ml-4 mr-0"
+          >
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+              isEaten ? "border-primary bg-primary" : "border-border"
+            }`}>
+              {isEaten && (
+                <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" viewBox="0 0 12 12">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setSelected(entry)}
+          className={`flex-1 flex items-center justify-between px-4 py-3 text-left active:bg-white/5 transition-colors ${isEaten ? "opacity-50" : ""}`}
+        >
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
+            <p className="text-sm font-medium mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{entry.recipes?.cuisine ?? ""}</p>
+          </div>
+          <div className="text-right shrink-0 ml-3">
+            <p className="text-sm font-semibold">{slotCal} kcal</p>
+            <p className="text-xs text-muted-foreground">{slotProt}g P · {slotCarb}g C</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            setSwappingId(entry.id);
+            await swapMealSlot({
+              weekNumber: entry.week_number,
+              dayOfWeek: entry.day_of_week,
+              mealSlot: entry.meal_slot,
+              currentRecipeId: entry.recipes?.id ?? "",
+            });
+            window.location.reload();
+          }}
+          className="shrink-0 mr-4 press text-muted-foreground active:text-primary transition-colors"
+          title="Swap meal"
+        >
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className={swappingId === entry.id ? "animate-spin" : ""}
+          >
+            <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+            <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          </svg>
+        </button>
+      </div>
     );
   }
 

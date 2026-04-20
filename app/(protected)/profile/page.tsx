@@ -144,6 +144,11 @@ export default function ProfilePage() {
               <Input type="number" step="1" value={profile.height_cm}
                 onChange={(e) => setProfile({ ...profile, height_cm: parseFloat(e.target.value) })}
                 className="rounded-xl bg-foreground/5 border-border h-10" />
+              {profile.height_cm > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {Math.floor(profile.height_cm / 2.54 / 12)}′{Math.round((profile.height_cm / 2.54) % 12)}″
+                </p>
+              )}
             </div>
           </div>
           <div className="space-y-1.5">

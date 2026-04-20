@@ -6,12 +6,13 @@ import { Skeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getExerciseInfo } from "@/lib/exercises";
 import { updateProgressAfterWorkout } from "@/lib/actions/training";
-import { getSuggested } from "@/lib/training-utils";
+import { getSuggested, increment } from "@/lib/training-utils";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
 import type { AnyProgram } from "@/lib/program";
 import type { ExerciseConfig } from "@/lib/templates";
 
 type SetLog = { setNumber: number; actualWeight: number | null; actualReps: number | null; completed: boolean };
+type WorkoutSession = { date: string; exercises: Record<string, { sets: number; weight: number; reps: string }> };
 
 const DOW_SHORT = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
@@ -31,7 +32,7 @@ type Draft = { weight: string; reps: string };
 
 function ExerciseCard({
   exercise, logs, isExpanded, onToggle, onLogSet, onUnlogSet,
-  suggestedWeight, isManual,
+  suggestedWeight, isManual, prevData,
 }: {
   exercise:        ExerciseConfig;
   logs:            SetLog[];
@@ -41,6 +42,7 @@ function ExerciseCard({
   onUnlogSet:      (setNum: number) => void;
   suggestedWeight: number;
   isManual:        boolean;
+  prevData?:       { sets: number; weight: number; reps: string };
 }) {
   const info       = getExerciseInfo(exercise.name);
   const isWeighted = info?.unit === "weight_reps";
@@ -128,6 +130,11 @@ function ExerciseCard({
             {isWeighted && isManual && " · Manual"}
             {exercise.restSeconds > 0 && ` · ${exercise.restSeconds}s`}
           </p>
+          {prevData && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Last: {prevData.sets}×{prevData.reps} @ {prevData.weight} lbs
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {Array.from({ length: exercise.sets }).map((_, i) => (
@@ -229,9 +236,11 @@ export default function TrainPage() {
   const [bodyweight, setBodyweight] = useState<number>(0);
   const [gender,     setGender]     = useState<string>("male");
   const [loading,    setLoading]    = useState(true);
-  const [setLogs,    setSetLogs]    = useState<Record<string, SetLog[]>>({});
-  const [expandedEx, setExpandedEx] = useState<string | null>(null);
-  const [completed,  setCompleted]  = useState(false);
+  const [setLogs,        setSetLogs]        = useState<Record<string, SetLog[]>>({});
+  const [expandedEx,     setExpandedEx]     = useState<string | null>(null);
+  const [completed,      setCompleted]      = useState(false);
+  const [workoutSummary, setWorkoutSummary] = useState<{ name: string; from: number; to: number }[]>([]);
+  const [prevSession,    setPrevSession]    = useState<Record<string, { sets: number; weight: number; reps: string }>>({});
   const [, startTransition] = useTransition();
 
   const todayDow = new Date().getDay();
@@ -259,6 +268,13 @@ export default function TrainPage() {
     try {
       const saved = localStorage.getItem(todayKey());
       if (saved) setSetLogs(JSON.parse(saved));
+    } catch { /* ignore */ }
+
+    try {
+      const log = JSON.parse(localStorage.getItem("hc-workout-log") ?? "[]");
+      const today = new Date().toISOString().split("T")[0];
+      const prev = log.find((s: any) => s.date !== today);
+      if (prev) setPrevSession(prev.exercises);
     } catch { /* ignore */ }
 
     setLoading(false);
@@ -318,6 +334,45 @@ export default function TrainPage() {
         })),
       };
     }
+
+    // Build workout summary — which exercises are going up next session
+    const summary: { name: string; from: number; to: number }[] = [];
+    for (const ex of todayDay.exercises) {
+      const info = getExerciseInfo(ex.name);
+      if (info?.unit !== "weight_reps") continue;
+      const logs = setLogs[ex.name] ?? [];
+      const allCompleted = logs.length === ex.sets && logs.every((s) => s.completed);
+      const allHitTarget = logs.every((s) => (s.actualReps ?? 0) >= parseInt(ex.reps));
+      if (!allCompleted || !allHitTarget) continue;
+      const curWeight = progress[ex.name]?.weight ?? 0;
+      if (curWeight > 0) {
+        summary.push({ name: ex.name, from: curWeight, to: curWeight + increment(ex.name) });
+      }
+    }
+    setWorkoutSummary(summary);
+
+    // Save session to localStorage workout log
+    const session: WorkoutSession = {
+      date: new Date().toISOString().split("T")[0],
+      exercises: {},
+    };
+    for (const ex of todayDay.exercises) {
+      const logs = setLogs[ex.name] ?? [];
+      const completedSets = logs.filter((s) => s.completed);
+      if (completedSets.length > 0) {
+        const last = completedSets[completedSets.length - 1];
+        session.exercises[ex.name] = {
+          sets: completedSets.length,
+          weight: last.actualWeight ?? 0,
+          reps: String(last.actualReps ?? 0),
+        };
+      }
+    }
+    try {
+      const existing = JSON.parse(localStorage.getItem("hc-workout-log") ?? "[]");
+      const updated = [session, ...existing].slice(0, 10);
+      localStorage.setItem("hc-workout-log", JSON.stringify(updated));
+    } catch { /* ignore */ }
 
     startTransition(async () => {
       const result = await updateProgressAfterWorkout(completedData);
@@ -458,6 +513,7 @@ export default function TrainPage() {
               onUnlogSet={(setNum) => handleUnlogSet(ex.name, setNum)}
               suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
               isManual={isManual}
+              prevData={prevSession[ex.name]}
             />
           ))}
 
@@ -469,11 +525,22 @@ export default function TrainPage() {
           )}
 
           {completed && (
-            <div className="glass widget-shadow rounded-2xl px-6 py-6 text-center space-y-1">
-              <p className="text-emerald-500 font-semibold text-base">Workout Complete!</p>
-              <p className="text-sm text-muted-foreground">
-                {isManual ? "Sets logged." : "Weights updated for next session."}
-              </p>
+            <div className="glass widget-shadow rounded-2xl px-5 py-5 space-y-3">
+              <div className="text-center">
+                <p className="text-emerald-500 font-semibold text-base">Workout Complete!</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{doneSets} sets · {new Date().toLocaleDateString("en-US", { weekday: "long" })}</p>
+              </div>
+              {workoutSummary.length > 0 && (
+                <div className="border-t border-border pt-3 space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Going up next session</p>
+                  {workoutSummary.map(({ name, from, to }) => (
+                    <div key={name} className="flex items-center justify-between">
+                      <span className="text-xs text-foreground/80 truncate">{name}</span>
+                      <span className="text-xs font-semibold tabular-nums text-emerald-500">{from} → {to} lbs</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>

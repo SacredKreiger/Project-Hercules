@@ -18,6 +18,8 @@ export default function ProgressPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editWeight, setEditWeight] = useState("");
 
   useEffect(() => { load(); }, []);
 
@@ -45,6 +47,15 @@ export default function ProgressPage() {
     if (error) { setError(error.message); setSaving(false); return; }
     setWeight(""); setNotes("");
     await load(); setSaving(false);
+  }
+
+  async function saveEdit(id: string) {
+    const val = parseFloat(editWeight);
+    if (isNaN(val) || val <= 0) { setEditingId(null); return; }
+    const supabase = createClient();
+    await supabase.from("progress_logs").update({ weight_lbs: val }).eq("id", id);
+    setLogs((prev) => prev.map((l) => l.id === id ? { ...l, weight_lbs: val } : l));
+    setEditingId(null);
   }
 
   async function deleteLog(id: string) {
@@ -171,21 +182,58 @@ export default function ProgressPage() {
                     <p className="text-xs text-muted-foreground/70 mt-0.5">{log.notes}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
-                  <button
-                    onClick={() => deleteLog(log.id)}
-                    className="text-muted-foreground hover:text-destructive transition-colors press"
-                    aria-label="Delete entry"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                    </svg>
-                  </button>
+                <div className="flex items-center gap-2">
+                  {editingId === log.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        step="0.1"
+                        autoFocus
+                        value={editWeight}
+                        onChange={(e) => setEditWeight(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") saveEdit(log.id); if (e.key === "Escape") setEditingId(null); }}
+                        className="w-20 bg-foreground/5 rounded-lg px-2 py-1 text-sm text-right tabular-nums outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                      <button onClick={() => saveEdit(log.id)} className="text-primary press" aria-label="Save">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="text-muted-foreground press" aria-label="Cancel">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-sm font-semibold tabular-nums">{log.weight_lbs} lbs</span>
+                      <button
+                        onClick={() => { setEditingId(log.id); setEditWeight(log.weight_lbs.toString()); }}
+                        className="text-muted-foreground hover:text-foreground transition-colors press"
+                        aria-label="Edit entry"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => deleteLog(log.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors press"
+                        aria-label="Delete entry"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
