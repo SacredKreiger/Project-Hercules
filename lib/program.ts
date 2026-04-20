@@ -18,10 +18,11 @@ export type OverloadMode =
 
 export type Phase = {
   id: string
-  name: string        // "Phase 1 – Foundation", "Deload", etc.
-  weeks: number       // 1–52
+  name: string          // "Phase 1 – Foundation", "Deload", etc.
+  weeks: number         // how many times this week repeats (1–52)
   isDeload: boolean
-  days: ProgramDay[]  // 7-day weekly schedule (by dayOfWeek 0-6)
+  overload: OverloadMode  // per-phase — each phase can have its own progression rules
+  days: ProgramDay[]    // 7-day weekly schedule (by dayOfWeek 0-6)
 }
 
 // ── Programs ──────────────────────────────────────────────────────────────────
@@ -35,7 +36,6 @@ export type ProgramV2 = {
   version: 2
   name: string
   startDate: string     // ISO "YYYY-MM-DD" — used to compute current phase/week
-  overload: OverloadMode
   phases: Phase[]
 }
 

@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TEMPLATES } from "@/lib/templates";
 import type { ProgramDay } from "@/lib/templates";
 import { increment, startingWeight } from "@/lib/training-utils";
-import type { ProgramV2 } from "@/lib/program";
+import type { ProgramV2, OverloadMode } from "@/lib/program";
+import { getActiveDayInfo } from "@/lib/program";
 import { getExerciseInfo } from "@/lib/exercises";
 
 // ── Save program + PRs (V1 / template flow) ──────────────────────────────────
@@ -108,8 +109,13 @@ export async function updateProgressAfterWorkout(
   const prs: Record<string, number> = (profile.training_prs as any) ?? {};
   const program = (profile.training_program as any) ?? null;
 
-  // Determine overload mode from V2 program (default to "auto" for V1 / null)
-  const overload = (program?.version === 2 ? program.overload : null) ?? { type: "auto" };
+  // Determine overload mode from the currently active phase (V2) or default auto
+  let overload: OverloadMode = { type: "auto" };
+  if (program?.version === 2) {
+    const todayDow = new Date().getDay();
+    const activeInfo = getActiveDayInfo(program, todayDow);
+    if (activeInfo.phase?.overload) overload = activeInfo.phase.overload;
+  }
 
   const updated = { ...current };
 

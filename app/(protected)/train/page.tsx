@@ -219,8 +219,8 @@ export default function TrainPage() {
   const activeInfo = program ? getActiveDayInfo(program, todayDow) : null;
   const todayDay   = activeInfo?.day ?? null;
 
-  // Overload mode (V2 only)
-  const overloadMode = (program && isV2(program)) ? (program as any).overload?.type ?? "auto" : "auto";
+  // Overload mode — read from the active phase (V2) or default auto
+  const overloadMode = activeInfo?.phase?.overload?.type ?? "auto";
   const isManual     = overloadMode === "manual";
 
   // Week strip — use V2 phase days if available, else V1 program days

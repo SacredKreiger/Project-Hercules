@@ -7,7 +7,8 @@ import { saveTrainingProgramV2 } from "@/lib/actions/training";
 import type { ProgramDay, ExerciseConfig } from "@/lib/templates";
 import type { Phase, OverloadMode, ProgramV2 } from "@/lib/program";
 
-const DOW_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const DOW_SHORT  = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const DOW_LABELS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -16,14 +17,32 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 function makeDays(): ProgramDay[] {
   return Array.from({ length: 7 }, (_, i) => ({
     dayOfWeek: i,
-    name: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][i],
+    name: DOW_LABELS[i],
     isRest: true,
     exercises: [],
   }));
 }
 
-function makePhase(n: number): Phase {
-  return { id: uid(), name: `Phase ${n}`, weeks: 4, isDeload: false, days: makeDays() };
+function defaultPhase(n: number): Phase {
+  return {
+    id: uid(),
+    name: `Phase ${n}`,
+    weeks: 4,
+    isDeload: false,
+    overload: { type: "auto" },
+    days: makeDays(),
+  };
+}
+
+function defaultDeload(): Phase {
+  return {
+    id: uid(),
+    name: "Deload",
+    weeks: 1,
+    isDeload: true,
+    overload: { type: "manual" },
+    days: makeDays(),
+  };
 }
 
 // ─── ExercisePicker ───────────────────────────────────────────────────────────
@@ -54,38 +73,40 @@ function ExercisePicker({ onAdd, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-3">
+      <div className="flex items-center gap-3 px-4 pt-safe pt-6 pb-3">
         <button type="button" onClick={onClose} className="press text-muted-foreground text-sm">Cancel</button>
         <h2 className="flex-1 text-center font-semibold text-sm">Add Exercise</h2>
         <div className="w-14" />
       </div>
 
       {configuring ? (
-        <div className="flex-1 px-4 space-y-5 pt-4">
+        <div className="flex-1 px-4 space-y-4 pt-2">
           <p className="text-xl font-bold">{configuring}</p>
           <div className="space-y-3">
             {[
-              { label: "Sets",      value: sets, setter: setSets,  placeholder: "3",  type: "number" },
-              { label: "Reps",      value: reps, setter: setReps,  placeholder: "8",  type: "text"   },
-              { label: "Rest (sec)",value: rest, setter: setRest,  placeholder: "90", type: "number" },
-            ].map(({ label, value, setter, placeholder, type }) => (
-              <div key={label} className="flex items-center justify-between glass rounded-2xl px-4 py-3">
+              { label: "Sets",       value: sets, setter: setSets, placeholder: "3",  mode: "numeric" },
+              { label: "Reps",       value: reps, setter: setReps, placeholder: "8",  mode: "text"    },
+              { label: "Rest (sec)", value: rest, setter: setRest, placeholder: "90", mode: "numeric" },
+            ].map(({ label, value, setter, placeholder, mode }) => (
+              <div key={label} className="flex items-center justify-between glass rounded-2xl px-4 py-3.5">
                 <span className="text-sm font-medium">{label}</span>
                 <input
-                  type={type} inputMode={type === "text" ? "text" : "numeric"}
-                  value={value} onChange={(e) => setter(e.target.value)}
+                  type={mode === "text" ? "text" : "number"}
+                  inputMode={mode as any}
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
                   placeholder={placeholder}
                   className="w-24 text-right bg-transparent text-sm font-semibold tabular-nums outline-none"
                 />
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">Reps can be a number, range (8–12), or AMRAP.</p>
-          <div className="flex gap-3">
+          <p className="text-xs text-muted-foreground">Reps: number (8), range (8–12), or AMRAP.</p>
+          <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => setConfiguring(null)}
-              className="flex-1 py-3 rounded-2xl bg-foreground/5 text-sm font-semibold press">Back</button>
+              className="flex-1 py-3.5 rounded-2xl bg-foreground/5 text-sm font-semibold press">Back</button>
             <button type="button" onClick={confirmAdd}
-              className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold press">
+              className="flex-1 py-3.5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold press">
               Add Exercise
             </button>
           </div>
@@ -110,7 +131,7 @@ function ExercisePicker({ onAdd, onClose }: {
           </div>
           <div className="flex-1 overflow-y-auto px-4 space-y-1 pb-8">
             {filtered.map((ex) => (
-              <button key={ex.name} type="button" onClick={() => setConfiguring(ex.name)}
+              <button key={ex.name} type="button" onClick={() => { setSets("3"); setReps("8"); setRest("90"); setConfiguring(ex.name); }}
                 className="w-full text-left flex items-center justify-between px-4 py-3 glass rounded-2xl press">
                 <span className="text-sm font-medium">{ex.name}</span>
                 <span className="text-xs text-muted-foreground">{ex.category}</span>
@@ -126,37 +147,134 @@ function ExercisePicker({ onAdd, onClose }: {
   );
 }
 
-// ─── PhaseEditor ──────────────────────────────────────────────────────────────
+// ─── OverloadPicker ───────────────────────────────────────────────────────────
 
-function PhaseEditor({ phase, onChange }: {
-  phase: Phase;
-  onChange: (updated: Phase) => void;
+function OverloadPicker({ overload, onChange }: {
+  overload: OverloadMode;
+  onChange: (o: OverloadMode) => void;
 }) {
-  const [activeDow, setActiveDow] = useState(1);
-  const [showPicker, setShowPicker] = useState(false);
+  const [incrLbs,   setIncrLbs]   = useState(
+    overload.type === "configured" ? String(overload.incrementLbs) : "5"
+  );
+  const [incrEvery, setIncrEvery] = useState(
+    overload.type === "configured" ? String(overload.everyNSessions) : "1"
+  );
 
-  const activeDay = phase.days[activeDow];
+  function select(type: OverloadMode["type"]) {
+    if (type === "configured") {
+      onChange({ type: "configured", incrementLbs: parseFloat(incrLbs) || 5, everyNSessions: parseInt(incrEvery) || 1 });
+    } else {
+      onChange({ type } as OverloadMode);
+    }
+  }
 
-  function updateDay(dow: number, updater: (d: ProgramDay) => ProgramDay) {
-    onChange({ ...phase, days: phase.days.map((d) => d.dayOfWeek === dow ? updater(d) : d) });
+  function updateConfigured() {
+    if (overload.type === "configured") {
+      onChange({ type: "configured", incrementLbs: parseFloat(incrLbs) || 5, everyNSessions: parseInt(incrEvery) || 1 });
+    }
+  }
+
+  const MODES: { type: OverloadMode["type"]; title: string; desc: string }[] = [
+    { type: "auto",       title: "Auto",       desc: "Add weight when all sets hit target reps" },
+    { type: "configured", title: "Configured", desc: "Add a fixed amount every N sessions" },
+    { type: "manual",     title: "Manual",     desc: "You enter your own weights — no suggestions" },
+  ];
+
+  return (
+    <div className="glass widget-shadow rounded-2xl overflow-hidden">
+      <p className="px-4 pt-3.5 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        Progressive Overload
+      </p>
+      {MODES.map((m) => {
+        const active = overload.type === m.type;
+        return (
+          <button key={m.type} type="button" onClick={() => select(m.type)}
+            className={`w-full flex items-start gap-3 px-4 py-3 border-t border-border press transition-colors ${active ? "bg-primary/5" : ""}`}>
+            <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${active ? "border-primary" : "border-border"}`}>
+              {active && <div className="w-2 h-2 rounded-full bg-primary" />}
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold">{m.title}</p>
+              <p className="text-xs text-muted-foreground">{m.desc}</p>
+            </div>
+          </button>
+        );
+      })}
+      {overload.type === "configured" && (
+        <div className="border-t border-border px-4 py-3 space-y-2.5 bg-foreground/3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Add (lbs)</span>
+            <input type="number" inputMode="decimal" value={incrLbs}
+              onChange={(e) => { setIncrLbs(e.target.value); }}
+              onBlur={updateConfigured}
+              className="w-20 bg-foreground/8 rounded-xl px-3 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Every N sessions</span>
+            <input type="number" inputMode="numeric" value={incrEvery}
+              onChange={(e) => { setIncrEvery(e.target.value); }}
+              onBlur={updateConfigured}
+              className="w-20 bg-foreground/8 rounded-xl px-3 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+type Step = "info" | "phase-editor" | "overview" | "weights";
+
+export default function BuilderPage() {
+  const router = useRouter();
+
+  // Program-level state
+  const [planName,  setPlanName]  = useState("My Program");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+
+  // Saved phases
+  const [phases, setPhases] = useState<Phase[]>([]);
+
+  // Phase currently being edited
+  const [draft,       setDraft]       = useState<Phase>(defaultPhase(1));
+  const [activeDow,   setActiveDow]   = useState(1);
+  const [showPicker,  setShowPicker]  = useState(false);
+  const [editingIdx,  setEditingIdx]  = useState<number | null>(null); // index in phases[] being re-edited
+
+  // Starting weights
+  const [prs, setPrs] = useState<Record<string, string>>({});
+
+  const [step,    setStep]    = useState<Step>("info");
+  const [pending, startTransition] = useTransition();
+
+  // ── Draft helpers ──────────────────────────────────────────────────────────
+
+  function updateDraftDay(dow: number, updater: (d: ProgramDay) => ProgramDay) {
+    setDraft((prev) => ({
+      ...prev,
+      days: prev.days.map((d) => d.dayOfWeek === dow ? updater(d) : d),
+    }));
   }
 
   function toggleRest(dow: number) {
-    updateDay(dow, (d) => ({ ...d, isRest: !d.isRest, exercises: [] }));
+    updateDraftDay(dow, (d) => ({ ...d, isRest: !d.isRest, exercises: [] }));
   }
 
   function addExercise(ex: ExerciseConfig) {
-    updateDay(activeDow, (d) => ({ ...d, exercises: [...d.exercises, ex] }));
+    updateDraftDay(activeDow, (d) => ({ ...d, exercises: [...d.exercises, ex] }));
     setShowPicker(false);
   }
 
   function removeExercise(dow: number, idx: number) {
-    updateDay(dow, (d) => ({ ...d, exercises: d.exercises.filter((_, i) => i !== idx) }));
+    updateDraftDay(dow, (d) => ({ ...d, exercises: d.exercises.filter((_, i) => i !== idx) }));
   }
 
   function moveExercise(dow: number, idx: number, dir: -1 | 1) {
-    updateDay(dow, (d) => {
-      const exs = [...d.exercises];
+    updateDraftDay(dow, (d) => {
+      const exs  = [...d.exercises];
       const swap = idx + dir;
       if (swap < 0 || swap >= exs.length) return d;
       [exs[idx], exs[swap]] = [exs[swap], exs[idx]];
@@ -164,162 +282,46 @@ function PhaseEditor({ phase, onChange }: {
     });
   }
 
-  return (
-    <>
-      {showPicker && <ExercisePicker onAdd={addExercise} onClose={() => setShowPicker(false)} />}
+  // ── Phase save / navigation ────────────────────────────────────────────────
 
-      {/* Day strip */}
-      <div className="flex gap-1 px-3 pb-2 pt-3">
-        {phase.days.map((d) => (
-          <button key={d.dayOfWeek} type="button" onClick={() => setActiveDow(d.dayOfWeek)}
-            className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl press transition-all ${
-              activeDow === d.dayOfWeek ? "bg-primary text-primary-foreground" : "glass"
-            }`}>
-            <span className="text-[10px] font-semibold">{DOW_SHORT[d.dayOfWeek]}</span>
-            <div className={`w-1 h-1 rounded-full ${
-              d.isRest
-                ? (activeDow === d.dayOfWeek ? "bg-primary-foreground/30" : "bg-foreground/15")
-                : (activeDow === d.dayOfWeek ? "bg-primary-foreground" : "bg-primary")
-            }`} />
-          </button>
-        ))}
-      </div>
-
-      {/* Day exercises */}
-      <div className="border-t border-border mx-3 rounded-2xl overflow-hidden glass">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-sm font-semibold">
-            {activeDay.isRest ? "Rest Day" : activeDay.name}
-          </span>
-          <button type="button" onClick={() => toggleRest(activeDow)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold press transition-all ${
-              activeDay.isRest ? "bg-foreground/10 text-muted-foreground" : "bg-primary/10 text-primary"
-            }`}>
-            {activeDay.isRest ? "Rest" : "Training"}
-          </button>
-        </div>
-
-        {activeDay.isRest ? (
-          <p className="px-4 py-5 text-sm text-muted-foreground text-center">No exercises — rest & recover.</p>
-        ) : (
-          <>
-            {activeDay.exercises.length === 0 && (
-              <p className="px-4 py-5 text-sm text-muted-foreground text-center">No exercises yet. Tap below to add.</p>
-            )}
-            {activeDay.exercises.map((ex, idx) => (
-              <div key={`${ex.name}-${idx}`}
-                className="flex items-center gap-2 px-4 py-3 border-b border-border last:border-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{ex.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {ex.sets} × {ex.reps}{ex.restSeconds > 0 && ` · ${ex.restSeconds}s`}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <button type="button" disabled={idx === 0} onClick={() => moveExercise(activeDow, idx, -1)}
-                    className="p-1 text-muted-foreground disabled:opacity-20 press">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-                  </button>
-                  <button type="button" disabled={idx === activeDay.exercises.length - 1} onClick={() => moveExercise(activeDow, idx, 1)}
-                    className="p-1 text-muted-foreground disabled:opacity-20 press">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                  </button>
-                </div>
-                <button type="button" onClick={() => removeExercise(activeDow, idx)}
-                  className="p-1.5 text-muted-foreground press rounded-lg">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
-            <button type="button" onClick={() => setShowPicker(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-primary text-sm font-semibold press border-t border-border">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Add Exercise
-            </button>
-          </>
-        )}
-      </div>
-      <div className="h-3" />
-    </>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-type Step = "program" | "phases" | "weights";
-
-export default function BuilderPage() {
-  const router = useRouter();
-
-  // ── Step 1: Program settings ──────────────────────────────────────────────
-  const [planName,    setPlanName]    = useState("My Program");
-  const [startDate,   setStartDate]   = useState(new Date().toISOString().split("T")[0]);
-  const [overload,    setOverload]    = useState<OverloadMode>({ type: "auto" });
-  const [incrLbs,     setIncrLbs]     = useState("5");
-  const [incrEvery,   setIncrEvery]   = useState("1");
-
-  // ── Step 2: Phases ────────────────────────────────────────────────────────
-  const [phases,         setPhases]         = useState<Phase[]>([makePhase(1)]);
-  const [expandedPhaseId, setExpandedPhaseId] = useState<string | null>(phases[0].id);
-
-  // ── Step 3: Starting weights ──────────────────────────────────────────────
-  const [prs, setPrs] = useState<Record<string, string>>({});
-
-  const [step,    setStep]    = useState<Step>("program");
-  const [pending, startTransition] = useTransition();
-
-  // ── Collect all unique weighted exercises across all phases ───────────────
-  const weightedExercises = useMemo(() => {
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const phase of phases) {
-      for (const day of phase.days) {
-        for (const ex of day.exercises) {
-          const info = getExerciseInfo(ex.name);
-          if (info?.unit === "weight_reps" && !seen.has(ex.name)) {
-            seen.add(ex.name);
-            out.push(ex.name);
-          }
-        }
-      }
+  function savePhaseAndAdd() {
+    if (editingIdx !== null) {
+      setPhases((prev) => prev.map((p, i) => i === editingIdx ? draft : p));
+      setEditingIdx(null);
+    } else {
+      setPhases((prev) => [...prev, draft]);
     }
-    return out;
-  }, [phases]);
-
-  // ── Phase mutations ───────────────────────────────────────────────────────
-
-  function addPhase() {
-    const p = makePhase(phases.length + 1);
-    setPhases((prev) => [...prev, p]);
-    setExpandedPhaseId(p.id);
+    const nextN = phases.length + (editingIdx !== null ? 0 : 1) + 1;
+    setDraft(defaultPhase(nextN));
+    setActiveDow(1);
+    setStep("phase-editor");
   }
 
-  function addDeload() {
-    const p: Phase = { id: uid(), name: "Deload", weeks: 1, isDeload: true, days: makeDays() };
-    setPhases((prev) => [...prev, p]);
-    setExpandedPhaseId(p.id);
+  function savePhaseAndContinue() {
+    let updated: Phase[];
+    if (editingIdx !== null) {
+      updated = phases.map((p, i) => i === editingIdx ? draft : p);
+      setEditingIdx(null);
+    } else {
+      updated = [...phases, draft];
+    }
+    setPhases(updated);
+    setStep("overview");
   }
 
-  function removePhase(id: string) {
+  function editPhase(idx: number) {
+    setDraft(phases[idx]);
+    setActiveDow(1);
+    setEditingIdx(idx);
+    setStep("phase-editor");
+  }
+
+  function deletePhase(idx: number) {
+    setPhases((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function movePhase(idx: number, dir: -1 | 1) {
     setPhases((prev) => {
-      const next = prev.filter((p) => p.id !== id);
-      if (expandedPhaseId === id) setExpandedPhaseId(next[next.length - 1]?.id ?? null);
-      return next;
-    });
-  }
-
-  function updatePhase(id: string, updater: (p: Phase) => Phase) {
-    setPhases((prev) => prev.map((p) => p.id === id ? updater(p) : p));
-  }
-
-  function movePhase(id: string, dir: -1 | 1) {
-    setPhases((prev) => {
-      const idx = prev.findIndex((p) => p.id === id);
-      if (idx < 0) return prev;
       const next = [...prev];
       const swap = idx + dir;
       if (swap < 0 || swap >= next.length) return prev;
@@ -328,224 +330,348 @@ export default function BuilderPage() {
     });
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  function addAnotherFromOverview() {
+    const nextN = phases.length + 1;
+    setDraft(defaultPhase(nextN));
+    setActiveDow(1);
+    setEditingIdx(null);
+    setStep("phase-editor");
+  }
+
+  function addDeloadFromOverview() {
+    setDraft(defaultDeload());
+    setActiveDow(1);
+    setEditingIdx(null);
+    setStep("phase-editor");
+  }
+
+  // ── Weighted exercises across all phases ────────────────────────────────────
+
+  const weightedExercises = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    const allPhases = step === "weights" ? phases : [...phases, draft];
+    for (const phase of allPhases) {
+      for (const day of phase.days) {
+        for (const ex of day.exercises) {
+          const info = getExerciseInfo(ex.name);
+          if (info?.unit === "weight_reps" && !seen.has(ex.name)) {
+            seen.add(ex.name); out.push(ex.name);
+          }
+        }
+      }
+    }
+    return out;
+  }, [phases, draft, step]);
+
+  // ── Save ───────────────────────────────────────────────────────────────────
 
   function handleSave() {
-    const resolvedOverload: OverloadMode = overload.type === "configured"
-      ? { type: "configured", incrementLbs: parseFloat(incrLbs) || 5, everyNSessions: parseInt(incrEvery) || 1 }
-      : overload;
-
     const program: ProgramV2 = {
-      version: 2,
-      name: planName.trim() || "My Program",
+      version:   2,
+      name:      planName.trim() || "My Program",
       startDate,
-      overload: resolvedOverload,
       phases,
     };
-
     const parsedPrs: Record<string, number> = {};
     for (const [k, v] of Object.entries(prs)) {
       const n = parseFloat(v);
       if (n > 0) parsedPrs[k] = n;
     }
-
     startTransition(async () => {
       const { error } = await saveTrainingProgramV2({ program, prs: parsedPrs });
       if (!error) { window.location.href = "/train"; }
     });
   }
 
-  // ── Total weeks helper ────────────────────────────────────────────────────
-  const totalWeeks = phases.reduce((s, p) => s + p.weeks, 0);
+  // ── Back helper ────────────────────────────────────────────────────────────
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // Step: "program"
-  // ════════════════════════════════════════════════════════════════════════════
-  if (step === "program") return (
+  function BackBtn({ to }: { to: Step | "router-back" }) {
+    return (
+      <button type="button"
+        onClick={() => to === "router-back" ? router.back() : setStep(to)}
+        className="text-xs text-muted-foreground press mb-3 flex items-center gap-1">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back
+      </button>
+    );
+  }
+
+  const totalWeeks = phases.reduce((s, p) => s + p.weeks, 0);
+  const activeDay  = draft.days[activeDow];
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP: info
+  // ══════════════════════════════════════════════════════════════════════════
+
+  if (step === "info") return (
     <div className="space-y-4">
       <div>
-        <button type="button" onClick={() => router.back()} className="text-xs text-muted-foreground press mb-3 flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight">Build Your Plan</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Name your program and choose how to track progress.</p>
+        <BackBtn to="router-back" />
+        <h1 className="text-2xl font-bold tracking-tight">New Program</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Give it a name, then build your phases one by one.</p>
       </div>
 
-      {/* Name */}
-      <div className="glass widget-shadow rounded-2xl px-4 py-3.5 flex items-center gap-3">
-        <span className="text-xs text-muted-foreground shrink-0">Plan name</span>
-        <input type="text" value={planName} onChange={(e) => setPlanName(e.target.value)}
-          className="flex-1 bg-transparent text-sm font-semibold outline-none text-right" maxLength={50}
-        />
+      <div className="glass widget-shadow rounded-2xl divide-y divide-border overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <span className="text-sm text-muted-foreground shrink-0">Name</span>
+          <input type="text" value={planName} onChange={(e) => setPlanName(e.target.value)}
+            className="flex-1 bg-transparent text-sm font-semibold outline-none text-right" maxLength={50}
+            placeholder="My Program"
+          />
+        </div>
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <span className="text-sm text-muted-foreground shrink-0">Start date</span>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+            className="flex-1 bg-transparent text-sm font-semibold outline-none text-right"
+          />
+        </div>
       </div>
 
-      {/* Start date */}
-      <div className="glass widget-shadow rounded-2xl px-4 py-3.5 flex items-center gap-3">
-        <span className="text-xs text-muted-foreground shrink-0">Start date</span>
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-          className="flex-1 bg-transparent text-sm font-semibold outline-none text-right"
-        />
-      </div>
-
-      {/* Overload mode */}
-      <div className="glass widget-shadow rounded-2xl overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-          Progressive Overload
-        </p>
-        {(["auto","configured","manual"] as const).map((mode) => {
-          const labels: Record<typeof mode, { title: string; desc: string }> = {
-            auto:       { title: "Auto",       desc: "Add weight when all sets complete at target reps" },
-            configured: { title: "Configured", desc: "Add a fixed amount every N sessions per exercise" },
-            manual:     { title: "Manual",     desc: "You enter your own weights each session, no suggestions" },
-          };
-          const active = overload.type === mode;
-          return (
-            <button key={mode} type="button" onClick={() => setOverload({ type: mode } as OverloadMode)}
-              className={`w-full flex items-start gap-3 px-4 py-3.5 border-t border-border first:border-0 press transition-colors ${
-                active ? "bg-primary/5" : ""
-              }`}>
-              <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                active ? "border-primary" : "border-border"
-              }`}>
-                {active && <div className="w-2 h-2 rounded-full bg-primary" />}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold">{labels[mode].title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{labels[mode].desc}</p>
-              </div>
-            </button>
-          );
-        })}
-
-        {/* Configured settings */}
-        {overload.type === "configured" && (
-          <div className="border-t border-border px-4 py-3 space-y-3 bg-foreground/3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Add weight (lbs)</span>
-              <input type="number" inputMode="decimal" value={incrLbs} onChange={(e) => setIncrLbs(e.target.value)}
-                className="w-20 bg-foreground/8 rounded-xl px-3 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Every N sessions</span>
-              <input type="number" inputMode="numeric" value={incrEvery} onChange={(e) => setIncrEvery(e.target.value)}
-                className="w-20 bg-foreground/8 rounded-xl px-3 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-primary/50"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <button type="button" onClick={() => setStep("phases")}
+      <button type="button"
+        onClick={() => { setDraft(defaultPhase(1)); setActiveDow(1); setStep("phase-editor"); }}
         className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm press">
-        Next: Build Phases →
+        Build Phase 1 →
       </button>
     </div>
   );
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // Step: "phases"
-  // ════════════════════════════════════════════════════════════════════════════
-  if (step === "phases") return (
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP: phase-editor
+  // ══════════════════════════════════════════════════════════════════════════
+
+  if (step === "phase-editor") return (
+    <>
+      {showPicker && <ExercisePicker onAdd={addExercise} onClose={() => setShowPicker(false)} />}
+
+      <div className="space-y-4">
+        <div>
+          <BackBtn to={phases.length > 0 || editingIdx !== null ? "overview" : "info"} />
+          <h1 className="text-2xl font-bold tracking-tight">
+            {editingIdx !== null ? "Edit Phase" : `Phase ${phases.length + 1}`}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Build the weekly schedule — it repeats for the number of weeks you set.
+          </p>
+        </div>
+
+        {/* Phase name + weeks */}
+        <div className="glass widget-shadow rounded-2xl divide-y divide-border overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span className="text-sm text-muted-foreground shrink-0">Phase name</span>
+            <input type="text" value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
+              className="flex-1 bg-transparent text-sm font-semibold outline-none text-right" maxLength={40}
+            />
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span className="text-sm text-muted-foreground shrink-0 flex-1">Repeat for</span>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setDraft((p) => ({ ...p, weeks: Math.max(1, p.weeks - 1) }))}
+                className="w-8 h-8 rounded-full bg-foreground/8 flex items-center justify-center press text-lg font-bold">−</button>
+              <span className="text-sm font-semibold tabular-nums w-16 text-center">
+                {draft.weeks} week{draft.weeks !== 1 ? "s" : ""}
+              </span>
+              <button type="button" onClick={() => setDraft((p) => ({ ...p, weeks: Math.min(52, p.weeks + 1) }))}
+                className="w-8 h-8 rounded-full bg-foreground/8 flex items-center justify-center press text-lg font-bold">+</button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <span className="text-sm text-muted-foreground">Deload week</span>
+            <button type="button" onClick={() => setDraft((p) => ({ ...p, isDeload: !p.isDeload }))}
+              className={`relative w-11 h-6 rounded-full transition-colors press ${draft.isDeload ? "bg-amber-500" : "bg-foreground/15"}`}>
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${draft.isDeload ? "translate-x-5.5" : "translate-x-0.5"}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* 7-day strip */}
+        <div className="glass widget-shadow rounded-2xl overflow-hidden">
+          <p className="px-4 pt-3.5 pb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Weekly Schedule
+          </p>
+          <div className="flex gap-1 px-3 pb-3">
+            {draft.days.map((d) => (
+              <button key={d.dayOfWeek} type="button" onClick={() => setActiveDow(d.dayOfWeek)}
+                className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl press transition-all ${
+                  activeDow === d.dayOfWeek ? "bg-primary text-primary-foreground" : "bg-foreground/5"
+                }`}>
+                <span className="text-[10px] font-semibold">{DOW_SHORT[d.dayOfWeek]}</span>
+                <div className={`w-1 h-1 rounded-full ${
+                  d.isRest
+                    ? (activeDow === d.dayOfWeek ? "bg-primary-foreground/30" : "bg-foreground/15")
+                    : (activeDow === d.dayOfWeek ? "bg-primary-foreground" : "bg-primary")
+                }`} />
+              </button>
+            ))}
+          </div>
+
+          {/* Day editor */}
+          <div className="border-t border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="text-sm font-semibold">{activeDay.name}</span>
+              <button type="button" onClick={() => toggleRest(activeDow)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold press transition-all ${
+                  activeDay.isRest ? "bg-foreground/10 text-muted-foreground" : "bg-primary/10 text-primary"
+                }`}>
+                {activeDay.isRest ? "Rest" : "Training"}
+              </button>
+            </div>
+
+            {activeDay.isRest ? (
+              <p className="px-4 py-6 text-sm text-muted-foreground text-center">Rest & recovery — no exercises.</p>
+            ) : (
+              <>
+                {activeDay.exercises.length === 0 && (
+                  <p className="px-4 py-5 text-sm text-muted-foreground text-center">No exercises yet. Tap below to add.</p>
+                )}
+                {activeDay.exercises.map((ex, idx) => (
+                  <div key={`${ex.name}-${idx}`}
+                    className="flex items-center gap-2 px-4 py-3 border-b border-border last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{ex.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {ex.sets} × {ex.reps}{ex.restSeconds > 0 && ` · ${ex.restSeconds}s rest`}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <button type="button" disabled={idx === 0} onClick={() => moveExercise(activeDow, idx, -1)}
+                        className="p-1 text-muted-foreground disabled:opacity-20 press">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                      </button>
+                      <button type="button" disabled={idx === activeDay.exercises.length - 1} onClick={() => moveExercise(activeDow, idx, 1)}
+                        className="p-1 text-muted-foreground disabled:opacity-20 press">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                    </div>
+                    <button type="button" onClick={() => removeExercise(activeDow, idx)}
+                      className="p-1.5 text-muted-foreground press rounded-lg">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setShowPicker(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-primary text-sm font-semibold press border-t border-border">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add Exercise
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Overload settings */}
+        <OverloadPicker
+          overload={draft.overload}
+          onChange={(o) => setDraft((p) => ({ ...p, overload: o }))}
+        />
+
+        {/* Save buttons */}
+        <div className="flex gap-3 pb-4">
+          <button type="button" onClick={savePhaseAndAdd}
+            className="flex-1 py-4 rounded-2xl bg-foreground/8 text-foreground text-sm font-semibold press">
+            Save &amp; Add Phase
+          </button>
+          <button type="button" onClick={savePhaseAndContinue}
+            className="flex-1 py-4 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold press">
+            Save &amp; Continue →
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP: overview
+  // ══════════════════════════════════════════════════════════════════════════
+
+  if (step === "overview") return (
     <div className="space-y-4">
       <div>
-        <button type="button" onClick={() => setStep("program")} className="text-xs text-muted-foreground press mb-3 flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight">Phases</h1>
+        <BackBtn to="phase-editor" />
+        <h1 className="text-2xl font-bold tracking-tight">Program Overview</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           {planName} · {totalWeeks} week{totalWeeks !== 1 ? "s" : ""} total
         </p>
       </div>
 
-      {phases.map((phase, phaseIdx) => {
-        const isExpanded = expandedPhaseId === phase.id;
-        const trainingDays = phase.days.filter((d) => !d.isRest).length;
-        return (
-          <div key={phase.id} className="glass widget-shadow rounded-2xl overflow-hidden">
-            {/* Phase header */}
-            <div className="flex items-center gap-2 px-4 py-3.5">
-              {/* Name */}
-              <input type="text" value={phase.name}
-                onChange={(e) => updatePhase(phase.id, (p) => ({ ...p, name: e.target.value }))}
-                onClick={(e) => e.stopPropagation()}
-                className="flex-1 min-w-0 bg-transparent font-semibold text-sm outline-none"
-                maxLength={30}
-              />
-              {phase.isDeload && (
-                <span className="text-[10px] font-bold uppercase tracking-wide text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full shrink-0">
-                  Deload
-                </span>
-              )}
-              {/* Weeks */}
-              <div className="flex items-center gap-1 shrink-0">
-                <button type="button" onClick={() => updatePhase(phase.id, (p) => ({ ...p, weeks: Math.max(1, p.weeks - 1) }))}
-                  className="w-6 h-6 rounded-full bg-foreground/8 flex items-center justify-center press text-sm font-bold">−</button>
-                <span className="text-xs font-semibold tabular-nums w-10 text-center">{phase.weeks}w</span>
-                <button type="button" onClick={() => updatePhase(phase.id, (p) => ({ ...p, weeks: Math.min(52, p.weeks + 1) }))}
-                  className="w-6 h-6 rounded-full bg-foreground/8 flex items-center justify-center press text-sm font-bold">+</button>
+      {/* Phase timeline */}
+      <div className="flex gap-1 h-2">
+        {phases.map((p) => (
+          <div key={p.id}
+            className={`rounded-full flex-none transition-all ${p.isDeload ? "bg-amber-400" : "bg-primary"}`}
+            style={{ flexBasis: `${(p.weeks / totalWeeks) * 100}%` }}
+          />
+        ))}
+      </div>
+
+      {/* Phase list */}
+      <div className="space-y-2">
+        {phases.map((phase, idx) => {
+          const trainingDays = phase.days.filter((d) => !d.isRest).length;
+          const overloadLabel = phase.overload.type === "auto" ? "Auto"
+            : phase.overload.type === "manual" ? "Manual"
+            : `+${(phase.overload as any).incrementLbs}lbs / ${(phase.overload as any).everyNSessions} sessions`;
+          return (
+            <div key={phase.id} className="glass widget-shadow rounded-2xl px-4 py-3.5 flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${phase.isDeload ? "bg-amber-400" : "bg-primary"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold truncate">{phase.name}</p>
+                  {phase.isDeload && (
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full shrink-0">Deload</span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {phase.weeks}w · {trainingDays} training days/wk · {overloadLabel}
+                </p>
               </div>
               {/* Reorder */}
-              <div className="flex flex-col shrink-0">
-                <button type="button" disabled={phaseIdx === 0} onClick={() => movePhase(phase.id, -1)}
-                  className="p-0.5 text-muted-foreground disabled:opacity-20 press">
+              <div className="flex flex-col gap-0.5 shrink-0">
+                <button type="button" disabled={idx === 0} onClick={() => movePhase(idx, -1)}
+                  className="p-1 text-muted-foreground disabled:opacity-20 press">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"/></svg>
                 </button>
-                <button type="button" disabled={phaseIdx === phases.length - 1} onClick={() => movePhase(phase.id, 1)}
-                  className="p-0.5 text-muted-foreground disabled:opacity-20 press">
+                <button type="button" disabled={idx === phases.length - 1} onClick={() => movePhase(idx, 1)}
+                  className="p-1 text-muted-foreground disabled:opacity-20 press">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
               </div>
-              {/* Delete */}
-              {phases.length > 1 && (
-                <button type="button" onClick={() => removePhase(phase.id)}
-                  className="p-1.5 text-muted-foreground press rounded-lg shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              )}
-              {/* Expand */}
-              <button type="button" onClick={() => setExpandedPhaseId(isExpanded ? null : phase.id)}
+              {/* Edit */}
+              <button type="button" onClick={() => editPhase(idx)}
                 className="p-1.5 text-muted-foreground press rounded-lg shrink-0">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
-                  <polyline points="6 9 12 15 18 9"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              {/* Delete */}
+              <button type="button" onClick={() => deletePhase(idx)}
+                className="p-1.5 text-muted-foreground press rounded-lg shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </div>
-
-            {/* Phase summary row */}
-            {!isExpanded && (
-              <div className="px-4 pb-3 flex gap-3">
-                <span className="text-xs text-muted-foreground">
-                  {trainingDays === 0 ? "No training days — tap to configure" : `${trainingDays} training day${trainingDays !== 1 ? "s" : ""}/week`}
-                </span>
-              </div>
-            )}
-
-            {/* Inline day editor */}
-            {isExpanded && (
-              <div className="border-t border-border">
-                <PhaseEditor phase={phase} onChange={(updated) => updatePhase(phase.id, () => updated)} />
-              </div>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* Add phase buttons */}
       <div className="flex gap-3">
-        <button type="button" onClick={addPhase}
+        <button type="button" onClick={addAnotherFromOverview}
           className="flex-1 glass widget-shadow rounded-2xl px-4 py-3.5 flex items-center justify-center gap-2 text-sm font-semibold press text-primary">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
           Add Phase
         </button>
-        <button type="button" onClick={addDeload}
+        <button type="button" onClick={addDeloadFromOverview}
           className="glass widget-shadow rounded-2xl px-4 py-3.5 flex items-center gap-2 text-sm font-semibold press text-amber-500">
           + Deload
         </button>
@@ -558,26 +684,23 @@ export default function BuilderPage() {
     </div>
   );
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // Step: "weights"
-  // ════════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP: weights
+  // ══════════════════════════════════════════════════════════════════════════
+
   return (
     <div className="space-y-4">
       <div>
-        <button type="button" onClick={() => setStep("phases")} className="text-xs text-muted-foreground press mb-3 flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </button>
+        <BackBtn to="overview" />
         <h1 className="text-2xl font-bold tracking-tight">Starting Weights</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Enter your 1-rep max for each lift. Leave blank to start at the bar (45 lbs).
+          Enter your 1RM for each lift — we'll start you at ~70%. Leave blank to start at the bar.
         </p>
       </div>
 
       {weightedExercises.length === 0 ? (
         <div className="glass widget-shadow rounded-2xl px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">No weighted exercises in your program.</p>
-          <p className="text-xs text-muted-foreground mt-1">Go back to add exercises to your phases.</p>
         </div>
       ) : (
         <div className="glass widget-shadow rounded-2xl overflow-hidden divide-y divide-border">
@@ -599,7 +722,7 @@ export default function BuilderPage() {
       )}
 
       <p className="text-xs text-muted-foreground px-1">
-        These are your 1RM PRs — the app will start you at ~70% automatically.
+        1RM = your 1-rep max. The app sets your working weight to ~70% automatically.
       </p>
 
       <button type="button" onClick={handleSave} disabled={pending}
