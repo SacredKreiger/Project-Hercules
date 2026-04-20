@@ -11,12 +11,6 @@ const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> 
   maintenance: { label: "Maintenance", bg: "bg-emerald-500/12", text: "text-emerald-500" },
 };
 
-const MACRO_BARS = [
-  { key: "protein", label: "Protein", color: "oklch(0.68 0.20 15)"  },
-  { key: "carbs",   label: "Carbs",   color: "oklch(0.78 0.16 80)"  },
-  { key: "fat",     label: "Fat",     color: "oklch(0.68 0.16 235)" },
-] as const;
-
 const SLOT_LABEL = ["", "Breakfast", "Lunch", "Snack", "Dinner", "Late Night"];
 
 function getGreeting() {
@@ -29,6 +23,7 @@ function getGreeting() {
 function pct(n: number, total: number) {
   return total > 0 ? Math.min(100, (n / total) * 100) : 0;
 }
+// pct is still used by the goal + phase progress bars
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -78,11 +73,6 @@ export default async function DashboardPage() {
     };
   }
 
-  const plannedCal  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).calories, 0);
-  const plannedPro  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).protein,  0);
-  const plannedCarb = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).carbs,    0);
-  const plannedFat  = (todayMeals ?? []).reduce((s: number, m: any) => s + slotMacros(m.meal_slot).fat,      0);
-
   const currentWeight = latestLog?.weight_lbs ?? profile.current_weight_lbs;
   const progressPct   = Math.min(100, Math.abs(
     (currentWeight - profile.current_weight_lbs) /
@@ -95,9 +85,6 @@ export default async function DashboardPage() {
   const totalPhaseWeeks = activeInfo?.totalWeeks ?? null;
   const programDone     = activeInfo?.programDone ?? false;
   const programName     = rawProgram?.name ?? null;
-
-  const macroValues = { protein: plannedPro, carbs: plannedCarb, fat: plannedFat };
-  const macroTargets = { protein: macros.protein, carbs: macros.carbs, fat: macros.fat };
 
   return (
     <div className="space-y-4">
@@ -117,64 +104,39 @@ export default async function DashboardPage() {
         </span>
       </div>
 
-      {/* ── Calorie hero + macro bars ── */}
+      {/* ── Daily targets ── */}
       <div className="glass widget-shadow rounded-2xl p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+          Daily Targets
+        </p>
 
         {/* Calorie hero */}
-        <div className="flex items-end justify-between mb-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-              Today&apos;s Calories
-            </p>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-5xl font-black tabular-nums tracking-tight leading-none"
-                style={{ color: "oklch(0.72 0.17 42)" }}>
-                {plannedCal}
-              </span>
-              <span className="text-sm text-muted-foreground">/ {macros.calories} kcal</span>
+        <div className="flex items-baseline gap-2 mb-5">
+          <span
+            className="text-5xl font-black tabular-nums tracking-tight leading-none"
+            style={{ color: "oklch(0.72 0.17 42)" }}>
+            {macros.calories}
+          </span>
+          <span className="text-sm text-muted-foreground font-medium">kcal</span>
+        </div>
+
+        {/* P / C / F stat blocks */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {([
+            { label: "Protein", value: macros.protein,  color: "oklch(0.68 0.20 15)"  },
+            { label: "Carbs",   value: macros.carbs,    color: "oklch(0.78 0.16 80)"  },
+            { label: "Fat",     value: macros.fat,       color: "oklch(0.68 0.16 235)" },
+          ] as const).map(({ label, value, color }) => (
+            <div key={label} className="bg-foreground/5 rounded-xl p-3 text-center">
+              <p className="text-2xl font-black tabular-nums leading-none" style={{ color }}>
+                {value}
+              </p>
+              <p className="text-[10px] font-semibold text-muted-foreground mt-1.5 uppercase tracking-wide">
+                {label}
+              </p>
+              <p className="text-[10px] text-muted-foreground">g</p>
             </div>
-          </div>
-          <div className="text-right pb-0.5">
-            <p className="text-[11px] text-muted-foreground mb-0.5">Remaining</p>
-            <p className="text-xl font-bold tabular-nums">
-              {Math.max(0, macros.calories - plannedCal)}
-            </p>
-          </div>
-        </div>
-
-        {/* Calorie bar */}
-        <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden mb-5">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${pct(plannedCal, macros.calories)}%`, background: "oklch(0.72 0.17 42)" }}
-          />
-        </div>
-
-        {/* Macro bars */}
-        <div className="space-y-3.5">
-          {MACRO_BARS.map(({ key, label, color }) => {
-            const logged = macroValues[key];
-            const target = macroTargets[key];
-            return (
-              <div key={key}>
-                <div className="flex justify-between items-center mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-                    <span className="text-xs font-medium text-muted-foreground">{label}</span>
-                  </div>
-                  <span className="text-xs font-semibold tabular-nums">
-                    {logged}<span className="text-muted-foreground font-normal">/{target}g</span>
-                  </span>
-                </div>
-                <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct(logged, target)}%`, background: color }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          ))}
         </div>
       </div>
 
