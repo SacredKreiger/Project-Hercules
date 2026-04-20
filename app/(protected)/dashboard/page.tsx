@@ -31,117 +31,6 @@ function pct(n: number, total: number) {
   return total > 0 ? Math.min(100, (n / total) * 100) : 0;
 }
 
-// ── SVG line chart (server-rendered) ─────────────────────────────────────────
-function WeightChart({
-  logs,
-  startWeight,
-  goalWeight,
-  phase,
-}: {
-  logs: { weight_lbs: number; log_date: string }[];
-  startWeight: number;
-  goalWeight: number;
-  phase: string;
-}) {
-  const W = 320, H = 72;
-  const pad = { t: 6, r: 8, b: 18, l: 8 };
-  const plotW = W - pad.l - pad.r;
-  const plotH = H - pad.t - pad.b;
-
-  const goalColor =
-    phase === "cut" ? "oklch(0.65 0.22 22)" :
-    phase === "bulk" ? "oklch(0.75 0.17 65)" :
-    "oklch(0.65 0.18 150)";
-
-  // No data — placeholder
-  if (logs.length === 0) {
-    const midY = pad.t + plotH / 2;
-    const goalY = pad.t + plotH * 0.25;
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-        <line x1={pad.l} y1={goalY} x2={W - pad.r} y2={goalY}
-          stroke={goalColor} strokeWidth="1.5" strokeDasharray="5 4" strokeOpacity="0.6" />
-        <line x1={pad.l} y1={midY} x2={W - pad.r} y2={midY}
-          stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.15" strokeDasharray="3 3" />
-        <text x={pad.l} y={goalY - 3} fontSize="9" fill={goalColor} opacity="0.8">goal</text>
-        <text x={pad.l} y={H - 4} fontSize="9" fill="currentColor" opacity="0.35">no weigh-ins yet</text>
-      </svg>
-    );
-  }
-
-  const allW = [...logs.map(l => l.weight_lbs), goalWeight, startWeight];
-  const range = Math.max(...allW) - Math.min(...allW);
-  const minW = Math.min(...allW) - range * 0.12 - 0.5;
-  const maxW = Math.max(...allW) + range * 0.12 + 0.5;
-
-  function toX(i: number) {
-    return logs.length === 1
-      ? pad.l + plotW / 2
-      : pad.l + (i / (logs.length - 1)) * plotW;
-  }
-  function toY(w: number) {
-    return pad.t + plotH - ((w - minW) / (maxW - minW)) * plotH;
-  }
-
-  const goalY   = toY(goalWeight);
-  const pts     = logs.map((l, i) => ({ x: toX(i), y: toY(l.weight_lbs) }));
-  const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const areaPath = logs.length > 1
-    ? `${linePath} L${pts[pts.length - 1].x.toFixed(1)},${(H - pad.b).toFixed(1)} L${pts[0].x.toFixed(1)},${(H - pad.b).toFixed(1)} Z`
-    : "";
-  const last = pts[pts.length - 1];
-  const lastWeight = logs[logs.length - 1].weight_lbs;
-
-  // X-axis date labels (first and last)
-  const firstDate = new Date(logs[0].log_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const lastDate  = new Date(logs[logs.length - 1].log_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-      <defs>
-        <linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.60 0.18 255)" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="oklch(0.60 0.18 255)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
-      {/* Goal line */}
-      <line x1={pad.l} y1={goalY} x2={W - pad.r} y2={goalY}
-        stroke={goalColor} strokeWidth="1.5" strokeDasharray="5 4" strokeOpacity="0.7" />
-      <text x={W - pad.r - 2} y={goalY - 3} fontSize="8.5" fill={goalColor}
-        textAnchor="end" opacity="0.85">
-        {goalWeight} lbs
-      </text>
-
-      {/* Area fill */}
-      {areaPath && <path d={areaPath} fill="url(#wGrad)" />}
-
-      {/* Weight line */}
-      {logs.length > 1 && (
-        <path d={linePath} fill="none" stroke="oklch(0.60 0.18 255)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      )}
-
-      {/* Current weight dot */}
-      <circle cx={last.x} cy={last.y} r="4" fill="oklch(0.60 0.18 255)" />
-      <circle cx={last.x} cy={last.y} r="2" fill="white" />
-
-      {/* X-axis labels */}
-      {logs.length > 1 && (
-        <>
-          <text x={pts[0].x} y={H - 2} fontSize="8.5" fill="currentColor" opacity="0.35" textAnchor="start">{firstDate}</text>
-          <text x={pts[pts.length - 1].x} y={H - 2} fontSize="8.5" fill="currentColor" opacity="0.35" textAnchor="end">{lastDate}</text>
-        </>
-      )}
-
-      {/* Current weight label */}
-      <text x={last.x} y={last.y - 7} fontSize="9" fill="oklch(0.60 0.18 255)"
-        textAnchor={last.x > W * 0.7 ? "end" : "middle"} fontWeight="600">
-        {lastWeight} lbs
-      </text>
-    </svg>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -170,12 +59,12 @@ export default async function DashboardPage() {
     .eq("user_id", user!.id).eq("week_number", weekNumber).eq("day_of_week", dayOfWeek)
     .order("meal_slot");
 
-  // Fetch all weigh-ins for the chart
+  // Latest weigh-in for current weight
   const { data: progressLogs } = await supabase
     .from("progress_logs").select("weight_lbs, log_date")
     .eq("user_id", user!.id)
-    .order("log_date", { ascending: true })
-    .limit(30);
+    .order("log_date", { ascending: false })
+    .limit(1);
 
   const mealsPerDay = todayMeals && todayMeals.length > 0
     ? (Math.max(...todayMeals.map((m: any) => m.meal_slot)) as 3 | 4 | 5)
@@ -194,9 +83,7 @@ export default async function DashboardPage() {
     };
   }
 
-  const currentWeight   = progressLogs && progressLogs.length > 0
-    ? progressLogs[progressLogs.length - 1].weight_lbs
-    : profile.current_weight_lbs;
+  const currentWeight = progressLogs?.[0]?.weight_lbs ?? profile.current_weight_lbs;
 
   const progressPct = Math.min(100, Math.abs(
     (currentWeight - profile.current_weight_lbs) /
@@ -233,13 +120,12 @@ export default async function DashboardPage() {
         </span>
       </div>
 
-      {/* ── Daily Targets — macro rings ── */}
+      {/* ── Daily Intake — macro rings ── */}
       <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-4 shrink-0">
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Daily Targets
+            Daily Intake
           </p>
-          <p className="text-[11px] text-muted-foreground">target</p>
         </div>
         <div className="grid grid-cols-4 gap-1 justify-items-center">
           <MacroRing label="Calories" logged={macros.calories} target={macros.calories} unit="kcal" color={CAL_COLOR} size={72} hideTarget />
@@ -249,26 +135,44 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Goal — weight chart ── */}
-      <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-2 shrink-0">
-        <div className="flex items-center justify-between mb-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Goal Progress</p>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground tabular-nums">
-              {currentWeight} → {profile.goal_weight_lbs} lbs
-            </span>
-            <span className="text-[10px] font-bold text-primary">
-              {progressPct.toFixed(0)}%
-            </span>
+      {/* ── Goal Progress — segmented bar ── */}
+      {(() => {
+        const SEGS = 20;
+        const filled = Math.round((progressPct / 100) * SEGS);
+        const lbsLeft = Math.abs(currentWeight - profile.goal_weight_lbs).toFixed(1);
+        return (
+          <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-3 shrink-0">
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Goal Progress
+              </p>
+              <p className="text-[11px] font-bold tabular-nums text-primary">
+                {lbsLeft} <span className="font-normal text-muted-foreground">lbs left</span>
+              </p>
+            </div>
+
+            {/* Segmented bar */}
+            <div className="flex gap-[3px] mb-2.5">
+              {Array.from({ length: SEGS }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-2 rounded-full"
+                  style={{
+                    background: i < filled
+                      ? "oklch(0.60 0.18 255)"
+                      : "oklch(0 0 0 / 8%)",
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground tabular-nums">{currentWeight} lbs now</span>
+              <span className="text-[10px] text-muted-foreground tabular-nums">{profile.goal_weight_lbs} lbs goal</span>
+            </div>
           </div>
-        </div>
-        <WeightChart
-          logs={progressLogs ?? []}
-          startWeight={profile.current_weight_lbs}
-          goalWeight={profile.goal_weight_lbs}
-          phase={profile.phase}
-        />
-      </div>
+        );
+      })()}
 
       {/* ── Today's Training ── */}
       <div className="glass widget-shadow rounded-2xl overflow-hidden shrink-0">
@@ -355,43 +259,47 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Today's Meals — vertical compact ── */}
-      <div className="glass widget-shadow rounded-2xl overflow-hidden shrink-0">
-        <div className="px-4 pt-2.5 pb-2 border-b border-border">
+      {/* ── Today's Meals — 2-col mini cards ── */}
+      <div className="glass widget-shadow rounded-2xl px-3 pt-2.5 pb-3 shrink-0">
+        <div className="flex items-center justify-between mb-2">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Today&apos;s Meals
           </p>
+          {todayMeals && todayMeals.length > 2 && (
+            <a href="/meals" className="text-[11px] text-primary font-semibold press">
+              +{todayMeals.length - 2} more →
+            </a>
+          )}
         </div>
 
         {todayMeals && todayMeals.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="grid grid-cols-2 gap-2">
             {todayMeals.slice(0, 2).map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
-                <div key={entry.id} className="px-4 py-2.5">
-                  <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">
-                      {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
-                    </p>
-                    <p className="text-xs font-black tabular-nums shrink-0">{m.calories} <span className="text-muted-foreground font-normal">kcal</span></p>
-                  </div>
-                  <p className="text-sm font-semibold leading-tight truncate">{entry.recipes?.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{m.protein}g P · {m.carbs}g C · {m.fat}g F</p>
+                <div key={entry.id} className="bg-foreground/5 rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">
+                    {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
+                  </p>
+                  <p className="text-sm font-semibold leading-snug mt-1 line-clamp-2">
+                    {entry.recipes?.name}
+                  </p>
+                  <p className="text-xs font-black tabular-nums mt-1.5">
+                    {m.calories}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">kcal</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {m.protein}P · {m.carbs}C · {m.fat}F
+                  </p>
                 </div>
               );
             })}
-            {todayMeals.length > 2 && (
-              <div className="px-4 py-1.5">
-                <a href="/meals" className="text-[11px] text-primary font-semibold press">
-                  +{todayMeals.length - 2} more meals →
-                </a>
-              </div>
-            )}
           </div>
         ) : (
-          <div className="px-4 py-3 text-center">
+          <div className="text-center py-2">
             <p className="text-sm text-muted-foreground">No meals planned yet.</p>
-            <a href="/meals" className="text-xs text-primary font-semibold mt-1 inline-block press">Set up meal plan →</a>
+            <a href="/meals" className="text-xs text-primary font-semibold mt-1 inline-block press">
+              Set up meal plan →
+            </a>
           </div>
         )}
       </div>
