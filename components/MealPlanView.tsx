@@ -370,67 +370,102 @@ export default function MealPlanView({
           </>
         )}
 
-        {/* ── Month view ── */}
-        {!isEmpty && view === "month" && (
-          <div className="space-y-3">
-            {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => {
-              const weekData = byWeekDay[week] ?? {};
-              return (
-                <div key={week} className={`glass widget-shadow rounded-2xl overflow-hidden ${week === weekNumber ? "ring-1 ring-primary/30" : ""}`}>
-                  {/* Week header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">Week {week}</span>
-                      {week === weekNumber && (
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-primary px-2 py-0.5 glass rounded-full">Current</span>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setSelectedWeek(week); setView("week"); }}
-                      className="text-xs text-primary font-semibold press"
-                    >
-                      View week →
-                    </button>
-                  </div>
+        {/* ── Month view — calendar grid ── */}
+        {!isEmpty && view === "month" && (() => {
+          // Compute week-1 Sunday from today's known position in the plan
+          const now = new Date();
+          const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const currentWeekSunday = new Date(todayMidnight);
+          currentWeekSunday.setDate(todayMidnight.getDate() - todayDow);
+          const week1Start = new Date(currentWeekSunday);
+          week1Start.setDate(currentWeekSunday.getDate() - (weekNumber - 1) * 7);
 
-                  {/* Compact day rows */}
-                  <div className="divide-y divide-border">
-                    {DAYS.map((_, dow) => {
-                      const entries = weekData[dow] ?? [];
-                      const kcal    = dayCalories(entries, dow);
-                      const isToday = week === weekNumber && dow === todayDow;
+          function cellDate(week: number, dow: number): Date {
+            const d = new Date(week1Start);
+            d.setDate(week1Start.getDate() + (week - 1) * 7 + dow);
+            return d;
+          }
+
+          const firstDate = cellDate(1, 0);
+          const lastDate  = cellDate(totalWeeks, 6);
+          const fmtMon    = (d: Date) => d.toLocaleDateString("en-US", { month: "short" });
+          const fmtMonYr  = (d: Date) => d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          const headerLabel = firstDate.getMonth() === lastDate.getMonth()
+            ? fmtMonYr(firstDate)
+            : `${fmtMon(firstDate)} – ${fmtMonYr(lastDate)}`;
+
+          return (
+            <div className="space-y-2">
+              <p className="text-center text-sm font-semibold text-muted-foreground">{headerLabel}</p>
+
+              <div className="glass widget-shadow rounded-2xl overflow-hidden">
+                {/* Day-of-week header */}
+                <div className="grid grid-cols-7 border-b border-border/60">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                    <div key={d} className="py-2.5 text-center">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{d}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Week rows */}
+                {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((week) => (
+                  <div key={week} className="grid grid-cols-7 border-b border-border/40 last:border-b-0">
+                    {Array.from({ length: 7 }, (_, dow) => {
+                      const entries  = byWeekDay[week]?.[dow] ?? [];
+                      const isToday  = week === weekNumber && dow === todayDow;
+                      const date     = cellDate(week, dow);
+                      const dateNum  = date.getDate();
+                      const kcal     = dayCalories(entries, dow);
+                      const hasMeals = entries.length > 0;
+
                       return (
                         <button
                           key={dow}
                           type="button"
                           onClick={() => { setSelectedWeek(week); setSelectedDow(dow); setView("day"); }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 text-left active:bg-white/5 transition-colors"
+                          className="flex flex-col items-center pt-2 pb-2.5 gap-1 active:bg-foreground/5 transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm w-7 ${isToday ? "font-bold text-primary" : "text-muted-foreground"}`}>
-                              {DAYS_SHORT[dow]}
+                          {/* Date circle */}
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center ${isToday ? "bg-primary" : ""}`}>
+                            <span className={`text-xs leading-none ${
+                              isToday
+                                ? "font-bold text-primary-foreground"
+                                : "font-medium text-foreground/80"
+                            }`}>
+                              {dateNum}
                             </span>
-                            {isToday && (
-                              <span className="text-[10px] text-primary font-semibold">Today</span>
-                            )}
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground">{entries.length} meals</span>
-                            {kcal > 0 && (
-                              <span className="text-xs font-semibold tabular-nums">{kcal} kcal</span>
-                            )}
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+
+                          {/* Meal dots */}
+                          <div className="flex gap-[3px] justify-center h-[5px]">
+                            {hasMeals && Array.from({ length: Math.min(entries.length, 5) }).map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-[5px] w-[5px] rounded-full ${isToday ? "bg-primary/60" : "bg-foreground/25"}`}
+                              />
+                            ))}
                           </div>
+
+                          {/* kcal label */}
+                          {kcal > 0 ? (
+                            <span className={`text-[9px] tabular-nums leading-none ${
+                              isToday ? "text-primary font-semibold" : "text-muted-foreground"
+                            }`}>
+                              {kcal}
+                            </span>
+                          ) : (
+                            <span className="h-[11px]" />
+                          )}
                         </button>
                       );
                     })}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
 
