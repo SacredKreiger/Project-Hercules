@@ -103,7 +103,8 @@ export default async function DashboardPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-2.5 h-full overflow-hidden">
+    <div className="flex flex-col gap-2.5 overflow-hidden"
+      style={{ height: "calc(100dvh - 2rem - max(1.5rem, env(safe-area-inset-bottom)))" }}>
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between shrink-0">
@@ -156,12 +157,7 @@ export default async function DashboardPage() {
               {Array.from({ length: SEGS }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex-1 h-2 rounded-full"
-                  style={{
-                    background: i < filled
-                      ? "oklch(0.60 0.18 255)"
-                      : "oklch(0 0 0 / 8%)",
-                  }}
+                  className={`flex-1 h-2 rounded-full ${i < filled ? "bg-primary" : "bg-foreground/10"}`}
                 />
               ))}
             </div>
