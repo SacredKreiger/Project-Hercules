@@ -73,7 +73,7 @@ function ExercisePicker({ onAdd, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
-      <div className="flex items-center gap-3 px-4 pt-safe pt-6 pb-3">
+      <div className="flex items-center gap-3 px-4 pt-6 pb-3">
         <button type="button" onClick={onClose} className="press text-muted-foreground text-sm">Cancel</button>
         <h2 className="flex-1 text-center font-semibold text-sm">Add Exercise</h2>
         <div className="w-14" />
@@ -201,7 +201,7 @@ function OverloadPicker({ overload, onChange }: {
         );
       })}
       {overload.type === "configured" && (
-        <div className="border-t border-border px-4 py-3 space-y-2.5 bg-foreground/3">
+        <div className="border-t border-border px-4 py-3 space-y-2.5 bg-foreground/5">
           <div className="flex items-center justify-between">
             <span className="text-sm">Add (lbs)</span>
             <input type="number" inputMode="decimal" value={incrLbs}
@@ -481,7 +481,8 @@ export default function BuilderPage() {
             <span className="text-sm text-muted-foreground">Deload week</span>
             <button type="button" onClick={() => setDraft((p) => ({ ...p, isDeload: !p.isDeload }))}
               className={`relative w-11 h-6 rounded-full transition-colors press ${draft.isDeload ? "bg-amber-500" : "bg-foreground/15"}`}>
-              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${draft.isDeload ? "translate-x-5.5" : "translate-x-0.5"}`} />
+              <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                style={{ transform: draft.isDeload ? "translateX(22px)" : "translateX(2px)" }} />
             </button>
           </div>
         </div>
