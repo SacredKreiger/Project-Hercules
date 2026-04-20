@@ -44,11 +44,7 @@ export function MacroRing({
         {/* Center label */}
         <div className="absolute inset-0 flex items-center justify-center">
           {hideTarget ? (
-            // number + unit on one line
-            <p className="text-sm font-bold tabular-nums leading-none text-center">
-              {logged}
-              <span className="text-[9px] font-medium text-muted-foreground ml-[1px]">{unit}</span>
-            </p>
+            <span className="text-sm font-bold tabular-nums leading-none">{logged}</span>
           ) : (
             <div className="flex flex-col items-center gap-0.5">
               <span className="text-base font-bold leading-none tabular-nums">{logged}</span>

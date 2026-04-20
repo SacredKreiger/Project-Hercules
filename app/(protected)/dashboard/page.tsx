@@ -253,20 +253,15 @@ export default async function DashboardPage() {
 
       {/* ── Today's Meals — 2-col mini cards ── */}
       <div className="glass widget-shadow rounded-2xl px-3 pt-2.5 pb-3 shrink-0">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Today&apos;s Meals
           </p>
-          {todayMeals && todayMeals.length > 2 && (
-            <a href="/meals" className="text-[11px] text-primary font-semibold press">
-              +{todayMeals.length - 2} more →
-            </a>
-          )}
         </div>
 
         {todayMeals && todayMeals.length > 0 ? (
           <div className="grid grid-cols-2 gap-2">
-            {todayMeals.slice(0, 2).map((entry: any) => {
+            {todayMeals.map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
                 <div key={entry.id} className="bg-foreground/5 rounded-xl px-3 py-2.5">
