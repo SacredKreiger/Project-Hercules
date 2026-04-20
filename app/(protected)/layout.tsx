@@ -14,11 +14,11 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   if (!profile?.onboarding_complete) redirect("/onboarding");
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
       <Sidebar />
       <DrumNav />
-      {/* Desktop: offset for sidebar. Mobile: no header/footer offset, full screen content */}
-      <main className="flex-1 md:ml-64 p-4 md:p-6 pb-safe">
+      {/* main scrolls internally — gives h-full a real height context for the dashboard */}
+      <main className="flex-1 md:ml-64 p-4 md:p-6 pb-safe overflow-y-auto h-full">
         {children}
       </main>
     </div>
