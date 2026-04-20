@@ -233,10 +233,10 @@ export default function GroceryPage() {
               {isOpen && (
                 <div className="divide-y divide-border border-t border-border">
                   {catItems.map((item) => {
-                    const globalIndex = items.indexOf(item);
+                    const globalIndex = items.findIndex((i) => i === item);
                     return (
                       <label
-                        key={globalIndex}
+                        key={`${item.category}-${item.name}`}
                         onClick={() => toggle(globalIndex)}
                         className="flex items-center gap-3 px-4 py-3.5 cursor-pointer press active:bg-foreground/5 transition-colors"
                       >

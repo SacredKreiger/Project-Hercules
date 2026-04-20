@@ -9,9 +9,9 @@ export default async function MealsPage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
   if (!profile) redirect("/onboarding");
 
-  const startDate = new Date(profile.program_start_date);
   const now = new Date();
-  const weekNumber = Math.ceil((Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7);
+  const startDate = profile.program_start_date ? new Date(profile.program_start_date) : now;
+  const weekNumber = Math.max(1, Math.ceil((Math.floor((now.getTime() - startDate.getTime()) / 86400000) + 1) / 7));
   const todayDow = now.getDay();
 
   // Load the full month (all 4 weeks) at once

@@ -27,10 +27,6 @@ function getGreeting() {
   return "Good evening";
 }
 
-function pct(n: number, total: number) {
-  return total > 0 ? Math.min(100, (n / total) * 100) : 0;
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default async function DashboardPage() {
   const supabase = await createClient();
