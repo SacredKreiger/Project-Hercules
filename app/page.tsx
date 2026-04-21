@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect("/dashboard");
+
   return (
     <div className="h-full overflow-hidden bg-background flex flex-col items-center justify-between px-6 relative select-none">
 
@@ -29,13 +35,19 @@ export default function LandingPage() {
       {/* Bottom spacer */}
       <div className="flex-1" />
 
-      {/* CTA — anchored to bottom */}
+      {/* CTAs — anchored to bottom */}
       <div className="relative z-10 w-full max-w-sm flex flex-col gap-3 pb-safe mb-6">
         <Link
-          href="/sign-in"
+          href="/sign-up"
           className="w-full py-4 rounded-full bg-primary text-primary-foreground font-semibold text-base text-center press"
         >
-          Enter
+          Get Started
+        </Link>
+        <Link
+          href="/sign-in"
+          className="w-full py-4 rounded-full glass font-medium text-base text-center press"
+        >
+          Sign In
         </Link>
       </div>
 
