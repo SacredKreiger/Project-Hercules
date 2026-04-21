@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 import { computeExactPortions } from "@/lib/portion-calc";
@@ -92,6 +93,7 @@ export default function MealPlanView({
   savedRestrictions?: string[];
 }) {
   const mealsPerDay = mealsPerDayProp;
+  const router = useRouter();
 
   const [view, setView]               = useState<"day" | "week" | "month">("day");
   const [selectedWeek, setSelectedWeek] = useState(weekNumber);
@@ -228,7 +230,7 @@ export default function MealPlanView({
               mealSlot: entry.meal_slot,
               currentRecipeId: entry.recipes?.id ?? "",
             });
-            window.location.reload();
+            router.refresh();
           }}
           className="shrink-0 mr-4 press text-muted-foreground active:text-primary transition-colors"
           title="Swap meal"
