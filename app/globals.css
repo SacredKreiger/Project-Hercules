@@ -345,9 +345,12 @@
     }
   }
 
-  /* Safe-area bottom padding for mobile */
+  /* Safe-area padding for iOS PWA */
   .pb-safe {
     padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
   }
 
   /* Hide scrollbars globally */

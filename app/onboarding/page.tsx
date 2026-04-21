@@ -101,7 +101,7 @@ export default function OnboardingPage() {
   const phaseStyle = PHASE_STYLES[form.phase] ?? { bg: "bg-foreground/10", text: "text-foreground" };
 
   return (
-    <div className="h-full overflow-auto bg-background relative">
+    <div className="h-full overflow-auto bg-background pt-safe relative">
       {/* Background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[120px]" />

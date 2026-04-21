@@ -34,7 +34,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="h-full overflow-auto bg-background flex items-center justify-center px-5 relative">
+    <div className="h-full overflow-auto bg-background flex items-center justify-center px-5 pt-safe relative">
       {/* Glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />

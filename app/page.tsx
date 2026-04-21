@@ -8,7 +8,7 @@ export default async function LandingPage() {
   if (user) redirect("/dashboard");
 
   return (
-    <div className="h-full overflow-hidden bg-background flex flex-col items-center justify-between px-6 relative select-none">
+    <div className="h-full overflow-hidden bg-background flex flex-col items-center justify-between px-6 pt-safe relative select-none">
 
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0">
