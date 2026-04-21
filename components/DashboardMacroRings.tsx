@@ -25,29 +25,42 @@ export function DashboardMacroRings({ macros, slotMacrosList }: DashboardMacroRi
   const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const key = `hc-eaten-${today}`;
-    let eatenSlots: number[] = [];
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) eatenSlots = JSON.parse(raw) as number[];
-    } catch {
-      eatenSlots = [];
+    function readEaten() {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `hc-eaten-${today}`;
+      let eatenSlots: number[] = [];
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) eatenSlots = JSON.parse(raw) as number[];
+      } catch {
+        eatenSlots = [];
+      }
+
+      const totals = slotMacrosList
+        .filter((s) => eatenSlots.includes(s.slot))
+        .reduce(
+          (acc, s) => ({
+            calories: acc.calories + s.calories,
+            protein:  acc.protein  + s.protein,
+            carbs:    acc.carbs    + s.carbs,
+            fat:      acc.fat      + s.fat,
+          }),
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        );
+
+      setConsumed(totals);
     }
 
-    const totals = slotMacrosList
-      .filter((s) => eatenSlots.includes(s.slot))
-      .reduce(
-        (acc, s) => ({
-          calories: acc.calories + s.calories,
-          protein:  acc.protein  + s.protein,
-          carbs:    acc.carbs    + s.carbs,
-          fat:      acc.fat      + s.fat,
-        }),
-        { calories: 0, protein: 0, carbs: 0, fat: 0 }
-      );
+    readEaten();
 
-    setConsumed(totals);
+    // Re-read when user navigates back to dashboard
+    document.addEventListener("visibilitychange", readEaten);
+    window.addEventListener("focus", readEaten);
+
+    return () => {
+      document.removeEventListener("visibilitychange", readEaten);
+      window.removeEventListener("focus", readEaten);
+    };
   }, [slotMacrosList]);
 
   return (
