@@ -70,6 +70,10 @@ export default function DrumNav() {
     lastSnapIdx.current = idx;
   }, [pathname, setOffset]);
 
+  useEffect(() => {
+    NAV.forEach(({ href }) => router.prefetch(href));
+  }, [router]);
+
   // Fire haptic visual + flash, then navigate and close
   const fireConfirm = useCallback((idx: number) => {
     // Guard: if already fired (e.g. synthetic click after touchend) — bail out
