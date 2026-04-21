@@ -99,7 +99,7 @@ export default async function DashboardPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between shrink-0">
@@ -114,8 +114,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Daily Intake — macro rings ── */}
-      <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-4 shrink-0">
-        <div className="mb-3">
+      <div className="glass widget-shadow rounded-2xl px-4 pt-2.5 pb-3 shrink-0">
+        <div className="mb-2">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Daily Intake
           </p>
@@ -255,11 +255,11 @@ export default async function DashboardPage() {
             {todayMeals.map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
-                <a key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2.5 block press">
+                <a key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2 block press">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">
                     {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
                   </p>
-                  <p className="text-sm font-semibold leading-snug mt-1 line-clamp-2">
+                  <p className="text-sm font-semibold leading-snug mt-1 line-clamp-1">
                     {entry.recipes?.name}
                   </p>
                   <p className="text-xs font-black tabular-nums mt-1.5">

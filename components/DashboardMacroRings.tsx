@@ -52,10 +52,10 @@ export function DashboardMacroRings({ macros, slotMacrosList }: DashboardMacroRi
 
   return (
     <div className="grid grid-cols-4 gap-1 justify-items-center">
-      <MacroRing label="Calories" logged={consumed.calories} target={macros.calories} unit=""  color={CAL_COLOR} size={72} />
-      <MacroRing label="Protein"  logged={consumed.protein}  target={macros.protein}  unit="g" color={P_COLOR}   size={72} />
-      <MacroRing label="Carbs"    logged={consumed.carbs}    target={macros.carbs}    unit="g" color={C_COLOR}   size={72} />
-      <MacroRing label="Fat"      logged={consumed.fat}      target={macros.fat}      unit="g" color={F_COLOR}   size={72} />
+      <MacroRing label="Calories" logged={consumed.calories} target={macros.calories} unit=""  color={CAL_COLOR} size={64} />
+      <MacroRing label="Protein"  logged={consumed.protein}  target={macros.protein}  unit="g" color={P_COLOR}   size={64} />
+      <MacroRing label="Carbs"    logged={consumed.carbs}    target={macros.carbs}    unit="g" color={C_COLOR}   size={64} />
+      <MacroRing label="Fat"      logged={consumed.fat}      target={macros.fat}      unit="g" color={F_COLOR}   size={64} />
     </div>
   );
 }
