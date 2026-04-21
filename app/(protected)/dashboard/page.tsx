@@ -3,8 +3,13 @@ import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
-import { MacroRing } from "@/components/MacroRing";
+import dynamic from "next/dynamic";
 import type { AnyProgram } from "@/lib/program";
+
+const DashboardMacroRings = dynamic(
+  () => import("@/components/DashboardMacroRings").then((m) => m.DashboardMacroRings),
+  { ssr: false }
+);
 
 const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> = {
   bulk:        { label: "Bulk",        bg: "bg-amber-500/12",   text: "text-amber-500" },
@@ -14,11 +19,6 @@ const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> 
 
 const SLOT_LABEL = ["", "Breakfast", "Lunch", "Snack", "Dinner", "Late Night"];
 const DOW_SHORT  = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
-const CAL_COLOR = "oklch(0.72 0.17 42)";
-const P_COLOR   = "oklch(0.68 0.20 15)";
-const C_COLOR   = "oklch(0.78 0.16 80)";
-const F_COLOR   = "oklch(0.68 0.16 235)";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -79,6 +79,11 @@ export default async function DashboardPage() {
     };
   }
 
+  const slotMacrosList = (todayMeals ?? []).map((entry: any) => ({
+    slot: entry.meal_slot,
+    ...slotMacros(entry.meal_slot),
+  }));
+
   const currentWeight = progressLogs?.[0]?.weight_lbs ?? profile.current_weight_lbs;
 
   const progressPct = Math.min(100, Math.abs(
@@ -120,12 +125,7 @@ export default async function DashboardPage() {
             Daily Intake
           </p>
         </div>
-        <div className="grid grid-cols-4 gap-1 justify-items-center">
-          <MacroRing label="Calories" logged={macros.calories} target={macros.calories} unit="" color={CAL_COLOR} size={72} hideTarget />
-          <MacroRing label="Protein"  logged={macros.protein}  target={macros.protein}  unit="g"    color={P_COLOR}   size={72} hideTarget />
-          <MacroRing label="Carbs"    logged={macros.carbs}    target={macros.carbs}    unit="g"    color={C_COLOR}   size={72} hideTarget />
-          <MacroRing label="Fat"      logged={macros.fat}      target={macros.fat}      unit="g"    color={F_COLOR}   size={72} hideTarget />
-        </div>
+        <DashboardMacroRings macros={macros} slotMacrosList={slotMacrosList} />
       </div>
 
       {/* ── Goal Progress — segmented bar ── */}
