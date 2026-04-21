@@ -19,7 +19,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       <EdgeSwipeBlocker />
       <Sidebar />
       <DrumNav />
-      <main className="flex-1 md:ml-64 h-full overflow-y-auto p-4 md:p-6 pb-safe">
+      <main className="flex-1 md:ml-64 h-full overflow-y-auto hide-scrollbar p-4 md:p-6 pb-safe">
         {children}
       </main>
     </div>

@@ -350,6 +350,15 @@
     padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
+  /* Hide scrollbars globally */
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Micro-interaction: subtle press scale on tap */
   .press {
     @apply transition-transform duration-100 active:scale-[0.97];
