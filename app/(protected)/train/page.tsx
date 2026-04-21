@@ -488,8 +488,13 @@ export default function TrainPage() {
 
             {/* Program done banner */}
             {activeInfo?.programDone && (
-              <div className="bg-emerald-500/10 rounded-xl px-3 py-2 text-center">
-                <p className="text-xs font-semibold text-emerald-600">Program complete — great work!</p>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 space-y-2">
+                <p className="text-sm font-bold text-emerald-600">Program complete!</p>
+                <p className="text-xs text-emerald-600/80">You finished every phase. Time to level up.</p>
+                <a href="/train/setup"
+                  className="inline-block text-xs font-semibold text-emerald-600 bg-emerald-500/15 px-3 py-1.5 rounded-full press">
+                  Start a new program →
+                </a>
               </div>
             )}
           </div>
@@ -541,6 +546,13 @@ export default function TrainPage() {
                   ))}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setCompleted(false)}
+                className="w-full text-center text-xs text-muted-foreground press mt-1"
+              >
+                Edit workout
+              </button>
             </div>
           )}
         </>
