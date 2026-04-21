@@ -13,12 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hercules — Your Fitness Command Center",
-  description: "Personalized meal plans, macro tracking, training programs, and progress tracking.",
+  title: "MVNMT — Move with a Purpose",
+  description: "Personalized meal plans, macro tracking, and training programs built around your body and goals.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Hercules",
+    title: "MVNMT",
   },
   formatDetection: { telephone: false },
 };
