@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
 import DrumNav from "@/components/DrumNav";
+import EdgeSwipeBlocker from "@/components/EdgeSwipeBlocker";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -15,6 +16,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen bg-background">
+      <EdgeSwipeBlocker />
       <Sidebar />
       <DrumNav />
       <main className="flex-1 md:ml-64 p-4 md:p-6 pb-safe">
