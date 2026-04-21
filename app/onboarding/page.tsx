@@ -4,14 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { calcBMR, calcTDEE, calcMacros, type Phase, type ActivityLevel } from "@/lib/macros";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 
 const STEPS = ["Your Info", "Body Stats", "Your Goal", "Your Macros"];
+
+const PHASE_STYLES: Record<string, { bg: string; text: string }> = {
+  bulk:        { bg: "bg-amber-500/12",   text: "text-amber-500" },
+  cut:         { bg: "bg-rose-500/12",    text: "text-rose-500" },
+  maintenance: { bg: "bg-emerald-500/12", text: "text-emerald-500" },
+};
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -95,73 +98,123 @@ export default function OnboardingPage() {
     router.refresh();
   }
 
+  const phaseStyle = PHASE_STYLES[form.phase] ?? { bg: "bg-foreground/10", text: "text-foreground" };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-lg space-y-6">
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground">
-            {STEPS.map((s, i) => (
-              <span key={s} className={i === step ? "text-primary font-medium" : ""}>{s}</span>
-            ))}
-          </div>
-          <Progress value={((step + 1) / STEPS.length) * 100} />
+    <div className="h-full overflow-auto bg-background relative">
+      {/* Background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 min-h-full flex flex-col items-center justify-center px-5 py-10">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <p className="text-2xl font-black tracking-[0.2em]">MVNMT</p>
+          <p className="text-xs text-muted-foreground mt-1">Let&apos;s set up your plan</p>
         </div>
 
-        <Card>
-          {/* Step 0: Personal Info */}
-          {step === 0 && (
-            <>
-              <CardHeader>
-                <CardTitle>Tell us about yourself</CardTitle>
-                <CardDescription>Basic info to personalize your plan</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input placeholder="Your name" value={form.name} onChange={(e) => update("name", e.target.value)} />
+        <div className="w-full max-w-sm space-y-4">
+          {/* Step dots */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            {STEPS.map((_, i) => (
+              <div key={i} className={`rounded-full transition-all duration-300 ${
+                i === step
+                  ? "w-6 h-2 bg-primary"
+                  : i < step
+                  ? "w-2 h-2 bg-primary/40"
+                  : "w-2 h-2 bg-foreground/15"
+              }`} />
+            ))}
+          </div>
+
+          {/* Step card */}
+          <div className="glass widget-shadow rounded-2xl p-5 space-y-4">
+            {/* Step 0: Your Info */}
+            {step === 0 && (
+              <>
+                <div>
+                  <p className="text-base font-bold">Tell us about yourself</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Basic info to personalize your plan</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Age</Label>
-                  <Input type="number" placeholder="25" value={form.age} onChange={(e) => update("age", e.target.value)} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground font-medium">Name</Label>
+                    <Input
+                      placeholder="Your name"
+                      value={form.name}
+                      onChange={(e) => update("name", e.target.value)}
+                      className="rounded-xl bg-foreground/5 border-border h-10"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground font-medium">Age</Label>
+                    <Input
+                      type="number"
+                      placeholder="25"
+                      value={form.age}
+                      onChange={(e) => update("age", e.target.value)}
+                      className="rounded-xl bg-foreground/5 border-border h-10"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Gender</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Gender</Label>
                   <Select value={form.gender} onValueChange={(v) => update("gender", v)}>
-                    <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                    <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </CardContent>
-            </>
-          )}
+              </>
+            )}
 
-          {/* Step 1: Body Stats */}
-          {step === 1 && (
-            <>
-              <CardHeader>
-                <CardTitle>Your body stats</CardTitle>
-                <CardDescription>Used to calculate your calorie needs</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Height</Label>
-                  <div className="flex gap-2">
-                    <Input type="number" placeholder="ft" value={form.heightFt} onChange={(e) => update("heightFt", e.target.value)} />
-                    <Input type="number" placeholder="in" value={form.heightIn} onChange={(e) => update("heightIn", e.target.value)} />
+            {/* Step 1: Body Stats */}
+            {step === 1 && (
+              <>
+                <div>
+                  <p className="text-base font-bold">Your body stats</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Used to calculate your calorie needs</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Height</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      type="number"
+                      placeholder="ft"
+                      value={form.heightFt}
+                      onChange={(e) => update("heightFt", e.target.value)}
+                      className="rounded-xl bg-foreground/5 border-border h-10"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="in"
+                      value={form.heightIn}
+                      onChange={(e) => update("heightIn", e.target.value)}
+                      className="rounded-xl bg-foreground/5 border-border h-10"
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Current Weight (lbs)</Label>
-                  <Input type="number" placeholder="160" value={form.currentWeight} onChange={(e) => update("currentWeight", e.target.value)} />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Current Weight (lbs)</Label>
+                  <Input
+                    type="number"
+                    placeholder="160"
+                    value={form.currentWeight}
+                    onChange={(e) => update("currentWeight", e.target.value)}
+                    className="rounded-xl bg-foreground/5 border-border h-10"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label>Activity Level</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Activity Level</Label>
                   <Select value={form.activityLevel} onValueChange={(v) => update("activityLevel", v)}>
-                    <SelectTrigger><SelectValue placeholder="How active are you?" /></SelectTrigger>
+                    <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10">
+                      <SelectValue placeholder="How active are you?" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="sedentary">Sedentary (desk job, little exercise)</SelectItem>
                       <SelectItem value="lightly_active">Lightly Active (1-3x/week)</SelectItem>
@@ -171,80 +224,112 @@ export default function OnboardingPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </CardContent>
-            </>
-          )}
+              </>
+            )}
 
-          {/* Step 2: Goal */}
-          {step === 2 && (
-            <>
-              <CardHeader>
-                <CardTitle>What&apos;s your goal?</CardTitle>
-                <CardDescription>This sets your calorie targets and program phase</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Goal Weight (lbs)</Label>
-                  <Input type="number" placeholder="190" value={form.goalWeight} onChange={(e) => update("goalWeight", e.target.value)} />
+            {/* Step 2: Your Goal */}
+            {step === 2 && (
+              <>
+                <div>
+                  <p className="text-base font-bold">What&apos;s your goal?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Sets your calorie targets and phase</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Phase</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Goal Weight (lbs)</Label>
+                  <Input
+                    type="number"
+                    placeholder="190"
+                    value={form.goalWeight}
+                    onChange={(e) => update("goalWeight", e.target.value)}
+                    className="rounded-xl bg-foreground/5 border-border h-10"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground font-medium">Phase</Label>
                   <Select value={form.phase} onValueChange={(v) => update("phase", v)}>
-                    <SelectTrigger><SelectValue placeholder="Select your phase" /></SelectTrigger>
+                    <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10">
+                      <SelectValue placeholder="Select your phase" />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bulk">Bulk — gain muscle & size</SelectItem>
+                      <SelectItem value="bulk">Bulk — gain muscle &amp; size</SelectItem>
                       <SelectItem value="cut">Cut — lose fat, keep muscle</SelectItem>
                       <SelectItem value="maintenance">Maintenance — stay at current weight</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </CardContent>
-            </>
-          )}
-
-          {/* Step 3: Summary */}
-          {step === 3 && macros && (
-            <>
-              <CardHeader>
-                <CardTitle>Your daily targets</CardTitle>
-                <CardDescription>Based on your stats — {form.phase} phase</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: "Calories", value: macros.calories, unit: "kcal" },
-                    { label: "Protein", value: macros.protein, unit: "g" },
-                    { label: "Carbs", value: macros.carbs, unit: "g" },
-                    { label: "Fat", value: macros.fat, unit: "g" },
-                  ].map(({ label, value, unit }) => (
-                    <div key={label} className="bg-muted rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold">{value}<span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span></p>
-                      <p className="text-sm text-muted-foreground mt-1">{label}</p>
-                    </div>
-                  ))}
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-              </CardContent>
-            </>
-          )}
-
-          <div className="p-6 pt-0 flex gap-3">
-            {step > 0 && (
-              <Button variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>
-                Back
-              </Button>
+              </>
             )}
-            {step < 3 ? (
-              <Button className="flex-1" onClick={() => setStep(step + 1)}>
-                Continue
-              </Button>
-            ) : (
-              <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
-                {loading ? "Setting up your plan..." : "Start My Journey"}
-              </Button>
+
+            {/* Step 3: Macro Summary */}
+            {step === 3 && (
+              <>
+                <div>
+                  <p className="text-base font-bold">Your daily targets</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Based on your stats</p>
+                </div>
+                {macros ? (
+                  <>
+                    <div className="flex justify-center">
+                      <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full ${phaseStyle.bg} ${phaseStyle.text}`}>
+                        {form.phase}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      {[
+                        { label: "Calories", value: macros.calories, unit: "kcal" },
+                        { label: "Protein",  value: macros.protein,  unit: "g" },
+                        { label: "Carbs",    value: macros.carbs,    unit: "g" },
+                        { label: "Fat",      value: macros.fat,      unit: "g" },
+                      ].map(({ label, value, unit }) => (
+                        <div key={label} className="bg-foreground/5 rounded-xl p-3">
+                          <p className="text-base font-bold tabular-nums">{value}</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5">{unit}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    Fill in your stats on the previous steps to see your targets.
+                  </p>
+                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
+              </>
             )}
           </div>
-        </Card>
+
+          {/* Navigation buttons */}
+          <div className="flex gap-3 mt-2">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={() => setStep(step - 1)}
+                className="flex-1 rounded-full h-11 font-medium glass widget-shadow press"
+              >
+                Back
+              </button>
+            )}
+            {step < 3 ? (
+              <button
+                type="button"
+                onClick={() => setStep(step + 1)}
+                className="flex-1 rounded-full h-11 font-semibold bg-primary text-primary-foreground press"
+              >
+                Continue
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 rounded-full h-11 font-semibold bg-primary text-primary-foreground press disabled:opacity-50"
+              >
+                {loading ? "Setting up..." : "Start Moving"}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
