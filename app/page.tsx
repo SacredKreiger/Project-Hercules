@@ -21,27 +21,21 @@ export default function LandingPage() {
         >
           MVNMT
         </h1>
-        <p className="text-base text-muted-foreground font-medium tracking-wide">
-          Move with a purpose.
+        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+          Move · Visualize · Nourish · Master · Train
         </p>
       </div>
 
       {/* Bottom spacer */}
       <div className="flex-1" />
 
-      {/* CTAs — anchored to bottom */}
+      {/* CTA — anchored to bottom */}
       <div className="relative z-10 w-full max-w-sm flex flex-col gap-3 pb-safe mb-6">
         <Link
-          href="/sign-up"
+          href="/sign-in"
           className="w-full py-4 rounded-full bg-primary text-primary-foreground font-semibold text-base text-center press"
         >
-          Get Started
-        </Link>
-        <Link
-          href="/sign-in"
-          className="w-full py-4 rounded-full glass font-medium text-base text-center press"
-        >
-          Sign In
+          Enter
         </Link>
       </div>
 
