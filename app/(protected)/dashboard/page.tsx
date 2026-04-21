@@ -269,7 +269,7 @@ export default async function DashboardPage() {
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {m.protein}P · {m.carbs}C · {m.fat}F
                   </p>
-                </a>
+                </Link>
               );
             })}
           </div>
