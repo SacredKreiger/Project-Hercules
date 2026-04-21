@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
@@ -221,10 +222,10 @@ export default async function DashboardPage() {
                         </p>
                       )}
                     </div>
-                    <a href="/train"
+                    <Link href="/train"
                       className="shrink-0 px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-xl press">
                       Start →
-                    </a>
+                    </Link>
                   </div>
                 )
               ) : (
@@ -234,9 +235,9 @@ export default async function DashboardPage() {
           ) : (
             <div className="text-center py-1 space-y-1">
               <p className="text-sm text-muted-foreground">No training plan set up.</p>
-              <a href="/train/setup" className="text-xs text-primary font-semibold press inline-block">
+              <Link href="/train/setup" className="text-xs text-primary font-semibold press inline-block">
                 Set up training →
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -255,7 +256,7 @@ export default async function DashboardPage() {
             {todayMeals.map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
-                <a key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2.5 block press">
+                <Link key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2.5 block press">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">
                     {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
                   </p>
@@ -275,9 +276,9 @@ export default async function DashboardPage() {
         ) : (
           <div className="text-center py-2">
             <p className="text-sm text-muted-foreground">No meals planned yet.</p>
-            <a href="/meals" className="text-xs text-primary font-semibold mt-1 inline-block press">
+            <Link href="/meals" className="text-xs text-primary font-semibold mt-1 inline-block press">
               Set up meal plan →
-            </a>
+            </Link>
           </div>
         )}
       </div>
