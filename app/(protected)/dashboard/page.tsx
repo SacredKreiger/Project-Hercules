@@ -3,13 +3,8 @@ import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
-import dynamic from "next/dynamic";
+import { DashboardMacroRings } from "@/components/DashboardMacroRings";
 import type { AnyProgram } from "@/lib/program";
-
-const DashboardMacroRings = dynamic(
-  () => import("@/components/DashboardMacroRings").then((m) => m.DashboardMacroRings),
-  { ssr: false }
-);
 
 const PHASE_STYLES: Record<string, { label: string; bg: string; text: string }> = {
   bulk:        { label: "Bulk",        bg: "bg-amber-500/12",   text: "text-amber-500" },
