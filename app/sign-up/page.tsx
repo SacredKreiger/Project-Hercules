@@ -34,15 +34,16 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-5 relative overflow-hidden">
+    <div className="h-full overflow-auto bg-background flex items-center justify-center px-5 relative">
+      {/* Glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/15 blur-[100px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-sm space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold tracking-[0.12em]">HERCULES</h1>
-          <p className="text-sm text-muted-foreground">Create your account</p>
+          <h1 className="text-2xl font-black tracking-[0.2em]">MVNMT</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create your account</p>
         </div>
 
         <form onSubmit={handleSignUp} className="glass widget-shadow rounded-3xl p-6 space-y-4">
@@ -84,7 +85,7 @@ export default function SignUpPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full glass-gold rounded-full h-11 font-semibold text-foreground border-0 mt-2"
+            className="w-full rounded-full h-11 font-semibold bg-primary text-primary-foreground mt-2"
           >
             {loading ? "Creating account..." : "Create Account"}
           </Button>
