@@ -15,12 +15,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Hercules — Your Fitness Command Center",
   description: "Personalized meal plans, macro tracking, training programs, and progress tracking.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Hercules",
+  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f3f0" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0d0d0d" },
+  ],
 };
 
 export default function RootLayout({

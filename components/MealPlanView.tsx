@@ -93,7 +93,7 @@ export default function MealPlanView({
 }) {
   const mealsPerDay = mealsPerDayProp;
 
-  const [view, setView]               = useState<"day" | "week" | "month">("week");
+  const [view, setView]               = useState<"day" | "week" | "month">("day");
   const [selectedWeek, setSelectedWeek] = useState(weekNumber);
   const [selectedDow, setSelectedDow]   = useState(todayDow);
   const [selected, setSelected]         = useState<MealEntry | null>(null);

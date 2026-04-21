@@ -151,8 +151,12 @@
     @apply border-border outline-ring/50;
   }
   html {
-    /* Disable Safari/Chrome swipe-to-navigate-back gesture and white navigation line */
-    overscroll-behavior-x: none;
+    background: var(--background);
+    /* Fill the status bar area so no white line shows through */
+    background-attachment: fixed;
+    overscroll-behavior: none;
+    /* Block iOS Safari horizontal swipe-back gesture */
+    touch-action: pan-y;
   }
   body {
     @apply bg-background text-foreground;
@@ -160,7 +164,8 @@
       "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overscroll-behavior-x: none;
+    overscroll-behavior: none;
+    touch-action: pan-y;
   }
 }
 
