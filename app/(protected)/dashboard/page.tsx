@@ -111,9 +111,6 @@ export default async function DashboardPage() {
             {getGreeting()}, {profile.name.split(" ")[0]}
           </h1>
         </div>
-        <span className={`text-[11px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0 ml-3 ${dietPhase.bg} ${dietPhase.text}`}>
-          {dietPhase.label}
-        </span>
       </div>
 
       {/* ── Daily Intake — macro rings ── */}
@@ -263,7 +260,7 @@ export default async function DashboardPage() {
             {todayMeals.map((entry: any) => {
               const m = slotMacros(entry.meal_slot);
               return (
-                <div key={entry.id} className="bg-foreground/5 rounded-xl px-3 py-2.5">
+                <a key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2.5 block press">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">
                     {SLOT_LABEL[entry.meal_slot] ?? `Meal ${entry.meal_slot}`}
                   </p>
@@ -276,7 +273,7 @@ export default async function DashboardPage() {
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {m.protein}P · {m.carbs}C · {m.fat}F
                   </p>
-                </div>
+                </a>
               );
             })}
           </div>
