@@ -143,7 +143,11 @@ export default function MealPlanView({
     setEatenIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
-      try { localStorage.setItem(`hc-eaten-${todayDate}`, JSON.stringify([...next])); } catch {}
+      // Store slot numbers so DashboardMacroRings can sum consumed macros
+      const eatenSlots = mealPlan
+        .filter((e) => next.has(e.id))
+        .map((e) => e.meal_slot);
+      try { localStorage.setItem(`hc-eaten-${todayDate}`, JSON.stringify(eatenSlots)); } catch {}
       return next;
     });
   }
