@@ -261,7 +261,7 @@ export async function swapMealSlot(params: {
   if (!user) return { error: "Not authenticated" };
 
   const { data: profile } = await supabase.from("profiles")
-    .select("current_weight_lbs, height_cm, age, gender, activity_level, phase, cuisine_preferences, dietary_restrictions")
+    .select("current_weight_lbs, height_cm, age, gender, activity_level, phase, goal_rate, cuisine_preferences, dietary_restrictions")
     .eq("id", user.id).single();
   if (!profile) return { error: "Profile not found" };
 

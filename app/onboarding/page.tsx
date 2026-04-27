@@ -85,7 +85,6 @@ export default function OnboardingPage() {
     tdeeValue && form.phase
       ? calcMacros(tdeeValue, parseFloat(form.currentWeight), form.phase as Phase, parseFloat(form.goalRate) || 0.5)
       : null;
-      : null;
 
   async function handleSubmit() {
     setLoading(true);
