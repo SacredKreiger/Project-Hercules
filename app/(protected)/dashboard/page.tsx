@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { MealsEnabledGate } from "@/components/MealsEnabledGate";
 import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
@@ -114,7 +115,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Daily Intake — macro rings ── */}
+      {/* ── Daily Intake + Meals — hidden in training-only mode ── */}
+      <MealsEnabledGate>
       <div className="glass widget-shadow rounded-2xl px-4 pt-3 pb-4 shrink-0">
         <div className="mb-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -282,6 +284,7 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+      </MealsEnabledGate>
 
     </div>
   );

@@ -20,6 +20,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [mealsEnabled, setMealsEnabled] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("hc-meals-enabled");
+    if (stored === "false") setMealsEnabled(false);
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -186,6 +192,28 @@ export default function ProfilePage() {
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>
+
+      {/* Preferences */}
+      <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
+        <p className="text-sm font-semibold">Preferences</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm">Meal Tracking</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Show meal plan and macro rings on dashboard</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !mealsEnabled;
+              setMealsEnabled(next);
+              localStorage.setItem("hc-meals-enabled", String(next));
+            }}
+            className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${mealsEnabled ? "bg-primary" : "bg-foreground/20"}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${mealsEnabled ? "translate-x-6" : "translate-x-0"}`} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
