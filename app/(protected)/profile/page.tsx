@@ -65,7 +65,7 @@ export default function ProfilePage() {
 
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
   const phaseStyle = PHASE_STYLES[profile.phase] ?? PHASE_STYLES.maintenance;
 
   return (
@@ -175,7 +175,7 @@ export default function ProfilePage() {
         {/* Phase */}
         <div className="glass widget-shadow rounded-2xl p-4 space-y-3">
           <p className="text-sm font-semibold">Phase</p>
-          <Select value={profile.phase} onValueChange={(v) => v && setProfile({ ...profile, phase: v })}>
+          <Select value={profile.phase} onValueChange={(v) => v && setProfile({ ...profile, phase: v, goal_rate: 0.5 })}>
             <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="bulk">Bulk — gain muscle &amp; size</SelectItem>
@@ -183,6 +183,46 @@ export default function ProfilePage() {
               <SelectItem value="maintenance">Maintenance — hold current weight</SelectItem>
             </SelectContent>
           </Select>
+
+          {(profile.phase === "bulk" || profile.phase === "cut") && (() => {
+            const options = profile.phase === "bulk"
+              ? [{ rate: 0.5, label: "Mild Bulk", desc: "0.5 lb/week" }, { rate: 1.0, label: "Bulk", desc: "1 lb/week" }, { rate: 2.0, label: "Aggressive Bulk", desc: "2 lbs/week" }]
+              : [{ rate: 0.5, label: "Mild Cut",  desc: "0.5 lb/week" }, { rate: 1.0, label: "Cut",  desc: "1 lb/week" }, { rate: 2.0, label: "Aggressive Cut",  desc: "2 lbs/week" }];
+            return (
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-muted-foreground font-medium">{profile.phase === "bulk" ? "Gain Rate" : "Loss Rate"}</p>
+                {options.map(({ rate, label, desc }) => {
+                  const selected = (profile.goal_rate ?? 0.5) === rate;
+                  const optMacros = (() => {
+                    const b = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
+                    const t = calcTDEE(b, profile.activity_level);
+                    return calcMacros(t, profile.current_weight_lbs, profile.phase, rate);
+                  })();
+                  return (
+                    <button
+                      key={rate}
+                      type="button"
+                      onClick={() => setProfile({ ...profile, goal_rate: rate })}
+                      className={`w-full text-left rounded-xl px-3 py-2.5 border transition-colors press ${
+                        selected ? "border-primary bg-primary/10" : "border-transparent bg-foreground/5"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">{label}</p>
+                          <p className="text-[11px] text-muted-foreground">{desc}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-black tabular-nums ${selected ? "text-primary" : ""}`}>{optMacros.calories}</p>
+                          <p className="text-[10px] text-muted-foreground">kcal/day</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {error && <p className="text-sm text-destructive px-1">{error}</p>}

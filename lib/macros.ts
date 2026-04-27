@@ -32,20 +32,24 @@ export function calcTDEE(bmr: number, activityLevel: ActivityLevel): number {
 export function calcMacros(
   tdee: number,
   weightLbs: number,
-  phase: Phase
+  phase: Phase,
+  goalRate: number = 0.5
 ): { calories: number; protein: number; carbs: number; fat: number } {
   let calories: number;
   let proteinPerLb: number;
   let fatPerLb: number;
 
+  // goalRate: 0.5 = 0.5 lbs/week (±250 cal/day), 1.0 = 1 lb/week (±500 cal/day)
+  const calAdjust = Math.round(goalRate * 500);
+
   switch (phase) {
     case "bulk":
-      calories = tdee + 400;
+      calories = tdee + calAdjust;
       proteinPerLb = 1.0;
       fatPerLb = 0.4;
       break;
     case "cut":
-      calories = tdee - 500;
+      calories = tdee - calAdjust;
       proteinPerLb = 1.2;
       fatPerLb = 0.35;
       break;

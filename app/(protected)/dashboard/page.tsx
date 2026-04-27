@@ -33,7 +33,7 @@ export default async function DashboardPage() {
 
   const bmr    = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee   = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
 
   const now       = new Date();
   const dayOfWeek = now.getDay();

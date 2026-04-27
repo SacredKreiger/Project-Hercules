@@ -109,7 +109,7 @@ async function generatePlan(config: PlanConfig) {
 
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
 
   const recipesQuery = supabase.from("recipes").select("id, name, meal_type, calories, protein_g, carbs_g, fat_g, tags");
   const { data: allRecipes } = mixAll
@@ -310,7 +310,7 @@ export async function swapMealSlot(params: {
   // Calculate slot targets
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase);
+  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
 
   // Determine meals per day from existing plan
   const { data: dayMeals } = await supabase.from("meal_plans")

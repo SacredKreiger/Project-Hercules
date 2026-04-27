@@ -16,6 +16,19 @@ const PHASE_STYLES: Record<string, { bg: string; text: string }> = {
   maintenance: { bg: "bg-emerald-500/12", text: "text-emerald-500" },
 };
 
+const RATE_OPTIONS = {
+  bulk: [
+    { rate: 0.5, label: "Mild Bulk",       desc: "0.5 lb/week" },
+    { rate: 1.0, label: "Bulk",            desc: "1 lb/week" },
+    { rate: 2.0, label: "Aggressive Bulk", desc: "2 lbs/week" },
+  ],
+  cut: [
+    { rate: 0.5, label: "Mild Cut",       desc: "0.5 lb/week" },
+    { rate: 1.0, label: "Cut",            desc: "1 lb/week" },
+    { rate: 2.0, label: "Aggressive Cut", desc: "2 lbs/week" },
+  ],
+};
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -32,6 +45,7 @@ export default function OnboardingPage() {
     goalWeight: string;
     activityLevel: string;
     phase: string;
+    goalRate: string;
   }>({
     name: "",
     age: "",
@@ -42,6 +56,7 @@ export default function OnboardingPage() {
     goalWeight: "",
     activityLevel: "",
     phase: "",
+    goalRate: "0.5",
   });
 
   function update(field: string, value: string | null) {
@@ -53,13 +68,23 @@ export default function OnboardingPage() {
       ? (parseInt(form.heightFt) * 12 + parseInt(form.heightIn)) * 2.54
       : 0;
 
+  const tdeeValue =
+    form.currentWeight && form.age && form.gender && heightCm && form.activityLevel
+      ? calcTDEE(
+          calcBMR(parseFloat(form.currentWeight), heightCm, parseInt(form.age), form.gender as "male" | "female"),
+          form.activityLevel as ActivityLevel
+        )
+      : null;
+
+  function macrosForRate(rate: number) {
+    if (!tdeeValue || !form.phase) return null;
+    return calcMacros(tdeeValue, parseFloat(form.currentWeight), form.phase as Phase, rate);
+  }
+
   const macros =
-    form.currentWeight && form.age && form.gender && heightCm && form.activityLevel && form.phase
-      ? (() => {
-          const bmr = calcBMR(parseFloat(form.currentWeight), heightCm, parseInt(form.age), form.gender as "male" | "female");
-          const tdee = calcTDEE(bmr, form.activityLevel as ActivityLevel);
-          return calcMacros(tdee, parseFloat(form.currentWeight), form.phase as Phase);
-        })()
+    tdeeValue && form.phase
+      ? calcMacros(tdeeValue, parseFloat(form.currentWeight), form.phase as Phase, parseFloat(form.goalRate) || 0.5)
+      : null;
       : null;
 
   async function handleSubmit() {
@@ -84,6 +109,7 @@ export default function OnboardingPage() {
       goal_weight_lbs: parseFloat(form.goalWeight),
       activity_level: form.activityLevel,
       phase: form.phase,
+      goal_rate: parseFloat(form.goalRate) || 0.5,
       program_start_date: new Date().toISOString().split("T")[0],
       onboarding_complete: true,
     });
@@ -246,7 +272,7 @@ export default function OnboardingPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground font-medium">Phase</Label>
-                  <Select value={form.phase} onValueChange={(v) => update("phase", v)}>
+                  <Select value={form.phase} onValueChange={(v) => { update("phase", v); update("goalRate", "0.5"); }}>
                     <SelectTrigger className="rounded-xl bg-foreground/5 border-border h-10">
                       <SelectValue placeholder="Select your phase" />
                     </SelectTrigger>
@@ -257,6 +283,46 @@ export default function OnboardingPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Rate cards — bulk or cut only */}
+                {(form.phase === "bulk" || form.phase === "cut") && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground font-medium">
+                      {form.phase === "bulk" ? "Gain Rate" : "Loss Rate"}
+                    </Label>
+                    <div className="space-y-2">
+                      {RATE_OPTIONS[form.phase].map(({ rate, label, desc }) => {
+                        const cal = macrosForRate(rate);
+                        const selected = parseFloat(form.goalRate) === rate;
+                        return (
+                          <button
+                            key={rate}
+                            type="button"
+                            onClick={() => update("goalRate", String(rate))}
+                            className={`w-full text-left rounded-xl px-3 py-2.5 border transition-colors press ${
+                              selected ? "border-primary bg-primary/10" : "border-transparent bg-foreground/5"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold">{label}</p>
+                                <p className="text-[11px] text-muted-foreground">{desc}</p>
+                              </div>
+                              {cal && (
+                                <div className="text-right">
+                                  <p className={`text-sm font-black tabular-nums ${selected ? "text-primary" : ""}`}>
+                                    {cal.calories}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">kcal/day</p>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
