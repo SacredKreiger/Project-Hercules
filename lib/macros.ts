@@ -29,6 +29,24 @@ export function calcTDEE(bmr: number, activityLevel: ActivityLevel): number {
   return Math.round(bmr * ACTIVITY_MULTIPLIERS[activityLevel]);
 }
 
+export function getEffectiveMacros(
+  profile: {
+    macro_overrides?: { calories: number; protein: number; carbs: number; fat: number } | null;
+    current_weight_lbs: number;
+    height_cm: number;
+    age: number;
+    gender: "male" | "female";
+    activity_level: ActivityLevel;
+    phase: Phase;
+    goal_rate?: number | null;
+  }
+): { calories: number; protein: number; carbs: number; fat: number } {
+  if (profile.macro_overrides) return profile.macro_overrides;
+  const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
+  const tdee = calcTDEE(bmr, profile.activity_level);
+  return calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+}
+
 export function calcMacros(
   tdee: number,
   weightLbs: number,

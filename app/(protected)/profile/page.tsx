@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { calcBMR, calcTDEE, calcMacros, getEffectiveMacros } from "@/lib/macros";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,8 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [mealsEnabled, setMealsEnabled] = useState(true);
+  const [editingTargets, setEditingTargets] = useState(false);
+  const [draftTargets, setDraftTargets] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   useEffect(() => {
     const stored = localStorage.getItem("hc-meals-enabled");
@@ -65,7 +67,9 @@ export default function ProfilePage() {
 
   const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
   const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const calcedMacros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const macros = getEffectiveMacros(profile);
+  const hasOverrides = !!profile.macro_overrides;
   const phaseStyle = PHASE_STYLES[profile.phase] ?? PHASE_STYLES.maintenance;
 
   return (
@@ -80,25 +84,80 @@ export default function ProfilePage() {
       {/* Daily targets */}
       <div className="glass widget-shadow rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold">Daily Targets</p>
-          <span className={`text-[11px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full ${phaseStyle.bg} ${phaseStyle.text}`}>
-            {profile.phase}
-          </span>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold">Daily Targets</p>
+            {hasOverrides && (
+              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Custom</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {hasOverrides && !editingTargets && (
+              <button
+                type="button"
+                onClick={() => setProfile({ ...profile, macro_overrides: null })}
+                className="text-[10px] text-muted-foreground underline underline-offset-2 press"
+              >
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!editingTargets) setDraftTargets({ ...macros });
+                setEditingTargets(!editingTargets);
+              }}
+              className="text-[11px] font-semibold text-primary press"
+            >
+              {editingTargets ? "Cancel" : "Edit"}
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-4 gap-2 text-center">
-          {[
-            { label: "Cal",     value: macros.calories, unit: "kcal" },
-            { label: "Protein", value: macros.protein,  unit: "g" },
-            { label: "Carbs",   value: macros.carbs,    unit: "g" },
-            { label: "Fat",     value: macros.fat,      unit: "g" },
-          ].map(({ label, value, unit }) => (
-            <div key={label} className="bg-foreground/5 rounded-xl p-3">
-              <p className="text-base font-bold tabular-nums tracking-tight">{value}</p>
-              <p className="text-[9px] text-muted-foreground mt-0.5">{unit}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+
+        {editingTargets ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {(["calories", "protein", "carbs", "fat"] as const).map((key) => (
+                <div key={key} className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground capitalize">{key === "calories" ? "Calories (kcal)" : `${key.charAt(0).toUpperCase() + key.slice(1)} (g)`}</label>
+                  <input
+                    type="number"
+                    value={draftTargets[key]}
+                    onChange={(e) => setDraftTargets((d) => ({ ...d, [key]: parseInt(e.target.value) || 0 }))}
+                    className="w-full rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm font-semibold tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <button
+              type="button"
+              onClick={() => {
+                setProfile({ ...profile, macro_overrides: draftTargets });
+                setEditingTargets(false);
+              }}
+              className="w-full rounded-xl bg-primary text-primary-foreground h-10 text-sm font-semibold press"
+            >
+              Save Targets
+            </button>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Calculated: {calcedMacros.calories} kcal · {calcedMacros.protein}P · {calcedMacros.carbs}C · {calcedMacros.fat}F
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {[
+              { label: "Cal",     value: macros.calories, unit: "kcal" },
+              { label: "Protein", value: macros.protein,  unit: "g" },
+              { label: "Carbs",   value: macros.carbs,    unit: "g" },
+              { label: "Fat",     value: macros.fat,      unit: "g" },
+            ].map(({ label, value, unit }) => (
+              <div key={label} className="bg-foreground/5 rounded-xl p-3">
+                <p className="text-base font-bold tabular-nums tracking-tight">{value}</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">{unit}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSave} className="space-y-3">

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { getEffectiveMacros } from "@/lib/macros";
 import { getServingsMultiplier } from "@/lib/meal-scaling";
 import { lookupIngredient, toGrams } from "@/lib/food-macros";
 import { redirect } from "next/navigation";
@@ -224,9 +224,7 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     .from("profiles").select("*").eq("id", userId).single();
   if (profileError || !profile) return { error: profileError?.message ?? "Profile not found." };
 
-  const bmr    = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
-  const tdee   = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const macros = getEffectiveMacros(profile);
 
   // Default training days: Mon–Fri. Stored in profile if available, else fallback.
   const trainingDays: number[] = profile.training_days ?? [1, 2, 3, 4, 5];

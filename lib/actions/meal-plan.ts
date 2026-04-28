@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { calcBMR, calcTDEE, calcMacros, getEffectiveMacros } from "@/lib/macros";
 import { redirect } from "next/navigation";
 import { generateGroceryList } from "@/lib/actions/grocery-list";
 
@@ -107,9 +107,7 @@ async function generatePlan(config: PlanConfig) {
   const supabase = await createClient();
   const { userId, profile, cuisines, restrictions, mixAll, mealsPerDay, prepStyle, trainingDays } = config;
 
-  const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
-  const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const macros = getEffectiveMacros(profile);
 
   const recipesQuery = supabase.from("recipes").select("id, name, meal_type, calories, protein_g, carbs_g, fat_g, tags");
   const { data: allRecipes } = mixAll
@@ -261,7 +259,7 @@ export async function swapMealSlot(params: {
   if (!user) return { error: "Not authenticated" };
 
   const { data: profile } = await supabase.from("profiles")
-    .select("current_weight_lbs, height_cm, age, gender, activity_level, phase, goal_rate, cuisine_preferences, dietary_restrictions")
+    .select("current_weight_lbs, height_cm, age, gender, activity_level, phase, goal_rate, macro_overrides, cuisine_preferences, dietary_restrictions")
     .eq("id", user.id).single();
   if (!profile) return { error: "Profile not found" };
 
@@ -308,9 +306,7 @@ export async function swapMealSlot(params: {
   const finalPool = available.length > 0 ? available : pool;
 
   // Calculate slot targets
-  const bmr = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
-  const tdee = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const macros = getEffectiveMacros(profile);
 
   // Determine meals per day from existing plan
   const { data: dayMeals } = await supabase.from("meal_plans")

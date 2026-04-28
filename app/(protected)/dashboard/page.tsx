@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MealsEnabledGate } from "@/components/MealsEnabledGate";
-import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { getEffectiveMacros } from "@/lib/macros";
 import { CAL_SPLIT } from "@/lib/meal-scaling";
 import { redirect } from "next/navigation";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
@@ -31,9 +31,7 @@ export default async function DashboardPage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
   if (!profile) redirect("/onboarding");
 
-  const bmr    = calcBMR(profile.current_weight_lbs, profile.height_cm, profile.age, profile.gender);
-  const tdee   = calcTDEE(bmr, profile.activity_level);
-  const macros = calcMacros(tdee, profile.current_weight_lbs, profile.phase, profile.goal_rate ?? 0.5);
+  const macros = getEffectiveMacros(profile);
 
   const now       = new Date();
   const dayOfWeek = now.getDay();
