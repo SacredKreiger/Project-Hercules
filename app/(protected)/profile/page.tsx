@@ -103,7 +103,10 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => {
-                if (!editingTargets) setDraftTargets({ ...macros });
+                if (!editingTargets) {
+                  const m = { ...macros };
+                  setDraftTargets({ ...m, calories: m.protein * 4 + m.carbs * 4 + m.fat * 9 });
+                }
                 setEditingTargets(!editingTargets);
               }}
               className="text-[11px] font-semibold text-primary press"
@@ -115,18 +118,30 @@ export default function ProfilePage() {
 
         {editingTargets ? (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              {(["calories", "protein", "carbs", "fat"] as const).map((key) => (
+            <div className="grid grid-cols-3 gap-2">
+              {(["protein", "carbs", "fat"] as const).map((key) => (
                 <div key={key} className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground capitalize">{key === "calories" ? "Calories (kcal)" : `${key.charAt(0).toUpperCase() + key.slice(1)} (g)`}</label>
+                  <label className="text-[10px] text-muted-foreground">{key.charAt(0).toUpperCase() + key.slice(1)} (g)</label>
                   <input
                     type="number"
                     value={draftTargets[key]}
-                    onChange={(e) => setDraftTargets((d) => ({ ...d, [key]: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setDraftTargets((d) => {
+                        const next = { ...d, [key]: val };
+                        next.calories = next.protein * 4 + next.carbs * 4 + next.fat * 9;
+                        return next;
+                      });
+                    }}
                     className="w-full rounded-xl bg-foreground/5 border border-border h-10 px-3 text-sm font-semibold tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               ))}
+            </div>
+            {/* Auto-calculated calories */}
+            <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-2.5 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Calories</p>
+              <p className="text-lg font-black tabular-nums text-primary">{draftTargets.calories} <span className="text-xs font-normal text-muted-foreground">kcal</span></p>
             </div>
             <button
               type="button"
@@ -139,7 +154,7 @@ export default function ProfilePage() {
               Save Targets
             </button>
             <p className="text-[10px] text-muted-foreground text-center">
-              Calculated: {calcedMacros.calories} kcal · {calcedMacros.protein}P · {calcedMacros.carbs}C · {calcedMacros.fat}F
+              Auto: {calcedMacros.calories} kcal · {calcedMacros.protein}P · {calcedMacros.carbs}C · {calcedMacros.fat}F
             </p>
           </div>
         ) : (
