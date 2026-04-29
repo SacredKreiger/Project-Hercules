@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { EXERCISES, EXERCISE_CATEGORIES, getExerciseInfo } from "@/lib/exercises";
 import { saveTrainingProgramV2 } from "@/lib/actions/training";
@@ -226,6 +226,8 @@ function OverloadPicker({ overload, onChange }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const DRAFT_KEY = "hc-train-builder-draft";
+
 type Step = "info" | "phase-editor" | "overview" | "weights";
 
 export default function BuilderPage() {
@@ -249,6 +251,39 @@ export default function BuilderPage() {
 
   const [step,    setStep]    = useState<Step>("info");
   const [pending, startTransition] = useTransition();
+
+  // ── Draft persistence ──────────────────────────────────────────────────────
+
+  const initialized = useRef(false);
+
+  // Restore on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.planName)  setPlanName(s.planName);
+        if (s.startDate) setStartDate(s.startDate);
+        if (s.phases)    setPhases(s.phases);
+        if (s.draft)     setDraft(s.draft);
+        if (s.activeDow != null) setActiveDow(s.activeDow);
+        if (s.editingIdx != null) setEditingIdx(s.editingIdx);
+        if (s.step)      setStep(s.step);
+        if (s.prs)       setPrs(s.prs);
+      }
+    } catch {}
+    initialized.current = true;
+  }, []);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (!initialized.current) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(
+        { planName, startDate, phases, draft, activeDow, editingIdx, step, prs }
+      ));
+    } catch {}
+  }, [planName, startDate, phases, draft, activeDow, editingIdx, step, prs]);
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
 
@@ -380,7 +415,10 @@ export default function BuilderPage() {
     }
     startTransition(async () => {
       const { error } = await saveTrainingProgramV2({ program, prs: parsedPrs });
-      if (!error) { window.location.href = "/train"; }
+      if (!error) {
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
+        window.location.href = "/train";
+      }
     });
   }
 
@@ -410,7 +448,10 @@ export default function BuilderPage() {
     <div className="space-y-4">
       <div>
         <BackBtn to="router-back" />
-        <h1 className="text-2xl font-bold tracking-tight">New Program</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">New Program</h1>
+          <span className="text-[10px] text-muted-foreground">Draft auto-saved</span>
+        </div>
         <p className="text-sm text-muted-foreground mt-0.5">Give it a name, then build your phases one by one.</p>
       </div>
 

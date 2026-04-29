@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { TEMPLATES } from "@/lib/templates";
 import { getExerciseInfo } from "@/lib/exercises";
@@ -15,6 +15,8 @@ const FOCUS_COLORS: Record<string, string> = {
   "Hypertrophy": "text-violet-500",
 };
 
+const DRAFT_KEY = "hc-train-setup-draft";
+
 export default function TrainSetupPage() {
   const router = useRouter();
   const [step,    setStep]    = useState<"select" | "prs">("select");
@@ -22,6 +24,30 @@ export default function TrainSetupPage() {
   const [prs,     setPrs]     = useState<Record<string, string>>({});
   const [error,   setError]   = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // ── Draft persistence ──────────────────────────────────────────────────────
+
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.step)     setStep(s.step);
+        if (s.selected) setSelected(s.selected);
+        if (s.prs)      setPrs(s.prs);
+      }
+    } catch {}
+    initialized.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!initialized.current) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, selected, prs }));
+    } catch {}
+  }, [step, selected, prs]);
 
   const template = TEMPLATES.find((t) => t.id === selected);
 
@@ -57,7 +83,10 @@ export default function TrainSetupPage() {
         prs: parsedPrs,
       });
       if (result.error) { setError(result.error); }
-      else { window.location.href = "/train"; }
+      else {
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
+        window.location.href = "/train";
+      }
     });
   }
 
