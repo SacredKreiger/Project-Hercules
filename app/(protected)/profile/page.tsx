@@ -50,6 +50,12 @@ export default function ProfilePage() {
     setTimeout(() => setSaved(false), 3000);
   }
 
+  async function saveMacroOverrides(overrides: { calories: number; protein: number; carbs: number; fat: number } | null) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("profiles").update({ macro_overrides: overrides }).eq("id", user!.id);
+  }
+
   if (!profile) {
     return (
       <div className="space-y-4 max-w-lg">
@@ -94,7 +100,7 @@ export default function ProfilePage() {
             {hasOverrides && !editingTargets && (
               <button
                 type="button"
-                onClick={() => setProfile({ ...profile, macro_overrides: null })}
+                onClick={() => { setProfile({ ...profile, macro_overrides: null }); saveMacroOverrides(null); }}
                 className="text-[10px] text-muted-foreground underline underline-offset-2 press"
               >
                 Reset
@@ -147,6 +153,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => {
                 setProfile({ ...profile, macro_overrides: draftTargets });
+                saveMacroOverrides(draftTargets);
                 setEditingTargets(false);
               }}
               className="w-full rounded-xl bg-primary text-primary-foreground h-10 text-sm font-semibold press"

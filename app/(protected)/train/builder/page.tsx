@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo, useEffect, useRef } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { EXERCISES, EXERCISE_CATEGORIES, getExerciseInfo } from "@/lib/exercises";
 import { saveTrainingProgramV2 } from "@/lib/actions/training";
@@ -254,7 +254,7 @@ export default function BuilderPage() {
 
   // ── Draft persistence ──────────────────────────────────────────────────────
 
-  const initialized = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Restore on mount
   useEffect(() => {
@@ -272,18 +272,18 @@ export default function BuilderPage() {
         if (s.prs)       setPrs(s.prs);
       }
     } catch {}
-    initialized.current = true;
+    setInitialized(true);
   }, []);
 
-  // Auto-save on every change
+  // Auto-save on every change (only after restore)
   useEffect(() => {
-    if (!initialized.current) return;
+    if (!initialized) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(
         { planName, startDate, phases, draft, activeDow, editingIdx, step, prs }
       ));
     } catch {}
-  }, [planName, startDate, phases, draft, activeDow, editingIdx, step, prs]);
+  }, [initialized, planName, startDate, phases, draft, activeDow, editingIdx, step, prs]);
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
 

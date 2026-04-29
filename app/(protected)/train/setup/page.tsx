@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition, useEffect, useRef } from "react";
+import { useState, useMemo, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TEMPLATES } from "@/lib/templates";
 import { getExerciseInfo } from "@/lib/exercises";
@@ -27,7 +27,7 @@ export default function TrainSetupPage() {
 
   // ── Draft persistence ──────────────────────────────────────────────────────
 
-  const initialized = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     try {
@@ -39,15 +39,15 @@ export default function TrainSetupPage() {
         if (s.prs)      setPrs(s.prs);
       }
     } catch {}
-    initialized.current = true;
+    setInitialized(true);
   }, []);
 
   useEffect(() => {
-    if (!initialized.current) return;
+    if (!initialized) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, selected, prs }));
     } catch {}
-  }, [step, selected, prs]);
+  }, [initialized, step, selected, prs]);
 
   const template = TEMPLATES.find((t) => t.id === selected);
 
