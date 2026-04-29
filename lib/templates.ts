@@ -4,6 +4,7 @@ export type ExerciseConfig = {
   reps: string;       // "6", "AMRAP", "30 sec", "400m", etc.
   restSeconds: number;
   notes?: string;
+  prPercent?: number; // % of PR to use as working weight (PR mode only)
 };
 
 export type ProgramDay = {

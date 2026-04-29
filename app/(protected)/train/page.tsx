@@ -6,7 +6,8 @@ import { Skeleton } from "@/components/Skeleton";
 import Link from "next/link";
 import { getExerciseInfo } from "@/lib/exercises";
 import { updateProgressAfterWorkout } from "@/lib/actions/training";
-import { getSuggested, increment } from "@/lib/training-utils";
+import { getSuggested, increment, prWeight } from "@/lib/training-utils";
+import { resetProgram } from "@/lib/actions/programs";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
 import type { AnyProgram } from "@/lib/program";
 import type { ExerciseConfig } from "@/lib/templates";
@@ -32,7 +33,7 @@ type Draft = { weight: string; reps: string };
 
 function ExerciseCard({
   exercise, logs, isExpanded, onToggle, onLogSet, onUnlogSet,
-  suggestedWeight, isManual, prevData,
+  suggestedWeight, isManual, prevData, prLbs, prModeEnabled,
 }: {
   exercise:        ExerciseConfig;
   logs:            SetLog[];
@@ -43,14 +44,20 @@ function ExerciseCard({
   suggestedWeight: number;
   isManual:        boolean;
   prevData?:       { sets: number; weight: number; reps: string };
+  prLbs?:          number;
+  prModeEnabled?:  boolean;
 }) {
   const info       = getExerciseInfo(exercise.name);
   const isWeighted = info?.unit === "weight_reps";
   const isCardio   = info?.unit === "distance_time";
   const doneSets   = logs.filter((s) => s.completed).length;
 
+  // PR % mode overrides suggested weight
+  const usePrMode = prModeEnabled && exercise.prPercent && prLbs && prLbs > 0;
+  const effectiveWeight = usePrMode ? prWeight(prLbs!, exercise.prPercent!) : suggestedWeight;
+
   // Manual mode: show last logged weight but leave blank if none
-  const defaultWeight = isManual && suggestedWeight === 0 ? "" : suggestedWeight.toString();
+  const defaultWeight = isManual && effectiveWeight === 0 ? "" : effectiveWeight.toString();
   const defaultReps   = parseDefaultReps(exercise.reps);
 
   const [drafts, setDrafts] = useState<Draft[]>(() =>
@@ -126,8 +133,9 @@ function ExerciseCard({
           <p className="text-sm font-semibold truncate">{exercise.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {exercise.sets} × {exercise.reps}
-            {isWeighted && !isManual && suggestedWeight > 0 && ` · ${suggestedWeight} lbs`}
-            {isWeighted && isManual && " · Manual"}
+            {isWeighted && usePrMode && ` · ${exercise.prPercent}% PR → ${effectiveWeight} lbs`}
+            {isWeighted && !usePrMode && !isManual && effectiveWeight > 0 && ` · ${effectiveWeight} lbs`}
+            {isWeighted && isManual && !usePrMode && " · Manual"}
             {exercise.restSeconds > 0 && ` · ${exercise.restSeconds}s`}
           </p>
           {prevData && (
@@ -232,10 +240,13 @@ function ExerciseCard({
 export default function TrainPage() {
   const [program,    setProgram]    = useState<AnyProgram | null>(null);
   const [prs,        setPrs]        = useState<Record<string, number>>({});
+  const [personalRecords, setPersonalRecords] = useState<Record<string, number>>({});
+  const [prModeEnabled, setPrModeEnabled] = useState(false);
   const [progress,   setProgress]   = useState<Record<string, { weight: number }>>({});
   const [bodyweight, setBodyweight] = useState<number>(0);
   const [gender,     setGender]     = useState<string>("male");
   const [loading,    setLoading]    = useState(true);
+  const [showReset,  setShowReset]  = useState(false);
   const [setLogs,        setSetLogs]        = useState<Record<string, SetLog[]>>({});
   const [expandedEx,     setExpandedEx]     = useState<string | null>(null);
   const [completed,      setCompleted]      = useState(false);
@@ -253,7 +264,7 @@ export default function TrainPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("training_program, training_prs, training_progress, current_weight_lbs, gender")
+      .select("training_program, training_prs, training_progress, current_weight_lbs, gender, pr_mode_enabled")
       .eq("id", user.id)
       .single();
 
@@ -264,6 +275,16 @@ export default function TrainPage() {
     if (profile?.training_progress)  setProgress(profile.training_progress as Record<string, { weight: number }>);
     if (profile?.current_weight_lbs) setBodyweight(profile.current_weight_lbs as number);
     if (profile?.gender)             setGender(profile.gender as string);
+    if (profile?.pr_mode_enabled)    setPrModeEnabled(true);
+
+    // Load personal records for PR mode
+    const { data: prRows } = await supabase.from("personal_records")
+      .select("exercise_name, weight_lbs").eq("user_id", user.id);
+    if (prRows?.length) {
+      const map: Record<string, number> = {};
+      prRows.forEach((r: any) => { map[r.exercise_name] = Number(r.weight_lbs); });
+      setPersonalRecords(map);
+    }
 
     try {
       const saved = localStorage.getItem(todayKey());
@@ -386,6 +407,33 @@ export default function TrainPage() {
 
   return (
     <div className="space-y-4">
+      {/* Reset confirmation */}
+      {showReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6">
+          <div className="glass widget-shadow rounded-2xl p-5 w-full max-w-sm space-y-4">
+            <p className="font-semibold">Reset Program?</p>
+            <p className="text-sm text-muted-foreground">
+              This will restart the program from Week 1 and clear all weight progression. Your program structure stays the same.
+            </p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowReset(false)}
+                className="flex-1 h-11 rounded-xl glass font-medium text-sm press">Cancel</button>
+              <button type="button"
+                onClick={() => {
+                  startTransition(async () => {
+                    await resetProgram();
+                    setShowReset(false);
+                    await load();
+                  });
+                }}
+                className="flex-1 h-11 rounded-xl bg-rose-500 text-white font-semibold text-sm press">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Training</h1>
@@ -396,9 +444,17 @@ export default function TrainPage() {
             </p>
           )}
         </div>
-        <Link href="/train/setup" className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
-          Change
-        </Link>
+        <div className="flex items-center gap-2">
+          {program && (
+            <button type="button" onClick={() => setShowReset(true)}
+              className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
+              Reset ↺
+            </button>
+          )}
+          <Link href="/train/programs" className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
+            Programs
+          </Link>
+        </div>
       </div>
 
       {loading && (
@@ -519,6 +575,8 @@ export default function TrainPage() {
               suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
               isManual={isManual}
               prevData={prevSession[ex.name]}
+              prLbs={personalRecords[ex.name]}
+              prModeEnabled={prModeEnabled}
             />
           ))}
 
