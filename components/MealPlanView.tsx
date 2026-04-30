@@ -276,27 +276,13 @@ export default function MealPlanView({
             <span className="text-muted-foreground/30">·</span>
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground capitalize">{phase}</span>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Mode pill */}
-            <div className="flex p-0.5 bg-foreground/5 rounded-full">
-              <button type="button" onClick={() => setModeAndStore("auto")}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${mode === "auto" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
-                Auto
-              </button>
-              <button type="button" onClick={() => setModeAndStore("custom")}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${mode === "custom" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
-                Custom
-              </button>
-            </div>
-            {/* Settings */}
-            <button type="button" onClick={() => setSheetOpen(true)}
-              className="p-1.5 rounded-full glass widget-shadow press text-muted-foreground">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          </div>
+          <button type="button" onClick={() => setSheetOpen(true)}
+            className="p-1.5 rounded-full glass widget-shadow press text-muted-foreground">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
         </div>
 
         {/* ── Auto empty state ── */}
@@ -317,83 +303,6 @@ export default function MealPlanView({
 
         {showDiary && (
           <>
-            {/* ── Week + day strip ── */}
-            <div className="glass widget-shadow rounded-2xl p-3 space-y-2">
-              {/* Week navigation */}
-              <div className="flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  disabled={selectedWeek <= 1}
-                  onClick={() => setSelectedWeek((w) => Math.max(1, w - 1))}
-                  className="p-1 press disabled:opacity-30 text-muted-foreground"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
-                  </svg>
-                </button>
-                <p className="text-xs font-semibold text-muted-foreground">
-                  Week {selectedWeek}
-                  {selectedWeek === weekNumber && <span className="text-primary"> · Current</span>}
-                </p>
-                <button
-                  type="button"
-                  disabled={selectedWeek >= totalWeeks}
-                  onClick={() => setSelectedWeek((w) => Math.min(totalWeeks, w + 1))}
-                  className="p-1 press disabled:opacity-30 text-muted-foreground"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Day pills */}
-              <div className="grid grid-cols-7 gap-1">
-                {DAYS_SHORT.map((label, d) => {
-                  const isToday    = d === todayDow && selectedWeek === weekNumber;
-                  const isSelected = d === selectedDow;
-                  const isCheat    = d === cheatDay;
-                  const hasMeals   = (byWeekDay[selectedWeek]?.[d]?.length ?? 0) > 0;
-
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setSelectedDow(d)}
-                      className="flex flex-col items-center gap-1 py-1.5 press rounded-xl"
-                    >
-                      <span className={`text-[10px] font-semibold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                        {label}
-                      </span>
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                        isSelected && isToday   ? "bg-primary" :
-                        isSelected             ? "bg-foreground/10 ring-1 ring-primary" :
-                        isToday                ? "ring-1 ring-primary/50" : ""
-                      }`}>
-                        {isCheat ? (
-                          <span className="text-[11px] leading-none">🍕</span>
-                        ) : (
-                          <span className={`text-xs font-bold ${
-                            isSelected && isToday ? "text-primary-foreground" :
-                            isToday              ? "text-primary" :
-                            isSelected           ? "text-foreground" : "text-muted-foreground"
-                          }`}>
-                            {d + 1}
-                          </span>
-                        )}
-                      </div>
-                      {/* Dot: has meals */}
-                      <div className={`w-1 h-1 rounded-full transition-all ${
-                        hasMeals && !isCheat
-                          ? isSelected ? "bg-primary" : "bg-foreground/25"
-                          : "opacity-0"
-                      }`} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* ── Macro progress card (today only) ── */}
             {isViewingToday && cheatDay !== selectedDow && (
               <div className="glass widget-shadow rounded-2xl p-4 space-y-3">

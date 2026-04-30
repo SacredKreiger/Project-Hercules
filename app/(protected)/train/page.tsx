@@ -472,35 +472,38 @@ export default function TrainPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/train/programs"
-            className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
-            Programs
-          </Link>
-          {program && (
-            <div className="relative" ref={overflowRef}>
-              <button
-                type="button"
-                onClick={() => setShowOverflow((v) => !v)}
-                className="w-8 h-8 flex items-center justify-center glass rounded-full press text-muted-foreground"
-                aria-label="More options"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
-                </svg>
-              </button>
-              {showOverflow && (
-                <div className="absolute right-0 top-10 z-40 glass widget-shadow rounded-xl overflow-hidden min-w-[140px]">
+          <div className="relative" ref={overflowRef}>
+            <button
+              type="button"
+              onClick={() => setShowOverflow((v) => !v)}
+              className="w-8 h-8 flex items-center justify-center glass rounded-full press text-muted-foreground"
+              aria-label="More options"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+              </svg>
+            </button>
+            {showOverflow && (
+              <div className="absolute right-0 top-10 z-40 glass widget-shadow rounded-xl overflow-hidden min-w-[160px]">
+                <Link
+                  href="/train/programs"
+                  onClick={() => setShowOverflow(false)}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground press active:bg-foreground/5"
+                >
+                  <span>📋</span> My Programs
+                </Link>
+                {program && (
                   <button
                     type="button"
                     onClick={() => { setShowOverflow(false); setShowReset(true); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-rose-500 press active:bg-foreground/5 text-left"
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-rose-500 press active:bg-foreground/5 text-left border-t border-border/40"
                   >
                     <span>↺</span> Reset program
                   </button>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
