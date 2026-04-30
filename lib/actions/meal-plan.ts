@@ -125,8 +125,17 @@ async function generatePlan(config: PlanConfig) {
   const byType: Record<string, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [], shake: [] };
   for (const r of finalRecipes) byType[r.meal_type]?.push(r);
 
-  // Delete the entire month plan for this user before regenerating
-  await supabase.from("meal_plans").delete().eq("user_id", userId);
+  // Only delete unlocked entries so locked meals are preserved
+  await supabase.from("meal_plans").delete().eq("user_id", userId).eq("locked", false);
+
+  const { data: lockedRows } = await supabase
+    .from("meal_plans")
+    .select("week_number, day_of_week, meal_slot")
+    .eq("user_id", userId)
+    .eq("locked", true);
+  const lockedSet = new Set(
+    (lockedRows ?? []).map((r) => `${r.week_number}-${r.day_of_week}-${r.meal_slot}`)
+  );
 
   const { slots, calSplit } = MEAL_CONFIG[mealsPerDay];
   const allEntries: any[] = [];
@@ -150,6 +159,7 @@ async function generatePlan(config: PlanConfig) {
         const isTraining = trainingDays.includes(dow);
         const calMultiplier = isTraining ? 1.0 : 0.85;
         for (const { slot, type } of slots) {
+          if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
           const pool = byType[type];
           if (!pool?.length) continue;
           const f = calSplit[slot] * calMultiplier;
@@ -192,6 +202,7 @@ async function generatePlan(config: PlanConfig) {
       for (let dow = 0; dow < 7; dow++) {
         const recipeSet = dow < switchDay ? setA : setB;
         for (const { slot } of slots) {
+          if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
           const recipe = recipeSet[slot];
           if (!recipe) continue;
           allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
@@ -336,4 +347,87 @@ export async function swapMealSlot(params: {
 
   if (updateError) return { error: updateError.message };
   return { error: null, newRecipeId: picked.id };
+}
+
+/**
+ * Directly assigns a specific recipe to a meal slot (manual pick).
+ * Sets locked = false (picking is separate from locking).
+ */
+export async function pickMealSlot(params: {
+  weekNumber: number;
+  dayOfWeek: number;
+  mealSlot: number;
+  recipeId: string;
+}): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase.from("meal_plans")
+    .update({ recipe_id: params.recipeId })
+    .eq("user_id", user.id)
+    .eq("week_number", params.weekNumber)
+    .eq("day_of_week", params.dayOfWeek)
+    .eq("meal_slot", params.mealSlot);
+
+  return { error: error?.message ?? null };
+}
+
+/**
+ * Toggles the locked flag on a meal slot.
+ * Locked meals are preserved when the plan is regenerated.
+ */
+export async function toggleMealLock(params: {
+  weekNumber: number;
+  dayOfWeek: number;
+  mealSlot: number;
+}): Promise<{ error: string | null; locked?: boolean }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: existing } = await supabase.from("meal_plans")
+    .select("locked")
+    .eq("user_id", user.id)
+    .eq("week_number", params.weekNumber)
+    .eq("day_of_week", params.dayOfWeek)
+    .eq("meal_slot", params.mealSlot)
+    .single();
+
+  const newLocked = !existing?.locked;
+  const { error } = await supabase.from("meal_plans")
+    .update({ locked: newLocked })
+    .eq("user_id", user.id)
+    .eq("week_number", params.weekNumber)
+    .eq("day_of_week", params.dayOfWeek)
+    .eq("meal_slot", params.mealSlot);
+
+  return { error: error?.message ?? null, locked: newLocked };
+}
+
+/**
+ * Searches the recipe library filtered by meal type and optional name query.
+ * Used by the recipe picker modal.
+ */
+export async function searchRecipes(params: {
+  mealType?: string;
+  query?: string;
+}): Promise<{ error: string | null; data: any[] }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated", data: [] };
+
+  let q = supabase.from("recipes")
+    .select("id, name, meal_type, cuisine, calories, protein_g, carbs_g, fat_g, tags")
+    .order("name");
+
+  if (params.mealType && params.mealType !== "all") {
+    q = q.eq("meal_type", params.mealType);
+  }
+  if (params.query?.trim()) {
+    q = q.ilike("name", `%${params.query.trim()}%`);
+  }
+
+  const { data, error } = await q.limit(100);
+  return { error: error?.message ?? null, data: data ?? [] };
 }

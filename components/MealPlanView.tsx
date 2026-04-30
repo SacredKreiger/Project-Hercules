@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import ReconfigureSheet from "@/components/ReconfigureSheet";
 import { CAL_SPLIT, getServingsMultiplier, scaleMacro } from "@/lib/meal-scaling";
 import { computeExactPortions } from "@/lib/portion-calc";
-import { swapMealSlot } from "@/lib/actions/meal-plan";
+import { swapMealSlot, pickMealSlot, toggleMealLock, searchRecipes } from "@/lib/actions/meal-plan";
 
 const DAYS       = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -55,6 +55,7 @@ type MealEntry = {
   week_number: number;
   day_of_week: number;
   meal_slot: number;
+  locked?: boolean;
   recipes: Recipe | null;
 };
 
@@ -105,6 +106,15 @@ export default function MealPlanView({
   const [checkedIngredients, setCheckedIngredients]   = useState<Record<string, number[]>>({});
   const [eatenIds, setEatenIds] = useState<Set<string>>(new Set());
   const [swappingId, setSwappingId] = useState<string | null>(null);
+  const [pickerFor, setPickerFor] = useState<{
+    weekNumber: number; dayOfWeek: number; mealSlot: number; mealType: string;
+  } | null>(null);
+  const [pickerRecipes, setPickerRecipes] = useState<any[]>([]);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerTab, setPickerTab] = useState("all");
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const [lockingId, setLockingId] = useState<string | null>(null);
+  const [buildDayOpen, setBuildDayOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -159,6 +169,20 @@ export default function MealPlanView({
     });
   }
 
+  useEffect(() => {
+    if (!pickerFor) return;
+    const timeout = setTimeout(async () => {
+      setPickerLoading(true);
+      const { data } = await searchRecipes({
+        mealType: pickerTab === "all" ? undefined : pickerTab,
+        query: pickerQuery,
+      });
+      setPickerRecipes(data);
+      setPickerLoading(false);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [pickerQuery, pickerTab, pickerFor]);
+
   // ── Data grouping ──────────────────────────────────────────────────────────
   // byWeekDay[week][dow] = MealEntry[]
   const byWeekDay: Record<number, Record<number, MealEntry[]>> = {};
@@ -178,25 +202,41 @@ export default function MealPlanView({
     return Math.round(base * (isRest ? 0.85 : 1.0));
   }
 
+  function getMealType(slot: number): string {
+    const label = SLOT_LABELS[mealsPerDay]?.[slot] ?? "";
+    if (label.includes("Breakfast")) return "breakfast";
+    if (label.includes("Lunch")) return "lunch";
+    if (label.includes("Dinner")) return "dinner";
+    return "snack";
+  }
+
+  async function openPicker(weekNumber: number, dayOfWeek: number, mealSlot: number) {
+    const mealType = getMealType(mealSlot);
+    setPickerFor({ weekNumber, dayOfWeek, mealSlot, mealType });
+    setPickerQuery("");
+    setPickerTab(mealType);
+    setPickerLoading(true);
+    const { data } = await searchRecipes({ mealType });
+    setPickerRecipes(data);
+    setPickerLoading(false);
+  }
+
   function MealRow({ entry }: { entry: MealEntry }) {
     const isRestDay = !trainingDays.includes(entry.day_of_week);
     const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
     const fraction = (split[entry.meal_slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
     const base = dailyMacros ?? { calories: dailyCalories, protein: 0, carbs: 0, fat: 0 };
-    // Show slot TARGETS — the exact portions solver always hits these values
     const slotCal  = Math.round(base.calories * fraction);
     const slotProt = Math.round(base.protein  * fraction);
     const slotCarb = Math.round(base.carbs    * fraction);
     const isEaten = eatenIds.has(entry.id);
     const isToday = selectedWeek === weekNumber && selectedDow === todayDow;
+    const isLocked = entry.locked ?? false;
+
     return (
       <div className="flex items-center">
         {isToday && (
-          <button
-            type="button"
-            onClick={() => toggleEaten(entry.id)}
-            className="shrink-0 ml-4 mr-0"
-          >
+          <button type="button" onClick={() => toggleEaten(entry.id)} className="shrink-0 ml-4 mr-0">
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
               isEaten ? "border-primary bg-primary" : "border-border"
             }`}>
@@ -223,21 +263,42 @@ export default function MealPlanView({
             <p className="text-xs text-muted-foreground">{slotProt}g P · {slotCarb}g C</p>
           </div>
         </button>
+
+        {/* Lock button */}
+        <button
+          type="button"
+          disabled={lockingId === entry.id}
+          onClick={async (e) => {
+            e.stopPropagation();
+            setLockingId(entry.id);
+            await toggleMealLock({ weekNumber: entry.week_number, dayOfWeek: entry.day_of_week, mealSlot: entry.meal_slot });
+            router.refresh();
+            setLockingId(null);
+          }}
+          className={`shrink-0 press transition-colors p-1 ${isLocked ? "text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
+          title={isLocked ? "Locked — won't change on regenerate" : "Lock this meal"}
+        >
+          {isLocked ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M18 10h-1V7A5 5 0 0 0 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v3H9V7zm3 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+            </svg>
+          )}
+        </button>
+
+        {/* Swap → opens picker */}
         <button
           type="button"
           onClick={async (e) => {
             e.stopPropagation();
-            setSwappingId(entry.id);
-            await swapMealSlot({
-              weekNumber: entry.week_number,
-              dayOfWeek: entry.day_of_week,
-              mealSlot: entry.meal_slot,
-              currentRecipeId: entry.recipes?.id ?? "",
-            });
-            router.refresh();
+            await openPicker(entry.week_number, entry.day_of_week, entry.meal_slot);
           }}
           className="shrink-0 mr-4 press text-muted-foreground active:text-primary transition-colors"
-          title="Swap meal"
+          title="Pick a meal"
         >
           <svg
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -389,6 +450,15 @@ export default function MealPlanView({
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setBuildDayOpen(true)}
+              className="w-full h-10 rounded-2xl border border-dashed border-border text-xs font-semibold text-muted-foreground press flex items-center justify-center gap-2"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Build My Day
+            </button>
 
             <DayCard
               dow={selectedDow}
@@ -543,6 +613,131 @@ export default function MealPlanView({
         savedCuisines={savedCuisines}
         savedRestrictions={savedRestrictions}
       />
+
+      {/* ── Recipe Picker Modal ── */}
+      {pickerFor && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
+          <div className="flex items-center gap-3 px-4 pt-6 pb-3 border-b border-border">
+            <button type="button" onClick={() => setPickerFor(null)} className="press text-muted-foreground text-sm">Cancel</button>
+            <h2 className="flex-1 text-center font-semibold text-sm">Pick a Meal</h2>
+            <button
+              type="button"
+              onClick={async () => {
+                setSwappingId("picker");
+                await swapMealSlot({
+                  weekNumber: pickerFor.weekNumber,
+                  dayOfWeek: pickerFor.dayOfWeek,
+                  mealSlot: pickerFor.mealSlot,
+                  currentRecipeId: "",
+                });
+                setPickerFor(null);
+                setSwappingId(null);
+                router.refresh();
+              }}
+              className="text-xs font-semibold text-primary press"
+            >
+              Auto
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 px-4 py-2 overflow-x-auto hide-scrollbar border-b border-border">
+            {["all", "breakfast", "lunch", "dinner", "snack"].map((t) => (
+              <button key={t} type="button" onClick={() => setPickerTab(t)}
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium press transition-colors capitalize ${t === pickerTab ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-muted-foreground"}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="px-4 py-2">
+            <input
+              type="text"
+              placeholder="Search recipes…"
+              value={pickerQuery}
+              onChange={(e) => setPickerQuery(e.target.value)}
+              className="w-full bg-foreground/5 rounded-xl h-10 px-4 text-sm outline-none focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+
+          {/* Recipe list */}
+          <div className="flex-1 overflow-y-auto px-4 space-y-1.5 pb-8">
+            {pickerLoading ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Loading…</div>
+            ) : pickerRecipes.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">No recipes found.</div>
+            ) : (
+              pickerRecipes.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={async () => {
+                    await pickMealSlot({ weekNumber: pickerFor.weekNumber, dayOfWeek: pickerFor.dayOfWeek, mealSlot: pickerFor.mealSlot, recipeId: r.id });
+                    setPickerFor(null);
+                    router.refresh();
+                  }}
+                  className="w-full text-left flex items-center justify-between px-4 py-3 glass rounded-2xl press"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{r.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{r.cuisine} · {r.meal_type}</p>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-sm font-semibold tabular-nums">{r.calories} kcal</p>
+                    <p className="text-xs text-muted-foreground">{r.protein_g}g P</p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Build My Day Sheet ── */}
+      {buildDayOpen && (
+        <div className="fixed inset-0 z-40 flex items-end" onClick={() => setBuildDayOpen(false)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative w-full max-h-[75dvh] overflow-y-auto glass rounded-t-3xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 glass rounded-t-3xl px-5 pt-5 pb-3 border-b border-border/40">
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-base">Build My Day</h2>
+                <button onClick={() => setBuildDayOpen(false)} className="text-muted-foreground press p-1">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{DAYS[selectedDow]} · Week {selectedWeek} — tap a slot to pick a meal</p>
+            </div>
+            <div className="px-5 py-4 space-y-2 pb-8">
+              {(byWeekDay[selectedWeek]?.[selectedDow] ?? [])
+                .sort((a, b) => a.meal_slot - b.meal_slot)
+                .map((entry) => (
+                  <div key={entry.id} className="glass rounded-2xl flex items-center gap-3 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{SLOT_LABELS[mealsPerDay]?.[entry.meal_slot] ?? "Meal"}</p>
+                      <p className="text-sm font-semibold mt-0.5 truncate">{entry.recipes?.name ?? "—"}</p>
+                      {entry.locked && <p className="text-[10px] text-primary mt-0.5">🔒 Locked</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setBuildDayOpen(false);
+                        await openPicker(entry.week_number, entry.day_of_week, entry.meal_slot);
+                      }}
+                      className="shrink-0 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold press"
+                    >
+                      Change
+                    </button>
+                  </div>
+                ))}
+              {(byWeekDay[selectedWeek]?.[selectedDow] ?? []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-8">No meals planned for this day.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Recipe detail sheet ── */}
       {selected && (
