@@ -44,6 +44,7 @@ const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const STORAGE_KEY = "hc-meal-config";
 
 type Config = {
+  mode: "auto" | "custom";
   mealsPerDay: 3 | 4 | 5;
   prepStyle: "daily" | "batch_weekly" | "batch_biweekly" | "repeat_daily";
   mixAll: boolean;
@@ -53,6 +54,7 @@ type Config = {
 };
 
 const DEFAULT_CONFIG: Config = {
+  mode: "auto",
   mealsPerDay: 4,
   prepStyle: "daily",
   mixAll: false,
@@ -77,12 +79,13 @@ export default function ReconfigureSheet({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  const [mode, setMode]             = useState<"auto" | "custom">(DEFAULT_CONFIG.mode);
   const [mealsPerDay, setMealsPerDay] = useState<3 | 4 | 5>(DEFAULT_CONFIG.mealsPerDay);
-  const [prepStyle, setPrepStyle] = useState<Config["prepStyle"]>(DEFAULT_CONFIG.prepStyle);
-  const [mixAll, setMixAll] = useState(false);
-  const [cheatDay, setCheatDay] = useState<number | null>(null);
+  const [prepStyle, setPrepStyle]   = useState<Config["prepStyle"]>(DEFAULT_CONFIG.prepStyle);
+  const [mixAll, setMixAll]         = useState(false);
+  const [cheatDay, setCheatDay]     = useState<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [cuisines, setCuisines] = useState<Set<string>>(new Set(savedCuisines));
+  const [cuisines, setCuisines]     = useState<Set<string>>(new Set(savedCuisines));
   const [restrictions, setRestrictions] = useState<Set<string>>(new Set(savedRestrictions));
 
   // Load persisted config from localStorage
@@ -91,6 +94,7 @@ export default function ReconfigureSheet({
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: Config = JSON.parse(raw);
+        setMode(saved.mode ?? "auto");
         setMealsPerDay(saved.mealsPerDay ?? DEFAULT_CONFIG.mealsPerDay);
         setPrepStyle(saved.prepStyle ?? DEFAULT_CONFIG.prepStyle);
         setMixAll(saved.mixAll ?? false);
@@ -122,8 +126,8 @@ export default function ReconfigureSheet({
     });
   }
 
-  function handleBuild() {
-    if (!mixAll && cuisines.size === 0) {
+  function handleSave() {
+    if (mode === "auto" && !mixAll && cuisines.size === 0) {
       setError("Pick at least one cuisine or use Mix it up.");
       return;
     }
@@ -131,12 +135,19 @@ export default function ReconfigureSheet({
 
     // Persist to localStorage
     const config: Config = {
-      mealsPerDay, prepStyle,
+      mode, mealsPerDay, prepStyle,
       mixAll, cuisines: [...cuisines], restrictions: [...restrictions],
       cheatDay,
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch {}
 
+    // Custom mode: just save settings and close — user picks meals themselves
+    if (mode === "custom") {
+      onClose();
+      return;
+    }
+
+    // Auto mode: generate the full plan
     const fd = new FormData();
     fd.append("meals_per_day", String(mealsPerDay));
     fd.append("prep_style", prepStyle);
@@ -195,43 +206,36 @@ export default function ReconfigureSheet({
             <p className="text-sm text-destructive glass rounded-2xl px-4 py-3">{error}</p>
           )}
 
-          {/* ── Prep Style ── */}
+          {/* ── Auto / Custom ── */}
           <div className="space-y-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Prep Style</p>
-              <p className="text-xs text-muted-foreground mt-0.5">How do you want to structure your cooking?</p>
-            </div>
-            <div className="space-y-2">
-              {PREP_STYLES.map((s) => {
-                const active = prepStyle === s.value;
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">How do you want to manage meals?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: "auto",   icon: "⚡", label: "Auto",   desc: "App builds and picks your meals." },
+                { value: "custom", icon: "✏️", label: "Custom", desc: "You pick every meal yourself." },
+              ] as const).map((opt) => {
+                const active = mode === opt.value;
                 return (
                   <button
-                    key={s.value}
+                    key={opt.value}
                     type="button"
-                    onClick={() => setPrepStyle(s.value as Config["prepStyle"])}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all press ${
-                      active
-                        ? "border-primary bg-primary/10"
-                        : "border-border glass hover:border-foreground/20"
+                    onClick={() => setMode(opt.value)}
+                    className={`flex flex-col items-start gap-2 p-4 rounded-2xl border text-left transition-all press ${
+                      active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
                     }`}
                   >
-                    <span className="text-2xl shrink-0">{s.icon}</span>
+                    <span className="text-xl">{opt.icon}</span>
                     <div>
-                      <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{s.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                      <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{opt.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
                     </div>
-                    {active && (
-                      <svg className="ml-auto shrink-0 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* ── Meals per Day ── */}
+          {/* ── Meals per Day (both modes) ── */}
           <div className="space-y-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Meals per Day</p>
@@ -247,9 +251,7 @@ export default function ReconfigureSheet({
                     type="button"
                     onClick={() => setMealsPerDay(n)}
                     className={`flex flex-col items-center py-3.5 rounded-2xl border transition-all press ${
-                      active
-                        ? "border-primary bg-primary/10"
-                        : "border-border glass hover:border-foreground/20"
+                      active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
                     }`}
                   >
                     <span className={`text-xl font-bold ${active ? "text-primary" : ""}`}>{n}</span>
@@ -260,78 +262,111 @@ export default function ReconfigureSheet({
             </div>
           </div>
 
-          {/* ── Cuisines ── */}
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cuisines</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {mixAll ? "Pulling from all available cuisines." : "Your plan pulls from these cuisines only."}
-                </p>
+          {/* ── Auto-only options ── */}
+          {mode === "auto" && (
+            <>
+              {/* Prep Style */}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Prep Style</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">How do you want to structure your cooking?</p>
+                </div>
+                <div className="space-y-2">
+                  {PREP_STYLES.map((s) => {
+                    const active = prepStyle === s.value;
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setPrepStyle(s.value as Config["prepStyle"])}
+                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all press ${
+                          active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
+                        }`}
+                      >
+                        <span className="text-2xl shrink-0">{s.icon}</span>
+                        <div>
+                          <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{s.label}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                        </div>
+                        {active && (
+                          <svg className="ml-auto shrink-0 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => { setMixAll((v) => !v); setCuisines(new Set()); }}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all press ${
-                  mixAll
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-muted-foreground hover:border-foreground/20"
-                }`}
-              >
-                Mix it up
-              </button>
-            </div>
-            {!mixAll && (
-              <div className="flex flex-wrap gap-2">
-                {CUISINES.map((c) => {
-                  const active = cuisines.has(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => toggleCuisine(c)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all press ${
-                        active
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border text-muted-foreground hover:border-foreground/20"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
-          {/* ── Dietary Restrictions ── */}
-          <div className="space-y-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Dietary Restrictions</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Optional — we filter your recipes automatically.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {RESTRICTIONS.map(({ value, label }) => {
-                const active = restrictions.has(value);
-                return (
+              {/* Cuisines */}
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cuisines</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {mixAll ? "Pulling from all available cuisines." : "Your plan pulls from these cuisines only."}
+                    </p>
+                  </div>
                   <button
-                    key={value}
                     type="button"
-                    onClick={() => toggleRestriction(value)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all press ${
-                      active
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border text-muted-foreground hover:border-foreground/20"
+                    onClick={() => { setMixAll((v) => !v); setCuisines(new Set()); }}
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all press ${
+                      mixAll ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-foreground/20"
                     }`}
                   >
-                    {label}
+                    Mix it up
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+                {!mixAll && (
+                  <div className="flex flex-wrap gap-2">
+                    {CUISINES.map((c) => {
+                      const active = cuisines.has(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => toggleCuisine(c)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all press ${
+                            active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-foreground/20"
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
-          {/* ── Advanced Options ── */}
+              {/* Dietary Restrictions */}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Dietary Restrictions</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Optional — we filter your recipes automatically.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {RESTRICTIONS.map(({ value, label }) => {
+                    const active = restrictions.has(value);
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => toggleRestriction(value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all press ${
+                          active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-foreground/20"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── Advanced Options (both modes) ── */}
           <div className="space-y-3">
             <button
               type="button"
@@ -356,39 +391,37 @@ export default function ReconfigureSheet({
             {showAdvanced && (
               <div className="space-y-6 pt-1">
 
-                {/* Same Every Day */}
-                <div className="space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Repeat Style</p>
-                  {(() => {
-                    const s = { value: "repeat_daily", icon: "🔁", label: "Same Every Day", desc: "Pick your meals once. Eat the same thing all week." };
-                    const active = prepStyle === s.value;
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => setPrepStyle(active ? "daily" : "repeat_daily")}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all press ${
-                          active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
-                        }`}
-                      >
-                        <span className="text-2xl shrink-0">{s.icon}</span>
-                        <div>
-                          <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{s.label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
-                        </div>
-                        {active && (
-                          <svg className="ml-auto shrink-0 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })()}
-                  {prepStyle === "repeat_daily" && (
-                    <p className="text-xs text-muted-foreground px-1">Switching back to a different prep style above will disable this.</p>
-                  )}
-                </div>
+                {/* Same Every Day (Auto only) */}
+                {mode === "auto" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Repeat Style</p>
+                    {(() => {
+                      const active = prepStyle === "repeat_daily";
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setPrepStyle(active ? "daily" : "repeat_daily")}
+                          className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all press ${
+                            active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
+                          }`}
+                        >
+                          <span className="text-2xl shrink-0">🔁</span>
+                          <div>
+                            <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>Same Every Day</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Pick your meals once. Eat the same thing all week.</p>
+                          </div>
+                          {active && (
+                            <svg className="ml-auto shrink-0 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })()}
+                  </div>
+                )}
 
-                {/* Cheat Day */}
+                {/* Cheat Day (both modes) */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cheat Day</p>
@@ -399,7 +432,7 @@ export default function ReconfigureSheet({
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground px-1">One day a week — no meals planned, no tracking. Tap to set, tap again to remove.</p>
+                  <p className="text-xs text-muted-foreground px-1">One day a week — no meals, no tracking. Enjoy it.</p>
                   <div className="grid grid-cols-7 gap-1.5">
                     {DAY_LABELS.map((label, d) => {
                       const active = cheatDay === d;
@@ -409,9 +442,7 @@ export default function ReconfigureSheet({
                           type="button"
                           onClick={() => setCheatDay(active ? null : d)}
                           className={`flex flex-col items-center py-2.5 rounded-xl border text-xs font-semibold transition-all press ${
-                            active
-                              ? "border-rose-500 bg-rose-500 text-white"
-                              : "border-border glass text-muted-foreground hover:border-foreground/20"
+                            active ? "border-rose-500 bg-rose-500 text-white" : "border-border glass text-muted-foreground hover:border-foreground/20"
                           }`}
                         >
                           {label}
@@ -421,7 +452,7 @@ export default function ReconfigureSheet({
                   </div>
                   {cheatDay !== null && (
                     <p className="text-xs text-muted-foreground px-1">
-                      🍕 {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cheatDay]} — free day, no plan generated.
+                      🍕 {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cheatDay]} — free day.
                     </p>
                   )}
                 </div>
@@ -433,8 +464,8 @@ export default function ReconfigureSheet({
           {/* ── CTA ── */}
           <button
             type="button"
-            disabled={isPending || (!mixAll && cuisines.size === 0)}
-            onClick={handleBuild}
+            disabled={isPending || (mode === "auto" && !mixAll && cuisines.size === 0)}
+            onClick={handleSave}
             className="w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-sm press disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
           >
             {isPending ? (
@@ -442,7 +473,7 @@ export default function ReconfigureSheet({
                 <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 Building your plan…
               </>
-            ) : "Build My Plan →"}
+            ) : mode === "auto" ? "Build My Plan →" : "Save Settings →"}
           </button>
 
         </div>

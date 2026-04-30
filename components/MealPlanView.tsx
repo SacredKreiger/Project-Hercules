@@ -270,53 +270,34 @@ export default function MealPlanView({
       <div className="space-y-5">
 
         {/* ── Header ── */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Meal Plan</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Week {weekNumber} · <span className="capitalize">{phase}</span> phase
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Week {weekNumber}</span>
+            <span className="text-muted-foreground/30">·</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground capitalize">{phase}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            className="shrink-0 p-2 rounded-full glass widget-shadow press text-muted-foreground mt-0.5"
-            title="Settings"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Mode pill */}
+            <div className="flex p-0.5 bg-foreground/5 rounded-full">
+              <button type="button" onClick={() => setModeAndStore("auto")}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${mode === "auto" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
+                Auto
+              </button>
+              <button type="button" onClick={() => setModeAndStore("custom")}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${mode === "custom" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
+                Custom
+              </button>
+            </div>
+            {/* Settings */}
+            <button type="button" onClick={() => setSheetOpen(true)}
+              className="p-1.5 rounded-full glass widget-shadow press text-muted-foreground">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
         </div>
-
-        {/* ── Mode toggle ── */}
-        <div className="flex p-1 bg-foreground/5 rounded-xl">
-          <button
-            type="button"
-            onClick={() => setModeAndStore("auto")}
-            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              mode === "auto" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Auto
-          </button>
-          <button
-            type="button"
-            onClick={() => setModeAndStore("custom")}
-            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              mode === "custom" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Custom
-          </button>
-        </div>
-        {mode === "auto" && (
-          <p className="text-xs text-muted-foreground -mt-2 px-1">App picks your meals. Tap ↻ to swap any meal instantly.</p>
-        )}
-        {mode === "custom" && (
-          <p className="text-xs text-muted-foreground -mt-2 px-1">You choose every meal. Tap ↻ to change, + to add.</p>
-        )}
 
         {/* ── Auto empty state ── */}
         {isEmpty && mode === "auto" && (
