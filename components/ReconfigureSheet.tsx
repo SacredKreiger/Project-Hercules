@@ -46,7 +46,6 @@ const STORAGE_KEY = "hc-meal-config";
 type Config = {
   mealsPerDay: 3 | 4 | 5;
   prepStyle: "daily" | "batch_weekly" | "batch_biweekly" | "repeat_daily";
-  trainingDays: number[];
   mixAll: boolean;
   cuisines: string[];
   restrictions: string[];
@@ -56,7 +55,6 @@ type Config = {
 const DEFAULT_CONFIG: Config = {
   mealsPerDay: 4,
   prepStyle: "daily",
-  trainingDays: [1, 2, 3, 4, 5],
   mixAll: false,
   cuisines: [],
   restrictions: [],
@@ -81,7 +79,6 @@ export default function ReconfigureSheet({
 
   const [mealsPerDay, setMealsPerDay] = useState<3 | 4 | 5>(DEFAULT_CONFIG.mealsPerDay);
   const [prepStyle, setPrepStyle] = useState<Config["prepStyle"]>(DEFAULT_CONFIG.prepStyle);
-  const [trainingDays, setTrainingDays] = useState<number[]>(DEFAULT_CONFIG.trainingDays);
   const [mixAll, setMixAll] = useState(false);
   const [cheatDay, setCheatDay] = useState<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -96,7 +93,6 @@ export default function ReconfigureSheet({
         const saved: Config = JSON.parse(raw);
         setMealsPerDay(saved.mealsPerDay ?? DEFAULT_CONFIG.mealsPerDay);
         setPrepStyle(saved.prepStyle ?? DEFAULT_CONFIG.prepStyle);
-        setTrainingDays(saved.trainingDays ?? DEFAULT_CONFIG.trainingDays);
         setMixAll(saved.mixAll ?? false);
         const savedCheatDay = saved.cheatDay ?? null;
         setCheatDay(savedCheatDay);
@@ -109,12 +105,6 @@ export default function ReconfigureSheet({
       }
     } catch {}
   }, []);
-
-  function toggleDay(d: number) {
-    setTrainingDays((prev) =>
-      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
-    );
-  }
 
   function toggleCuisine(c: string) {
     setCuisines((prev) => {
@@ -141,7 +131,7 @@ export default function ReconfigureSheet({
 
     // Persist to localStorage
     const config: Config = {
-      mealsPerDay, prepStyle, trainingDays,
+      mealsPerDay, prepStyle,
       mixAll, cuisines: [...cuisines], restrictions: [...restrictions],
       cheatDay,
     };
@@ -150,7 +140,6 @@ export default function ReconfigureSheet({
     const fd = new FormData();
     fd.append("meals_per_day", String(mealsPerDay));
     fd.append("prep_style", prepStyle);
-    trainingDays.forEach((d) => fd.append("training_days", String(d)));
     if (mixAll) {
       fd.append("mix", "true");
     } else {
@@ -265,33 +254,6 @@ export default function ReconfigureSheet({
                   >
                     <span className={`text-xl font-bold ${active ? "text-primary" : ""}`}>{n}</span>
                     <span className="text-[10px] text-muted-foreground mt-0.5 text-center px-1">{labels[n]}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Training Days ── */}
-          <div className="space-y-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Training Days</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Rest days get 15% fewer carbs automatically — no math needed.</p>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {DAY_LABELS.map((label, d) => {
-                const active = trainingDays.includes(d);
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => toggleDay(d)}
-                    className={`flex flex-col items-center py-2.5 rounded-xl border text-xs font-semibold transition-all press ${
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border glass text-muted-foreground hover:border-foreground/20"
-                    }`}
-                  >
-                    {label}
                   </button>
                 );
               })}

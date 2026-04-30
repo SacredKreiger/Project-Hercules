@@ -268,7 +268,8 @@ export async function reconfigureMealPlan(formData: FormData) {
   const restrictions = formData.getAll("restrictions") as string[];
   const mealsPerDay = (Number(formData.get("meals_per_day")) || 4) as 3 | 4 | 5;
   const prepStyle = (formData.get("prep_style") as PlanConfig["prepStyle"]) || "daily";
-  const trainingDays = formData.getAll("training_days").map(Number);
+  const trainingDaysRaw = formData.getAll("training_days").map(Number);
+  const trainingDays = trainingDaysRaw.length > 0 ? trainingDaysRaw : [0, 1, 2, 3, 4, 5, 6];
   const cheatDayRaw = formData.get("cheat_day") as string | null;
   const cheatDay: number | null = (cheatDayRaw && cheatDayRaw !== "none") ? Number(cheatDayRaw) : null;
 
