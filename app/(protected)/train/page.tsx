@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, useCallback } from "react";
+import { useEffect, useState, useTransition, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/Skeleton";
 import Link from "next/link";
@@ -247,14 +247,29 @@ export default function TrainPage() {
   const [gender,     setGender]     = useState<string>("male");
   const [loading,    setLoading]    = useState(true);
   const [showReset,  setShowReset]  = useState(false);
+  const [showOverflow, setShowOverflow] = useState(false);
   const [setLogs,        setSetLogs]        = useState<Record<string, SetLog[]>>({});
   const [expandedEx,     setExpandedEx]     = useState<string | null>(null);
   const [completed,      setCompleted]      = useState(false);
   const [workoutSummary, setWorkoutSummary] = useState<{ name: string; from: number; to: number }[]>([]);
   const [prevSession,    setPrevSession]    = useState<Record<string, { sets: number; weight: number; reps: string }>>({});
   const [, startTransition] = useTransition();
+  const overflowRef = useRef<HTMLDivElement>(null);
 
   const todayDow = new Date().getDay();
+  const [selectedDow, setSelectedDow] = useState<number>(todayDow);
+
+  // Close overflow menu on outside tap
+  useEffect(() => {
+    if (!showOverflow) return;
+    function handleClick(e: MouseEvent) {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+        setShowOverflow(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showOverflow]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -315,6 +330,15 @@ export default function TrainPage() {
   const weekDays = program
     ? (isV2(program) && activeInfo?.phase ? activeInfo.phase.days : (program as any).days ?? [])
     : [];
+
+  // Selected day's workout (may differ from today when tapping week strip)
+  const selectedDay = weekDays.find((d: any) => d.dayOfWeek === selectedDow) ?? null;
+  const isViewingToday = selectedDow === todayDow;
+
+  // Sets progress always refers to today's actual workout
+  const totalSets = todayDay?.exercises.reduce((acc, ex) => acc + ex.sets, 0) ?? 0;
+  const doneSets  = Object.values(setLogs).reduce((acc, sets) => acc + sets.filter((s) => s.completed).length, 0);
+  const allDone   = totalSets > 0 && doneSets >= totalSets;
 
   function handleLogSet(exercise: string, setNum: number, weight: number | null, reps: number | null) {
     setSetLogs((prev) => {
@@ -401,10 +425,6 @@ export default function TrainPage() {
     });
   }
 
-  const totalSets = todayDay?.exercises.reduce((acc, ex) => acc + ex.sets, 0) ?? 0;
-  const doneSets  = Object.values(setLogs).reduce((acc, sets) => acc + sets.filter((s) => s.completed).length, 0);
-  const allDone   = totalSets > 0 && doneSets >= totalSets;
-
   return (
     <div className="space-y-4">
       {/* Reset confirmation */}
@@ -434,26 +454,53 @@ export default function TrainPage() {
         </div>
       )}
 
-      <div className="flex items-start justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Training</h1>
-          {program && (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {program.name}
-              {activeInfo?.phase && ` · ${activeInfo.phase.name}`}
-            </p>
+          {program ? (
+            <>
+              <p className="text-xs text-muted-foreground font-medium">{program.name}</p>
+              {activeInfo?.weekInPhase != null && (
+                <p className="text-[11px] text-muted-foreground/70">
+                  Week {activeInfo.weekInPhase}{activeInfo.totalWeeks != null ? `/${activeInfo.totalWeeks}` : ""}
+                  {activeInfo?.phase && ` · ${activeInfo.phase.name}`}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm font-semibold">Training</p>
           )}
         </div>
         <div className="flex items-center gap-2">
-          {program && (
-            <button type="button" onClick={() => setShowReset(true)}
-              className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
-              Reset ↺
-            </button>
-          )}
-          <Link href="/train/programs" className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
+          <Link href="/train/programs"
+            className="text-xs text-muted-foreground press px-3 py-1.5 glass rounded-full">
             Programs
           </Link>
+          {program && (
+            <div className="relative" ref={overflowRef}>
+              <button
+                type="button"
+                onClick={() => setShowOverflow((v) => !v)}
+                className="w-8 h-8 flex items-center justify-center glass rounded-full press text-muted-foreground"
+                aria-label="More options"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                </svg>
+              </button>
+              {showOverflow && (
+                <div className="absolute right-0 top-10 z-40 glass widget-shadow rounded-xl overflow-hidden min-w-[140px]">
+                  <button
+                    type="button"
+                    onClick={() => { setShowOverflow(false); setShowReset(true); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-rose-500 press active:bg-foreground/5 text-left"
+                  >
+                    <span>↺</span> Reset program
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -475,43 +522,50 @@ export default function TrainPage() {
         </div>
       )}
 
-      {!loading && program && todayDay && (
+      {!loading && program && (
         <>
-          {/* Day summary + week strip */}
+          {/* ── Day card + week strip ── */}
           <div className="glass widget-shadow rounded-2xl p-4 space-y-4">
-            <div className="flex items-center justify-between">
+
+            {/* Hero: selected day name + sets progress */}
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">
-                  Today
-                  {activeInfo?.weekInPhase != null && (
-                    <span className="ml-2 text-muted-foreground normal-case tracking-normal font-medium">
-                      Week {activeInfo.weekInPhase}{activeInfo.totalWeeks != null ? `/${activeInfo.totalWeeks}` : ""}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xl font-bold">{todayDay.name}</p>
-                {activeInfo?.phase && (
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                    {activeInfo.phase.name}
-                    {activeInfo.phase.isDeload && (
-                      <span className="text-[10px] font-bold uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">Deload</span>
+                {selectedDay && !selectedDay.isRest ? (
+                  <>
+                    <p className="text-xl font-bold leading-tight">{selectedDay.name}</p>
+                    {activeInfo?.phase?.isDeload && isViewingToday && (
+                      <span className="mt-1 inline-block text-[10px] font-bold uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                        Deload
+                      </span>
                     )}
+                  </>
+                ) : (
+                  <p className="text-xl font-bold leading-tight text-muted-foreground">
+                    {selectedDay ? "Rest Day" : "No workout"}
                   </p>
                 )}
+                {!isViewingToday && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDow(todayDow)}
+                    className="mt-1.5 text-[11px] text-primary font-semibold press"
+                  >
+                    ← Back to today
+                  </button>
+                )}
               </div>
-              {todayDay.isRest ? (
-                <span className="text-2xl">😴</span>
-              ) : totalSets > 0 ? (
-                <div className="text-right">
-                  <p className="text-2xl font-bold tabular-nums">
+              {isViewingToday && todayDay && !todayDay.isRest && totalSets > 0 && (
+                <div className="text-right shrink-0">
+                  <p className="text-2xl font-bold tabular-nums leading-none">
                     {doneSets}<span className="text-base text-muted-foreground font-normal">/{totalSets}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">sets done</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">sets done</p>
                 </div>
-              ) : null}
+              )}
             </div>
 
-            {!todayDay.isRest && totalSets > 0 && (
+            {/* Progress bar — only when viewing today's live workout */}
+            {isViewingToday && todayDay && !todayDay.isRest && totalSets > 0 && (
               <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
                 <div className="h-full bg-primary rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (doneSets / totalSets) * 100)}%` }}
@@ -522,20 +576,36 @@ export default function TrainPage() {
             {/* Week strip */}
             <div className="flex gap-1">
               {Array.from({ length: 7 }).map((_, dow) => {
-                const day     = weekDays.find((d: any) => d.dayOfWeek === dow);
-                const isToday = dow === todayDow;
-                const isRest  = !day || day.isRest;
+                const day        = weekDays.find((d: any) => d.dayOfWeek === dow);
+                const isToday    = dow === todayDow;
+                const isSelected = dow === selectedDow;
+                const isRest     = !day || day.isRest;
+                const isTappable = !isRest;
+
                 return (
                   <div key={dow} className="flex-1 flex flex-col items-center gap-1">
-                    <span className={`text-[10px] font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                    <span className={`text-[10px] font-medium ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
                       {DOW_SHORT[dow]}
                     </span>
-                    <div className={`w-full max-w-[36px] aspect-square rounded-full flex items-center justify-center text-[9px] font-semibold transition-all ${
-                      isToday  ? "bg-primary text-primary-foreground"
-                      : isRest ? "bg-foreground/5 text-muted-foreground"
-                               : "bg-foreground/10 text-foreground"
-                    }`}>
-                      {isRest ? "–" : day?.name?.slice(0, 2)}
+                    <div className="relative w-full flex justify-center">
+                      <div
+                        role={isTappable ? "button" : undefined}
+                        tabIndex={isTappable ? 0 : undefined}
+                        onClick={isTappable ? () => setSelectedDow(dow) : undefined}
+                        onKeyDown={isTappable ? (e) => e.key === "Enter" && setSelectedDow(dow) : undefined}
+                        className={`w-full max-w-[36px] aspect-square rounded-full flex items-center justify-center text-[9px] font-semibold transition-all ${
+                          isSelected && !isRest ? "bg-primary text-primary-foreground"
+                          : isRest             ? "bg-foreground/5 text-muted-foreground"
+                          : isToday            ? "bg-foreground/15 text-foreground ring-1 ring-primary/50"
+                                               : "bg-foreground/10 text-foreground press cursor-pointer"
+                        }`}
+                      >
+                        {isRest ? "–" : day?.name?.slice(0, 2)}
+                      </div>
+                      {/* "Today" pip on today's dot when viewing a different day */}
+                      {isToday && !isSelected && !isRest && (
+                        <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                      )}
                     </div>
                   </div>
                 );
@@ -555,78 +625,79 @@ export default function TrainPage() {
             )}
           </div>
 
-          {todayDay.isRest && (
+          {/* ── Exercise list for selected day ── */}
+          {selectedDay?.isRest ? (
             <div className="glass widget-shadow rounded-2xl px-6 py-10 text-center space-y-2">
               <p className="text-3xl">😴</p>
               <p className="font-semibold">Rest Day</p>
               <p className="text-sm text-muted-foreground">Recover, hydrate, sleep well.</p>
             </div>
-          )}
+          ) : selectedDay ? (
+            <>
+              {selectedDay.exercises.map((ex: ExerciseConfig) => (
+                <ExerciseCard
+                  key={ex.name}
+                  exercise={ex}
+                  logs={isViewingToday ? (setLogs[ex.name] ?? []) : []}
+                  isExpanded={isViewingToday && expandedEx === ex.name}
+                  onToggle={() => isViewingToday && setExpandedEx((prev) => prev === ex.name ? null : ex.name)}
+                  onLogSet={(setNum, weight, reps) => isViewingToday && handleLogSet(ex.name, setNum, weight, reps)}
+                  onUnlogSet={(setNum) => isViewingToday && handleUnlogSet(ex.name, setNum)}
+                  suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
+                  isManual={isManual}
+                  prevData={prevSession[ex.name]}
+                  prLbs={personalRecords[ex.name]}
+                  prModeEnabled={prModeEnabled}
+                />
+              ))}
 
-          {!todayDay.isRest && todayDay.exercises.map((ex) => (
-            <ExerciseCard
-              key={ex.name}
-              exercise={ex}
-              logs={setLogs[ex.name] ?? []}
-              isExpanded={expandedEx === ex.name}
-              onToggle={() => setExpandedEx((prev) => prev === ex.name ? null : ex.name)}
-              onLogSet={(setNum, weight, reps) => handleLogSet(ex.name, setNum, weight, reps)}
-              onUnlogSet={(setNum) => handleUnlogSet(ex.name, setNum)}
-              suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
-              isManual={isManual}
-              prevData={prevSession[ex.name]}
-              prLbs={personalRecords[ex.name]}
-              prModeEnabled={prModeEnabled}
-            />
-          ))}
+              {isViewingToday && doneSets > 0 && !completed && (
+                <button type="button" onClick={handleCompleteWorkout}
+                  className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm press">
+                  {allDone ? "Complete Workout ✓" : `Finish Workout (${doneSets}/${totalSets} sets)`}
+                </button>
+              )}
 
-          {!todayDay.isRest && doneSets > 0 && !completed && (
-            <button type="button" onClick={handleCompleteWorkout}
-              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm press">
-              {allDone ? "Complete Workout ✓" : `Finish Workout (${doneSets}/${totalSets} sets)`}
-            </button>
-          )}
-
-          {completed && (
-            <div className="glass widget-shadow rounded-2xl px-5 py-5 space-y-3">
-              <div className="text-center">
-                <p className="text-emerald-500 font-semibold text-base">Workout Complete!</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{doneSets} sets · {new Date().toLocaleDateString("en-US", { weekday: "long" })}</p>
-              </div>
-              {workoutSummary.length > 0 && (
-                <div className="border-t border-border pt-3 space-y-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Going up next session</p>
-                  {workoutSummary.map(({ name, from, to }) => (
-                    <div key={name} className="flex items-center justify-between">
-                      <span className="text-xs text-foreground/80 truncate">{name}</span>
-                      <span className="text-xs font-semibold tabular-nums text-emerald-500">{from} → {to} lbs</span>
+              {isViewingToday && completed && (
+                <div className="glass widget-shadow rounded-2xl px-5 py-5 space-y-3">
+                  <div className="text-center">
+                    <p className="text-emerald-500 font-semibold text-base">Workout Complete!</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{doneSets} sets · {new Date().toLocaleDateString("en-US", { weekday: "long" })}</p>
+                  </div>
+                  {workoutSummary.length > 0 && (
+                    <div className="border-t border-border pt-3 space-y-1.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Going up next session</p>
+                      {workoutSummary.map(({ name, from, to }) => (
+                        <div key={name} className="flex items-center justify-between">
+                          <span className="text-xs text-foreground/80 truncate">{name}</span>
+                          <span className="text-xs font-semibold tabular-nums text-emerald-500">{from} → {to} lbs</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCompleted(false)}
+                    className="w-full text-center text-xs text-muted-foreground press mt-1"
+                  >
+                    Edit workout
+                  </button>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => setCompleted(false)}
-                className="w-full text-center text-xs text-muted-foreground press mt-1"
-              >
-                Edit workout
-              </button>
+            </>
+          ) : (
+            /* No workout scheduled on selected day */
+            <div className="glass widget-shadow rounded-2xl px-6 py-10 text-center space-y-2">
+              <p className="text-3xl">📅</p>
+              <p className="font-semibold">No workout {isViewingToday ? "today" : DOW_SHORT[selectedDow]}</p>
+              <p className="text-sm text-muted-foreground">
+                {isV2(program) && activeInfo?.phase
+                  ? `${activeInfo.phase.name} — rest day`
+                  : "Rest up and come back tomorrow."}
+              </p>
             </div>
           )}
         </>
-      )}
-
-      {/* No workout scheduled today but program exists */}
-      {!loading && program && !todayDay && (
-        <div className="glass widget-shadow rounded-2xl px-6 py-10 text-center space-y-2">
-          <p className="text-3xl">📅</p>
-          <p className="font-semibold">No workout today</p>
-          <p className="text-sm text-muted-foreground">
-            {isV2(program) && activeInfo?.phase
-              ? `${activeInfo.phase.name} — rest day`
-              : "Rest up and come back tomorrow."}
-          </p>
-        </div>
       )}
     </div>
   );
