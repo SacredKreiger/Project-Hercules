@@ -28,6 +28,66 @@ const STORES = [
 type StoreId = typeof STORES[number]["id"];
 const STORE_KEY = "hc-store-pref";
 
+// ─── Settings Sheet ────────────────────────────────────────────────────────────
+
+function GrocerySettingsSheet({
+  open,
+  onClose,
+  onRegenerate,
+  regenerating,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onRegenerate: () => void;
+  regenerating: boolean;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative w-full glass rounded-t-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Handle + header */}
+        <div className="px-6 pt-5 pb-4 border-b border-border/40">
+          <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">Grocery Settings</h2>
+            <button onClick={onClose} className="text-muted-foreground p-1 press">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 pt-5 pb-10 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Regenerate your grocery list based on your current meal plan.
+          </p>
+
+          <button
+            type="button"
+            onClick={onRegenerate}
+            disabled={regenerating}
+            className="w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold text-sm press disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              className={regenerating ? "animate-spin" : ""}>
+              <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+            </svg>
+            {regenerating ? "Rebuilding…" : "Regenerate List"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+
 export default function GroceryPage() {
   const [items,    setItems]   = useState<GroceryItem[]>([]);
   const [userId,   setUserId]  = useState<string | null>(null);
@@ -36,6 +96,7 @@ export default function GroceryPage() {
   const [regenerating,  setRegenerating]  = useState(false);
   const [store,         setStore]         = useState<StoreId>("walmart");
   const [storePicker,   setStorePicker]   = useState(false);
+  const [settingsOpen,  setSettingsOpen]  = useState(false);
   const [addOpen,       setAddOpen]       = useState(false);
   const [customName,    setCustomName]    = useState("");
   const [customQty,     setCustomQty]     = useState("1");
@@ -109,7 +170,10 @@ export default function GroceryPage() {
   async function handleRegenerate() {
     setRegenerating(true);
     const { error } = await regenerateGroceryList();
-    if (!error) await load();
+    if (!error) {
+      setSettingsOpen(false);
+      await load();
+    }
     setRegenerating(false);
   }
 
@@ -143,15 +207,14 @@ export default function GroceryPage() {
         <h1 className="text-2xl font-bold tracking-tight">Grocery List</h1>
         <button
           type="button"
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press disabled:opacity-50"
+          onClick={() => setSettingsOpen(true)}
+          className="flex items-center justify-center w-9 h-9 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all press"
+          aria-label="Grocery settings"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-            className={regenerating ? "animate-spin" : ""}>
-            <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-          {regenerating ? "Rebuilding..." : "Regenerate"}
         </button>
       </div>
 
@@ -404,6 +467,14 @@ export default function GroceryPage() {
           )}
         </div>
       )}
+
+      {/* Settings sheet */}
+      <GrocerySettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onRegenerate={handleRegenerate}
+        regenerating={regenerating}
+      />
     </div>
   );
 }

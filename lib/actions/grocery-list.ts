@@ -30,8 +30,9 @@ function getGroceryCategory(name: string, foodCategory: string): string {
   return FOOD_TO_GROCERY[foodCategory] ?? "Other";
 }
 
-// ─── Bulk quantity rounding ────────────────────────────────────────────────────
-// Always rounds UP to a sensible store-shelf unit so you never run short.
+// ─── Precise weekly quantity display ──────────────────────────────────────────
+// Shows practical quantities at 1 decimal place precision.
+// Counted items (eggs, tortillas, whole produce) round to nearest whole number.
 
 function toBulkDisplay(grams: number, groceryCategory: string, name: string): { qty: number; unit: string } {
   const n = name.toLowerCase();
@@ -39,81 +40,81 @@ function toBulkDisplay(grams: number, groceryCategory: string, name: string): { 
   // ── Protein ──────────────────────────────────────────────────────────────────
   if (groceryCategory === "Protein") {
     if (n.includes("egg")) {
-      const count = Math.ceil(grams / 50);           // ~50 g / egg
-      return { qty: Math.ceil(count / 12) * 12, unit: "ct" }; // nearest dozen
+      const count = Math.round(grams / 50);          // ~50 g / egg
+      return { qty: Math.max(1, count), unit: "ct" };
     }
     const lbs = grams / 453.592;
-    return { qty: Math.ceil(lbs * 4) / 4, unit: "lbs" };      // nearest ¼ lb
+    return { qty: Math.round(lbs * 10) / 10, unit: "lbs" }; // 1 decimal place
   }
 
   // ── Produce ──────────────────────────────────────────────────────────────────
   if (groceryCategory === "Produce") {
     if (n.includes("garlic")) {
-      return { qty: Math.ceil(grams / 4), unit: "cloves" };    // ~4 g / clove
+      return { qty: Math.round(grams / 4), unit: "cloves" };  // ~4 g / clove
     }
     if (n.includes("avocado")) {
-      return { qty: Math.ceil(grams / 150), unit: "ct" };
+      return { qty: Math.max(1, Math.round(grams / 150)), unit: "ct" };
     }
     if (n.includes("onion") || n.includes("bell pepper") || n.includes("tomato")) {
-      return { qty: Math.ceil(grams / 120), unit: "ct" };
+      return { qty: Math.max(1, Math.round(grams / 120)), unit: "ct" };
     }
     const lbs = grams / 453.592;
     if (lbs < 0.5) {
-      return { qty: Math.ceil((grams / 28.35) * 2) / 2, unit: "oz" }; // nearest ½ oz
+      return { qty: Math.round((grams / 28.35) * 10) / 10, unit: "oz" }; // 1 decimal oz
     }
-    return { qty: Math.ceil(lbs * 4) / 4, unit: "lbs" };
+    return { qty: Math.round(lbs * 10) / 10, unit: "lbs" };
   }
 
   // ── Grains & Carbs ────────────────────────────────────────────────────────────
   if (groceryCategory === "Grains & Carbs") {
     if (n.includes("tortilla") || n.includes("bread") || n.includes("pita") || n.includes("naan")) {
       const pieceG = n.includes("flour tortilla") ? 45 : n.includes("corn tortilla") ? 26 : 28;
-      const count  = Math.ceil(grams / pieceG);
-      return { qty: Math.ceil(count / 4) * 4, unit: "ct" };   // nearest 4-pack
+      const count  = Math.round(grams / pieceG);
+      return { qty: Math.max(1, count), unit: "ct" };
     }
     const lbs = grams / 453.592;
     if (lbs < 0.5) {
-      return { qty: Math.ceil((grams / 28.35) * 2) / 2, unit: "oz" };
+      return { qty: Math.round((grams / 28.35) * 10) / 10, unit: "oz" };
     }
-    return { qty: Math.ceil(lbs * 2) / 2, unit: "lbs" };       // nearest ½ lb
+    return { qty: Math.round(lbs * 10) / 10, unit: "lbs" };
   }
 
   // ── Dairy ─────────────────────────────────────────────────────────────────────
   if (groceryCategory === "Dairy") {
     if (n.includes("milk") || n.includes("coconut milk")) {
       const qts = grams / 946;
-      return { qty: Math.ceil(qts * 2) / 2, unit: "qt" };
+      return { qty: Math.round(qts * 10) / 10, unit: "qt" };
     }
     if (n.includes("butter")) {
-      return { qty: Math.ceil(grams / 113), unit: "sticks" };  // 1 stick = 113 g
+      return { qty: Math.max(1, Math.round(grams / 113)), unit: "sticks" }; // 1 stick = 113 g
     }
     if (n.includes("yogurt") || n.includes("sour cream") || n.includes("cream")) {
       const oz = grams / 28.35;
-      return { qty: Math.ceil(oz / 8) * 8, unit: "oz" };       // nearest 8 oz container
+      return { qty: Math.round(oz * 10) / 10, unit: "oz" };
     }
     const oz = grams / 28.35;
-    return { qty: Math.ceil(oz * 2) / 2, unit: "oz" };
+    return { qty: Math.round(oz * 10) / 10, unit: "oz" };
   }
 
   // ── Pantry ────────────────────────────────────────────────────────────────────
   if (n.includes("oil") || n.includes("ghee")) {
     const oz = grams / 28.35;
-    return { qty: Math.ceil(oz), unit: "oz" };
+    return { qty: Math.round(oz * 10) / 10, unit: "oz" };
   }
   if (n.includes("peanut butter") || n.includes("almond butter")) {
     const oz = grams / 28.35;
-    return { qty: Math.ceil(oz / 8) * 8, unit: "oz" };          // nearest 8 oz jar
+    return { qty: Math.round(oz * 10) / 10, unit: "oz" };
   }
 
   // Tiny amounts (spices, sauces) — show in tbsp
   if (grams < 60) {
     const tbsp = grams / 14.79;
-    return { qty: Math.ceil(tbsp), unit: "tbsp" };
+    return { qty: Math.round(tbsp * 10) / 10, unit: "tbsp" };
   }
 
   const oz = grams / 28.35;
   if (oz < 0.5) return { qty: Math.round(grams), unit: "g" };
-  return { qty: Math.ceil(oz), unit: "oz" };
+  return { qty: Math.round(oz * 10) / 10, unit: "oz" };
 }
 
 // ─── Price estimates (US avg retail, 2026) ────────────────────────────────────
@@ -239,6 +240,9 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
 
   const mealsPerDay = Math.max(...mealPlans.map((e) => e.meal_slot)) as 3 | 4 | 5;
 
+  // Count distinct weeks that have meal data so we can average to a single week
+  const weekCount = new Set(mealPlans.map((e) => e.week_number)).size;
+
   // Accumulate total grams per ingredient key
   type Accumulator = { grams: number; category: string; displayName: string; unit?: string; qty?: number };
   const acc = new Map<string, Accumulator>();
@@ -277,7 +281,7 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     }
   }
 
-  // Convert accumulated data to grocery items
+  // Convert accumulated data to grocery items (divide by weekCount for weekly quantities)
   type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean; cost: number };
   const items: GroceryItem[] = [];
 
@@ -285,9 +289,10 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     const groceryCategory = getGroceryCategory(data.displayName, data.category);
 
     if (data.grams > 0) {
-      const { qty, unit } = toBulkDisplay(data.grams, groceryCategory, data.displayName);
+      const weeklyGrams = data.grams / weekCount;
+      const { qty, unit } = toBulkDisplay(weeklyGrams, groceryCategory, data.displayName);
       if (qty <= 0) continue;
-      const roundedQty = Math.round(qty * 100) / 100;
+      const roundedQty = Math.round(qty * 10) / 10;
       const cost = Math.round(roundedQty * pricePerUnit(data.displayName, unit, groceryCategory) * 100) / 100;
       items.push({
         name:     data.displayName,
@@ -298,7 +303,8 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
         cost,
       });
     } else if (data.qty && data.qty > 0) {
-      const roundedQty = Math.ceil(data.qty);
+      const weeklyQty  = data.qty / weekCount;
+      const roundedQty = Math.max(1, Math.round(weeklyQty));
       items.push({
         name:     data.displayName,
         qty:      roundedQty,
