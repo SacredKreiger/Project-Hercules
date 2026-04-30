@@ -44,7 +44,17 @@ export default function ProfilePage() {
     setSaving(true); setError(""); setSaved(false);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("profiles").update(profile).eq("id", user!.id);
+    const { error } = await supabase.from("profiles").update({
+      name: profile.name,
+      age: profile.age,
+      gender: profile.gender,
+      current_weight_lbs: profile.current_weight_lbs,
+      goal_weight_lbs: profile.goal_weight_lbs,
+      height_cm: profile.height_cm,
+      activity_level: profile.activity_level,
+      phase: profile.phase,
+      goal_rate: profile.goal_rate,
+    }).eq("id", user!.id);
     if (error) { setError(error.message); setSaving(false); return; }
     setSaved(true); setSaving(false);
     setTimeout(() => setSaved(false), 3000);
@@ -53,7 +63,8 @@ export default function ProfilePage() {
   async function saveMacroOverrides(overrides: { calories: number; protein: number; carbs: number; fat: number } | null) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("profiles").update({ macro_overrides: overrides }).eq("id", user!.id);
+    const { error } = await supabase.from("profiles").update({ macro_overrides: overrides }).eq("id", user!.id);
+    if (error) console.error("saveMacroOverrides failed:", error.message);
   }
 
   if (!profile) {
@@ -265,7 +276,7 @@ export default function ProfilePage() {
             </SelectContent>
           </Select>
 
-          {(profile.phase === "bulk" || profile.phase === "cut") && (() => {
+          {(profile.phase === "bulk" || profile.phase === "cut") && !hasOverrides && (() => {
             const options = profile.phase === "bulk"
               ? [{ rate: 0.5, label: "Mild Bulk", desc: "0.5 lb/week" }, { rate: 1.0, label: "Bulk", desc: "1 lb/week" }, { rate: 2.0, label: "Aggressive Bulk", desc: "2 lbs/week" }]
               : [{ rate: 0.5, label: "Mild Cut",  desc: "0.5 lb/week" }, { rate: 1.0, label: "Cut",  desc: "1 lb/week" }, { rate: 2.0, label: "Aggressive Cut",  desc: "2 lbs/week" }];
@@ -304,6 +315,19 @@ export default function ProfilePage() {
               </div>
             );
           })()}
+
+          {(profile.phase === "bulk" || profile.phase === "cut") && hasOverrides && (
+            <p className="text-xs text-muted-foreground pt-1">
+              Rate selector hidden — your custom targets are active.{" "}
+              <button
+                type="button"
+                onClick={() => { setProfile({ ...profile, macro_overrides: null }); saveMacroOverrides(null); }}
+                className="text-primary underline underline-offset-2 press"
+              >
+                Reset to auto
+              </button>
+            </p>
+          )}
         </div>
 
         {error && <p className="text-sm text-destructive px-1">{error}</p>}
