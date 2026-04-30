@@ -292,21 +292,31 @@ export default function MealPlanView({
 
         {/* ── Mode toggle ── */}
         <div className="flex p-1 bg-foreground/5 rounded-xl">
-          {(["auto", "custom"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setModeAndStore(m)}
-              className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
-                mode === m
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {m === "auto" ? "Auto" : "Custom"}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => setModeAndStore("auto")}
+            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              mode === "auto" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            Auto
+          </button>
+          <button
+            type="button"
+            onClick={() => setModeAndStore("custom")}
+            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              mode === "custom" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            Custom
+          </button>
         </div>
+        {mode === "auto" && (
+          <p className="text-xs text-muted-foreground -mt-2 px-1">App picks your meals. Tap ↻ to swap any meal instantly.</p>
+        )}
+        {mode === "custom" && (
+          <p className="text-xs text-muted-foreground -mt-2 px-1">You choose every meal. Tap ↻ to change, + to add.</p>
+        )}
 
         {/* ── Auto empty state ── */}
         {isEmpty && mode === "auto" && (
@@ -552,13 +562,26 @@ export default function MealPlanView({
                             )}
                           </button>
 
-                          {/* Swap */}
+                          {/* Swap — Auto: app picks directly; Custom: opens picker */}
                           <button
                             type="button"
+                            disabled={swappingId === entry.id}
                             onClick={async () => {
-                              await openPicker(entry.week_number, entry.day_of_week, entry.meal_slot);
+                              if (mode === "auto") {
+                                setSwappingId(entry.id);
+                                await swapMealSlot({
+                                  weekNumber: entry.week_number,
+                                  dayOfWeek: entry.day_of_week,
+                                  mealSlot: entry.meal_slot,
+                                  currentRecipeId: entry.recipes?.id ?? "",
+                                });
+                                setSwappingId(null);
+                                router.refresh();
+                              } else {
+                                await openPicker(entry.week_number, entry.day_of_week, entry.meal_slot);
+                              }
                             }}
-                            className="shrink-0 pr-4 pl-1 py-4 press text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                            className="shrink-0 pr-4 pl-1 py-4 press text-muted-foreground/50 hover:text-muted-foreground transition-colors disabled:opacity-40"
                           >
                             <svg
                               width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -571,19 +594,44 @@ export default function MealPlanView({
                           </button>
                         </div>
                       ) : (
-                        /* Empty slot — add button */
-                        <button
-                          type="button"
-                          onClick={() => openPicker(selectedWeek, selectedDow, slot)}
-                          className="w-full flex items-center gap-3 px-4 py-4 text-left press active:bg-white/5 transition-colors"
-                        >
-                          <div className="w-5 h-5 rounded-full border-2 border-dashed border-border flex items-center justify-center">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        /* Empty slot */
+                        mode === "auto" ? (
+                          <button
+                            type="button"
+                            disabled={swappingId === `empty-${slot}`}
+                            onClick={async () => {
+                              setSwappingId(`empty-${slot}`);
+                              await swapMealSlot({
+                                weekNumber: selectedWeek,
+                                dayOfWeek: selectedDow,
+                                mealSlot: slot,
+                                currentRecipeId: "",
+                              });
+                              setSwappingId(null);
+                              router.refresh();
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-4 text-left press active:bg-white/5 transition-colors disabled:opacity-40"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={swappingId === `empty-${slot}` ? "animate-spin text-primary" : "text-muted-foreground/50"}>
+                              <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                              <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
                             </svg>
-                          </div>
-                          <span className="text-sm text-muted-foreground">Add meal</span>
-                        </button>
+                            <span className="text-sm text-muted-foreground">Auto-fill</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openPicker(selectedWeek, selectedDow, slot)}
+                            className="w-full flex items-center gap-3 px-4 py-4 text-left press active:bg-white/5 transition-colors"
+                          >
+                            <div className="w-5 h-5 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                              </svg>
+                            </div>
+                            <span className="text-sm text-muted-foreground">Add meal</span>
+                          </button>
+                        )
                       )}
                     </div>
                   );
@@ -608,28 +656,8 @@ export default function MealPlanView({
         <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
           <div className="flex items-center gap-3 px-4 pt-6 pb-3 border-b border-border">
             <button type="button" onClick={() => setPickerFor(null)} className="press text-muted-foreground text-sm">Cancel</button>
-            <h2 className="flex-1 text-center font-semibold text-sm">Pick a Meal</h2>
-            {mode === "auto" && (
-              <button
-                type="button"
-                onClick={async () => {
-                  setSwappingId("picker");
-                  await swapMealSlot({
-                    weekNumber: pickerFor.weekNumber,
-                    dayOfWeek: pickerFor.dayOfWeek,
-                    mealSlot: pickerFor.mealSlot,
-                    currentRecipeId: "",
-                  });
-                  setPickerFor(null);
-                  setSwappingId(null);
-                  router.refresh();
-                }}
-                className="text-xs font-semibold text-primary press"
-              >
-                Auto
-              </button>
-            )}
-            {mode === "custom" && <div className="w-10" />}
+            <h2 className="flex-1 text-center font-semibold text-sm">Choose Your Meal</h2>
+            <div className="w-12" />
           </div>
 
           {/* Tabs */}
