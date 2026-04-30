@@ -45,11 +45,12 @@ const STORAGE_KEY = "hc-meal-config";
 
 type Config = {
   mealsPerDay: 3 | 4 | 5;
-  prepStyle: "daily" | "batch_weekly" | "batch_biweekly";
+  prepStyle: "daily" | "batch_weekly" | "batch_biweekly" | "repeat_daily";
   trainingDays: number[];
   mixAll: boolean;
   cuisines: string[];
   restrictions: string[];
+  cheatDay: number | null;
 };
 
 const DEFAULT_CONFIG: Config = {
@@ -59,6 +60,7 @@ const DEFAULT_CONFIG: Config = {
   mixAll: false,
   cuisines: [],
   restrictions: [],
+  cheatDay: null,
 };
 
 export default function ReconfigureSheet({
@@ -81,6 +83,8 @@ export default function ReconfigureSheet({
   const [prepStyle, setPrepStyle] = useState<Config["prepStyle"]>(DEFAULT_CONFIG.prepStyle);
   const [trainingDays, setTrainingDays] = useState<number[]>(DEFAULT_CONFIG.trainingDays);
   const [mixAll, setMixAll] = useState(false);
+  const [cheatDay, setCheatDay] = useState<number | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [cuisines, setCuisines] = useState<Set<string>>(new Set(savedCuisines));
   const [restrictions, setRestrictions] = useState<Set<string>>(new Set(savedRestrictions));
 
@@ -94,6 +98,9 @@ export default function ReconfigureSheet({
         setPrepStyle(saved.prepStyle ?? DEFAULT_CONFIG.prepStyle);
         setTrainingDays(saved.trainingDays ?? DEFAULT_CONFIG.trainingDays);
         setMixAll(saved.mixAll ?? false);
+        const savedCheatDay = saved.cheatDay ?? null;
+        setCheatDay(savedCheatDay);
+        if (saved.prepStyle === "repeat_daily" || savedCheatDay !== null) setShowAdvanced(true);
         if (saved.cuisines?.length) setCuisines(new Set(saved.cuisines));
         if (saved.restrictions?.length) setRestrictions(new Set(saved.restrictions));
       } else if (savedCuisines.length) {
@@ -136,6 +143,7 @@ export default function ReconfigureSheet({
     const config: Config = {
       mealsPerDay, prepStyle, trainingDays,
       mixAll, cuisines: [...cuisines], restrictions: [...restrictions],
+      cheatDay,
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch {}
 
@@ -149,6 +157,7 @@ export default function ReconfigureSheet({
       cuisines.forEach((c) => fd.append("cuisines", c));
     }
     restrictions.forEach((r) => fd.append("restrictions", r));
+    fd.append("cheat_day", cheatDay !== null ? String(cheatDay) : "none");
 
     startTransition(async () => {
       try {
@@ -358,6 +367,105 @@ export default function ReconfigureSheet({
                 );
               })}
             </div>
+          </div>
+
+          {/* ── Advanced Options ── */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-dashed border-border text-left press"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">Advanced Options</span>
+                {(prepStyle === "repeat_daily" || cheatDay !== null) && (
+                  <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Active</span>
+                )}
+              </div>
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className={`text-muted-foreground transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {showAdvanced && (
+              <div className="space-y-6 pt-1">
+
+                {/* Same Every Day */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Repeat Style</p>
+                  {(() => {
+                    const s = { value: "repeat_daily", icon: "🔁", label: "Same Every Day", desc: "Pick your meals once. Eat the same thing all week." };
+                    const active = prepStyle === s.value;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setPrepStyle(active ? "daily" : "repeat_daily")}
+                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all press ${
+                          active ? "border-primary bg-primary/10" : "border-border glass hover:border-foreground/20"
+                        }`}
+                      >
+                        <span className="text-2xl shrink-0">{s.icon}</span>
+                        <div>
+                          <p className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{s.label}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                        </div>
+                        {active && (
+                          <svg className="ml-auto shrink-0 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })()}
+                  {prepStyle === "repeat_daily" && (
+                    <p className="text-xs text-muted-foreground px-1">Switching back to a different prep style above will disable this.</p>
+                  )}
+                </div>
+
+                {/* Cheat Day */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cheat Day</p>
+                    {cheatDay !== null && (
+                      <button type="button" onClick={() => setCheatDay(null)}
+                        className="text-xs text-muted-foreground underline underline-offset-2 press">
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground px-1">One day a week — no meals planned, no tracking. Tap to set, tap again to remove.</p>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {DAY_LABELS.map((label, d) => {
+                      const active = cheatDay === d;
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setCheatDay(active ? null : d)}
+                          className={`flex flex-col items-center py-2.5 rounded-xl border text-xs font-semibold transition-all press ${
+                            active
+                              ? "border-rose-500 bg-rose-500 text-white"
+                              : "border-border glass text-muted-foreground hover:border-foreground/20"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {cheatDay !== null && (
+                    <p className="text-xs text-muted-foreground px-1">
+                      🍕 {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cheatDay]} — free day, no plan generated.
+                    </p>
+                  )}
+                </div>
+
+              </div>
+            )}
           </div>
 
           {/* ── CTA ── */}

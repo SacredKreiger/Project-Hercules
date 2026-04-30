@@ -97,15 +97,16 @@ type PlanConfig = {
   restrictions: string[];
   mixAll: boolean;
   mealsPerDay: 3 | 4 | 5;
-  prepStyle: "daily" | "batch_weekly" | "batch_biweekly";
+  prepStyle: "daily" | "batch_weekly" | "batch_biweekly" | "repeat_daily";
   trainingDays: number[]; // 0=Sun … 6=Sat
+  cheatDay: number | null;
 };
 
 const TOTAL_WEEKS = 4;
 
 async function generatePlan(config: PlanConfig) {
   const supabase = await createClient();
-  const { userId, profile, cuisines, restrictions, mixAll, mealsPerDay, prepStyle, trainingDays } = config;
+  const { userId, profile, cuisines, restrictions, mixAll, mealsPerDay, prepStyle, trainingDays, cheatDay } = config;
 
   const macros = getEffectiveMacros(profile);
 
@@ -140,6 +141,27 @@ async function generatePlan(config: PlanConfig) {
   const { slots, calSplit } = MEAL_CONFIG[mealsPerDay];
   const allEntries: any[] = [];
 
+  // For repeat_daily: pick one recipe set once and reuse across all weeks/days
+  const repeatDailySet: Record<number, any> = {};
+  if (prepStyle === "repeat_daily") {
+    const { slots: rdSlots, calSplit: rdCalSplit } = MEAL_CONFIG[mealsPerDay];
+    const rdUsed: Record<string, Set<string>> = Object.fromEntries(
+      Object.keys(byType).map((k) => [k, new Set<string>()])
+    );
+    for (const { slot, type } of rdSlots) {
+      const pool = byType[type];
+      if (!pool?.length) continue;
+      const f = rdCalSplit[slot];
+      const targets: SlotTargets = {
+        calories: macros.calories * f,
+        protein:  macros.protein  * f,
+        carbs:    macros.carbs    * f,
+        fat:      macros.fat      * f,
+      };
+      repeatDailySet[slot] = pickRecipe(pool, targets, rdUsed[type]);
+    }
+  }
+
   // Tracks recipes used in the previous week to maximise variety week-over-week
   let lastWeekUsed: Record<string, Set<string>> = Object.fromEntries(
     Object.keys(byType).map((k) => [k, new Set<string>()])
@@ -156,6 +178,7 @@ async function generatePlan(config: PlanConfig) {
 
     if (prepStyle === "daily") {
       for (let dow = 0; dow < 7; dow++) {
+        if (cheatDay !== null && dow === cheatDay) continue; // skip cheat day
         const isTraining = trainingDays.includes(dow);
         const calMultiplier = isTraining ? 1.0 : 0.85;
         for (const { slot, type } of slots) {
@@ -175,7 +198,7 @@ async function generatePlan(config: PlanConfig) {
           allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
         }
       }
-    } else {
+    } else if (prepStyle === "batch_weekly" || prepStyle === "batch_biweekly") {
       // Batch: pick 2 recipe sets per week, assign by day range
       const switchDay = prepStyle === "batch_biweekly" ? 3 : 4;
       const setA: Record<number, any> = {};
@@ -200,10 +223,21 @@ async function generatePlan(config: PlanConfig) {
       }
 
       for (let dow = 0; dow < 7; dow++) {
+        if (cheatDay !== null && dow === cheatDay) continue; // skip cheat day
         const recipeSet = dow < switchDay ? setA : setB;
         for (const { slot } of slots) {
           if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
           const recipe = recipeSet[slot];
+          if (!recipe) continue;
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+        }
+      }
+    } else if (prepStyle === "repeat_daily") {
+      for (let dow = 0; dow < 7; dow++) {
+        if (cheatDay !== null && dow === cheatDay) continue; // skip cheat day
+        for (const { slot } of slots) {
+          if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
+          const recipe = repeatDailySet[slot];
           if (!recipe) continue;
           allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
         }
@@ -235,6 +269,8 @@ export async function reconfigureMealPlan(formData: FormData) {
   const mealsPerDay = (Number(formData.get("meals_per_day")) || 4) as 3 | 4 | 5;
   const prepStyle = (formData.get("prep_style") as PlanConfig["prepStyle"]) || "daily";
   const trainingDays = formData.getAll("training_days").map(Number);
+  const cheatDayRaw = formData.get("cheat_day") as string | null;
+  const cheatDay: number | null = (cheatDayRaw && cheatDayRaw !== "none") ? Number(cheatDayRaw) : null;
 
   if (!mixAll && cuisines.length === 0) {
     return { error: "Pick at least one cuisine or use Mix it up." };
@@ -248,7 +284,7 @@ export async function reconfigureMealPlan(formData: FormData) {
 
   const { error } = await generatePlan({
     userId: user.id, profile, cuisines, restrictions, mixAll,
-    mealsPerDay, prepStyle, trainingDays,
+    mealsPerDay, prepStyle, trainingDays, cheatDay,
   });
 
   if (error) return { error };

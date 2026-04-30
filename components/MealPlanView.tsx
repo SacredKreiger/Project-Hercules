@@ -102,6 +102,7 @@ export default function MealPlanView({
   const [selected, setSelected]         = useState<MealEntry | null>(null);
   const [sheetOpen, setSheetOpen]       = useState(false);
   const [trainingDays, setTrainingDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [cheatDay, setCheatDay] = useState<number | null>(null);
   const [checkedSteps, setCheckedSteps]               = useState<Record<string, number[]>>({});
   const [checkedIngredients, setCheckedIngredients]   = useState<Record<string, number[]>>({});
   const [eatenIds, setEatenIds] = useState<Set<string>>(new Set());
@@ -129,6 +130,7 @@ export default function MealPlanView({
       if (config) {
         const parsed = JSON.parse(config);
         if (parsed.trainingDays) setTrainingDays(parsed.trainingDays);
+        if (parsed.cheatDay !== undefined) setCheatDay(parsed.cheatDay);
       }
     } catch {}
   }, []);
@@ -314,6 +316,25 @@ export default function MealPlanView({
   }
 
   function DayCard({ dow, entries, isToday }: { dow: number; entries: MealEntry[]; isToday: boolean }) {
+    if (cheatDay === dow) {
+      return (
+        <div className={`glass widget-shadow rounded-2xl overflow-hidden ${isToday ? "ring-1 ring-primary/40" : ""}`}>
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+            <span className="text-sm font-semibold">{DAYS[dow]}</span>
+            {isToday && (
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-primary px-2 py-0.5 glass rounded-full">Today</span>
+            )}
+            <span className="ml-auto text-[10px] font-semibold uppercase tracking-widest text-rose-400 px-2 py-0.5 bg-rose-500/10 rounded-full">Cheat Day</span>
+          </div>
+          <div className="px-6 py-8 text-center space-y-2">
+            <p className="text-3xl">🍕</p>
+            <p className="font-semibold text-sm">No tracking today</p>
+            <p className="text-xs text-muted-foreground">Enjoy your meal. You earned it.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`glass widget-shadow rounded-2xl overflow-hidden ${isToday ? "ring-1 ring-primary/40" : ""}`}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
@@ -451,14 +472,16 @@ export default function MealPlanView({
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setBuildDayOpen(true)}
-              className="w-full h-10 rounded-2xl border border-dashed border-border text-xs font-semibold text-muted-foreground press flex items-center justify-center gap-2"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Build My Day
-            </button>
+            {cheatDay !== selectedDow && (
+              <button
+                type="button"
+                onClick={() => setBuildDayOpen(true)}
+                className="w-full h-10 rounded-2xl border border-dashed border-border text-xs font-semibold text-muted-foreground press flex items-center justify-center gap-2"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Build My Day
+              </button>
+            )}
 
             <DayCard
               dow={selectedDow}
@@ -579,12 +602,16 @@ export default function MealPlanView({
                             </span>
                           </div>
 
-                          {/* Single dot — meals planned */}
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            hasMeals
-                              ? isToday ? "bg-primary" : "bg-foreground/30"
-                              : "opacity-0"
-                          }`} />
+                          {/* Single dot — meals planned, or pizza on cheat day */}
+                          {dow === cheatDay ? (
+                            <span className="text-[8px] leading-none">🍕</span>
+                          ) : (
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              hasMeals
+                                ? isToday ? "bg-primary" : "bg-foreground/30"
+                                : "opacity-0"
+                            }`} />
+                          )}
 
                           {/* kcal */}
                           <span className={`text-[9px] tabular-nums leading-none ${
