@@ -468,3 +468,12 @@ export async function searchRecipes(params: {
   const { data, error } = await q.limit(100);
   return { error: error?.message ?? null, data: data ?? [] };
 }
+
+export async function clearMealPlan(): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase.from("meal_plans").delete().eq("user_id", user.id);
+  return { error: error?.message ?? null };
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { reconfigureMealPlan } from "@/lib/actions/meal-plan";
+import { reconfigureMealPlan, clearMealPlan } from "@/lib/actions/meal-plan";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 const CUISINES = [
@@ -141,9 +141,12 @@ export default function ReconfigureSheet({
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch {}
 
-    // Custom mode: just save settings and close — user picks meals themselves
+    // Custom mode: clear any auto-generated meals so user starts with blank slots
     if (mode === "custom") {
-      onClose();
+      startTransition(async () => {
+        await clearMealPlan();
+        onClose();
+      });
       return;
     }
 
