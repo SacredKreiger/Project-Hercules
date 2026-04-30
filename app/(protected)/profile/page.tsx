@@ -357,6 +357,26 @@ export default function ProfilePage() {
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${profile.pr_mode_enabled ? "translate-x-6" : "translate-x-0"}`} />
           </button>
         </div>
+        {/* Progressive Overload */}
+        <div className="flex items-center justify-between pt-1 border-t border-border">
+          <div>
+            <p className="text-sm">Progressive Overload</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Automatically increase weight based on performance</p>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              const next = !profile.progressive_overload_enabled;
+              setProfile({ ...profile, progressive_overload_enabled: next });
+              const supabase = createClient();
+              const { data: { user } } = await supabase.auth.getUser();
+              await supabase.from("profiles").update({ progressive_overload_enabled: next }).eq("id", user!.id);
+            }}
+            className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${profile.progressive_overload_enabled ? "bg-primary" : "bg-foreground/20"}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${profile.progressive_overload_enabled ? "translate-x-6" : "translate-x-0"}`} />
+          </button>
+        </div>
       </div>
     </div>
   );

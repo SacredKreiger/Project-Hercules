@@ -2,6 +2,7 @@ export type ExerciseCategory =
   | "Barbell"
   | "Dumbbell"
   | "Bodyweight"
+  | "Core"
   | "Cable & Machine"
   | "Cardio"
   | "Kettlebell";
@@ -99,6 +100,26 @@ export const EXERCISES: ExerciseInfo[] = [
   { name: "Mountain Climber",    category: "Bodyweight", unit: "reps_only" },
   { name: "Bear Crawl",          category: "Bodyweight", unit: "reps_only" },
 
+  // ── Core ─────────────────────────────────────────────────────────────────
+  { name: "Crunch",              category: "Core", unit: "reps_only"   },
+  { name: "Sit-Up",              category: "Core", unit: "reps_only"   },
+  { name: "Bicycle Crunch",      category: "Core", unit: "reps_only"   },
+  { name: "Cable Crunch",        category: "Core", unit: "weight_reps" },
+  { name: "Russian Twist",       category: "Core", unit: "reps_only"   },
+  { name: "Dead Bug",            category: "Core", unit: "reps_only"   },
+  { name: "Dragon Flag",         category: "Core", unit: "reps_only"   },
+  { name: "Ab Wheel Rollout",    category: "Core", unit: "reps_only"   },
+  { name: "Pallof Press",        category: "Core", unit: "weight_reps" },
+  { name: "Plank",               category: "Core", unit: "reps_only"   },
+  { name: "Side Plank",          category: "Core", unit: "reps_only"   },
+  { name: "Hollow Body Hold",    category: "Core", unit: "reps_only"   },
+  { name: "L-Sit",               category: "Core", unit: "reps_only"   },
+  { name: "Hanging Knee Raise",  category: "Core", unit: "reps_only"   },
+  { name: "V-Up",                category: "Core", unit: "reps_only"   },
+  { name: "Toe Touch",           category: "Core", unit: "reps_only"   },
+  { name: "Bird Dog",            category: "Core", unit: "reps_only"   },
+  { name: "Windshield Wiper",    category: "Core", unit: "reps_only"   },
+
   // ── Cable & Machine ──────────────────────────────────────────────────────
   { name: "Lat Pulldown",        category: "Cable & Machine", unit: "weight_reps" },
   { name: "Cable Row",           category: "Cable & Machine", unit: "weight_reps" },
@@ -143,7 +164,7 @@ export const EXERCISES: ExerciseInfo[] = [
 ];
 
 export const EXERCISE_CATEGORIES: ExerciseCategory[] = [
-  "Barbell", "Dumbbell", "Bodyweight", "Cable & Machine", "Cardio", "Kettlebell",
+  "Barbell", "Dumbbell", "Bodyweight", "Core", "Cable & Machine", "Cardio", "Kettlebell",
 ];
 
 export function getExerciseInfo(name: string): ExerciseInfo | undefined {

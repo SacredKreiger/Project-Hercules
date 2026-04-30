@@ -9,15 +9,18 @@ import type { ProgramDay, ExerciseConfig } from "@/lib/templates";
 import type { Phase, OverloadMode, ProgramV2 } from "@/lib/program";
 
 const DRAFT_ID_KEY = "hc-builder-program-id";
+const PRESET_KEY   = "hc-workout-presets";
 const DOW_SHORT    = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const DOW_LABELS   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+type Preset = { id: string; name: string; exercises: ExerciseConfig[] };
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
 function makeDays(): ProgramDay[] {
   return Array.from({ length: 7 }, (_, i) => ({ dayOfWeek: i, name: DOW_LABELS[i], isRest: true, exercises: [] }));
 }
 function newPhase(n: number): Phase {
-  return { id: uid(), name: `Phase ${n}`, weeks: 4, isDeload: false, overload: { type: "auto" }, days: makeDays() };
+  return { id: uid(), name: `Phase ${n}`, weeks: 4, isDeload: false, overload: { type: "manual" }, days: makeDays() };
 }
 function newDeload(): Phase {
   return { id: uid(), name: "Deload", weeks: 1, isDeload: true, overload: { type: "manual" }, days: makeDays() };
@@ -25,82 +28,221 @@ function newDeload(): Phase {
 
 // ── Exercise Picker ────────────────────────────────────────────────────────────
 
-function ExercisePicker({ onAdd, onClose }: { onAdd: (ex: ExerciseConfig) => void; onClose: () => void }) {
+function ExercisePicker({
+  onAdd,
+  onAddPreset,
+  onClose,
+  currentDayExercises,
+}: {
+  onAdd: (ex: ExerciseConfig) => void;
+  onAddPreset: (exercises: ExerciseConfig[]) => void;
+  onClose: () => void;
+  currentDayExercises: ExerciseConfig[];
+}) {
+  const [tab, setTab] = useState<"Library" | "Saved">("Library");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [configuring, setConfiguring] = useState<string | null>(null);
+  const [presets, setPresets] = useState<Preset[]>([]);
+
+  // Cardio config state
+  const [duration, setDuration] = useState("30");
+  const [distance, setDistance] = useState("");
+  const [effort, setEffort] = useState("Easy");
+
+  // Strength config state
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("8");
   const [rest, setRest] = useState("90");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (raw) setPresets(JSON.parse(raw));
+    } catch {}
+  }, []);
 
   const filtered = EXERCISES.filter((e) => {
     const matchCat = category === "All" || e.category === category;
     return matchCat && e.name.toLowerCase().includes(query.toLowerCase());
   });
 
+  const isCardio = configuring ? getExerciseInfo(configuring)?.unit === "distance_time" : false;
+
   function confirmAdd() {
     if (!configuring) return;
-    onAdd({ name: configuring, sets: parseInt(sets) || 3, reps: reps || "8", restSeconds: parseInt(rest) || 90 });
+    if (isCardio) {
+      const repsStr = [duration ? `${duration} min` : "", distance || "", effort].filter(Boolean).join(" · ");
+      onAdd({ name: configuring, sets: 1, reps: repsStr || "30 min · Easy", restSeconds: 0 });
+    } else {
+      onAdd({ name: configuring, sets: parseInt(sets) || 3, reps: reps || "8", restSeconds: parseInt(rest) || 90 });
+    }
     setConfiguring(null);
     setQuery("");
+  }
+
+  function deletePreset(id: string) {
+    const updated = presets.filter((p) => p.id !== id);
+    setPresets(updated);
+    try { localStorage.setItem(PRESET_KEY, JSON.stringify(updated)); } catch {}
   }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
       <div className="flex items-center gap-3 px-4 pt-6 pb-3">
-        <button type="button" onClick={onClose} className="press text-muted-foreground text-sm">Cancel</button>
-        <h2 className="flex-1 text-center font-semibold text-sm">Add Exercise</h2>
+        <button type="button" onClick={configuring ? () => setConfiguring(null) : onClose} className="press text-muted-foreground text-sm">
+          {configuring ? "← Back" : "Cancel"}
+        </button>
+        <h2 className="flex-1 text-center font-semibold text-sm">
+          {configuring ? configuring : "Add Exercise"}
+        </h2>
         <div className="w-14" />
       </div>
 
       {configuring ? (
         <div className="flex-1 flex flex-col px-5 pt-4 space-y-4">
-          <p className="font-semibold">{configuring}</p>
-          <div className="grid grid-cols-3 gap-3">
-            {[["Sets", sets, setSets], ["Reps", reps, setReps], ["Rest (s)", rest, setRest]].map(([label, val, set]) => (
-              <div key={label as string} className="space-y-1">
-                <label className="text-[10px] text-muted-foreground">{label as string}</label>
-                <input type={label === "Reps" ? "text" : "number"} value={val as string}
-                  onChange={(e) => (set as any)(e.target.value)}
-                  className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm text-center outline-none focus:ring-1 focus:ring-primary/50"
-                />
+          {isCardio ? (
+            <>
+              <p className="text-xs text-muted-foreground">Configure your {configuring.toLowerCase()}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">Duration (min)</label>
+                  <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)}
+                    className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm text-center outline-none focus:ring-1 focus:ring-primary/50" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">Distance (optional)</label>
+                  <input type="text" placeholder="e.g. 5 miles, 5K" value={distance} onChange={(e) => setDistance(e.target.value)}
+                    className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm outline-none focus:ring-1 focus:ring-primary/50" />
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">Effort</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {["Easy", "Moderate", "Hard", "Race"].map((e) => (
+                    <button key={e} type="button" onClick={() => setEffort(e)}
+                      className={`py-2 rounded-xl text-xs font-semibold press transition-colors ${effort === e ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-muted-foreground"}`}>
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl bg-foreground/5 px-4 py-2.5">
+                <p className="text-xs text-muted-foreground">Summary</p>
+                <p className="text-sm font-semibold mt-0.5">
+                  {[duration ? `${duration} min` : "", distance || "", effort].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">Sets</label>
+                <input type="number" value={sets} onChange={(e) => setSets(e.target.value)}
+                  className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm text-center outline-none focus:ring-1 focus:ring-primary/50" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">Reps</label>
+                <input type="text" value={reps} onChange={(e) => setReps(e.target.value)}
+                  className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm text-center outline-none focus:ring-1 focus:ring-primary/50" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">Rest (s)</label>
+                <input type="number" value={rest} onChange={(e) => setRest(e.target.value)}
+                  className="w-full bg-foreground/5 rounded-xl h-10 px-3 text-sm text-center outline-none focus:ring-1 focus:ring-primary/50" />
+              </div>
+            </div>
+          )}
           <button type="button" onClick={confirmAdd}
             className="w-full h-11 rounded-full bg-primary text-primary-foreground font-semibold text-sm press">
             Add to Day
           </button>
-          <button type="button" onClick={() => setConfiguring(null)}
-            className="text-sm text-muted-foreground text-center press">← Back</button>
         </div>
       ) : (
         <>
-          <div className="px-4 pb-2">
-            <input autoFocus type="text" placeholder="Search exercises…" value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-foreground/5 rounded-xl h-10 px-4 text-sm outline-none focus:ring-1 focus:ring-primary/50"
-            />
-          </div>
-          <div className="flex gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
-            {["All", ...EXERCISE_CATEGORIES].map((c) => (
-              <button key={c} type="button" onClick={() => setCategory(c)}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium press transition-colors ${c === category ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-muted-foreground"}`}>
-                {c}
+          {/* Tab switcher */}
+          <div className="flex gap-1 px-4 pb-2">
+            {(["Library", "Saved"] as const).map((t) => (
+              <button key={t} type="button" onClick={() => setTab(t)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold press transition-colors ${t === tab ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-muted-foreground"}`}>
+                {t}
               </button>
             ))}
           </div>
-          <div className="flex-1 overflow-y-auto px-4 space-y-1 pb-8">
-            {filtered.map((ex) => (
-              <button key={ex.name} type="button"
-                onClick={() => { setSets("3"); setReps("8"); setRest("90"); setConfiguring(ex.name); }}
-                className="w-full text-left flex items-center justify-between px-4 py-3 glass rounded-2xl press">
-                <span className="text-sm font-medium">{ex.name}</span>
-                <span className="text-xs text-muted-foreground">{ex.category}</span>
-              </button>
-            ))}
-            {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-10">No exercises found.</p>}
-          </div>
+
+          {tab === "Library" ? (
+            <>
+              <div className="px-4 pb-2">
+                <input autoFocus type="text" placeholder="Search exercises…" value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full bg-foreground/5 rounded-xl h-10 px-4 text-sm outline-none focus:ring-1 focus:ring-primary/50"
+                />
+              </div>
+              <div className="flex gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
+                {["All", ...EXERCISE_CATEGORIES].map((c) => (
+                  <button key={c} type="button" onClick={() => setCategory(c)}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium press transition-colors ${c === category ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-muted-foreground"}`}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 space-y-1 pb-8">
+                {filtered.map((ex) => (
+                  <button key={ex.name} type="button"
+                    onClick={() => {
+                      if (ex.unit === "distance_time") {
+                        setDuration("30"); setDistance(""); setEffort("Easy");
+                      } else {
+                        setSets("3"); setReps("8"); setRest("90");
+                      }
+                      setConfiguring(ex.name);
+                    }}
+                    className="w-full text-left flex items-center justify-between px-4 py-3 glass rounded-2xl press">
+                    <span className="text-sm font-medium">{ex.name}</span>
+                    <span className="text-xs text-muted-foreground">{ex.category}</span>
+                  </button>
+                ))}
+                {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-10">No exercises found.</p>}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-8 pt-2">
+              {presets.length === 0 ? (
+                <div className="text-center py-16 space-y-2">
+                  <p className="text-2xl">📋</p>
+                  <p className="font-semibold text-sm">No saved workouts yet</p>
+                  <p className="text-xs text-muted-foreground">Build a day&apos;s exercises then tap &quot;Save as Preset&quot; to save it here.</p>
+                </div>
+              ) : (
+                presets.map((preset) => (
+                  <div key={preset.id} className="glass rounded-2xl overflow-hidden">
+                    <div className="px-4 pt-3 pb-2">
+                      <p className="font-semibold text-sm">{preset.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{preset.exercises.length} exercises</p>
+                      <div className="mt-2 space-y-0.5">
+                        {preset.exercises.slice(0, 4).map((ex, i) => (
+                          <p key={i} className="text-xs text-muted-foreground truncate">· {ex.name}</p>
+                        ))}
+                        {preset.exercises.length > 4 && (
+                          <p className="text-xs text-muted-foreground">+{preset.exercises.length - 4} more</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="border-t border-border flex">
+                      <button type="button" onClick={() => deletePreset(preset.id)}
+                        className="flex-1 py-2.5 text-center text-xs font-semibold text-rose-500 press border-r border-border">
+                        Delete
+                      </button>
+                      <button type="button" onClick={() => { onAddPreset(preset.exercises); onClose(); }}
+                        className="flex-1 py-2.5 text-center text-xs font-semibold text-primary press">
+                        Load Workout
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
@@ -166,8 +308,8 @@ function OverloadPicker({ overload, onChange }: { overload: OverloadMode; onChan
 function PhaseCard({
   phase, phaseIdx, isExpanded, activeDow,
   onToggle, onDelete, onMove, onUpdate, onToggleDow, onAddExercise,
-  onRemoveExercise, onMoveExercise, onUpdateExercisePr,
-  canMoveUp, canMoveDown, prModeEnabled, prs,
+  onRemoveExercise, onMoveExercise, onUpdateExercisePr, onSavePreset,
+  canMoveUp, canMoveDown, prModeEnabled, overloadEnabled, prs,
 }: {
   phase: Phase; phaseIdx: number; isExpanded: boolean; activeDow: number;
   onToggle: () => void; onDelete: () => void; onMove: (dir: -1|1) => void;
@@ -177,8 +319,9 @@ function PhaseCard({
   onRemoveExercise: (dow: number, idx: number) => void;
   onMoveExercise: (dow: number, idx: number, dir: -1|1) => void;
   onUpdateExercisePr: (dow: number, idx: number, pct: number | undefined) => void;
+  onSavePreset: (exercises: ExerciseConfig[]) => void;
   canMoveUp: boolean; canMoveDown: boolean;
-  prModeEnabled: boolean; prs: Record<string, string>;
+  prModeEnabled: boolean; overloadEnabled: boolean; prs: Record<string, string>;
 }) {
   const activeDay = phase.days[activeDow];
   const trainingDays = phase.days.filter((d) => !d.isRest).length;
@@ -248,7 +391,9 @@ function PhaseCard({
           </div>
 
           {/* Overload picker */}
-          <OverloadPicker overload={phase.overload} onChange={(o) => onUpdate({ ...phase, overload: o })} />
+          {overloadEnabled && (
+            <OverloadPicker overload={phase.overload} onChange={(o) => onUpdate({ ...phase, overload: o })} />
+          )}
 
           {/* Day strip */}
           <div className="flex gap-1">
@@ -293,7 +438,9 @@ function PhaseCard({
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{ex.name}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {ex.sets} × {ex.reps} · {ex.restSeconds}s rest
+                          {getExerciseInfo(ex.name)?.unit === "distance_time"
+                            ? ex.reps
+                            : `${ex.sets} × ${ex.reps} · ${ex.restSeconds}s rest`}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
@@ -333,6 +480,22 @@ function PhaseCard({
                     )}
                   </div>
                 ))}
+                {(activeDay?.exercises.length ?? 0) > 0 && (
+                  <button type="button" onClick={() => {
+                    const name = window.prompt("Preset name?", `${DOW_LABELS[activeDow]} Workout`);
+                    if (!name?.trim()) return;
+                    try {
+                      const raw = localStorage.getItem(PRESET_KEY);
+                      const existing: Preset[] = raw ? JSON.parse(raw) : [];
+                      const updated = [...existing, { id: uid(), name: name.trim(), exercises: activeDay.exercises }];
+                      localStorage.setItem(PRESET_KEY, JSON.stringify(updated));
+                    } catch {}
+                    onSavePreset(activeDay.exercises);
+                  }}
+                  className="w-full h-9 rounded-xl border border-dashed border-primary/30 text-xs text-primary font-medium press flex items-center justify-center gap-1.5">
+                    Save as Preset
+                  </button>
+                )}
                 <button type="button" onClick={onAddExercise}
                   className="w-full h-9 rounded-xl border border-dashed border-border text-xs text-muted-foreground font-medium press flex items-center justify-center gap-1.5">
                   <span className="text-base leading-none">+</span> Add Exercise
@@ -361,6 +524,7 @@ export default function BuilderPage() {
   const [showPicker, setShowPicker]   = useState(false);
   const [prs, setPrs]                 = useState<Record<string, string>>({});
   const [prModeEnabled, setPrModeEnabled] = useState(false);
+  const [overloadEnabled, setOverloadEnabled] = useState(false);
   const [saveStatus, setSaveStatus]   = useState<"idle" | "saving" | "saved">("idle");
   const [initialized, setInitialized] = useState(false);
   const [error, setError]             = useState<string | null>(null);
@@ -376,8 +540,9 @@ export default function BuilderPage() {
       if (!user) return;
 
       const { data: profile } = await supabase.from("profiles")
-        .select("pr_mode_enabled").eq("id", user.id).single();
+        .select("pr_mode_enabled, progressive_overload_enabled").eq("id", user.id).single();
       if (profile?.pr_mode_enabled) setPrModeEnabled(true);
+      if (profile?.progressive_overload_enabled) setOverloadEnabled(true);
 
       const { data: prRows } = await supabase.from("personal_records")
         .select("exercise_name, weight_lbs").eq("user_id", user.id);
@@ -518,6 +683,16 @@ export default function BuilderPage() {
     setShowPicker(false);
   }
 
+  function addPreset(exercises: ExerciseConfig[]) {
+    if (expandedIdx === null) return;
+    const phase = phases[expandedIdx];
+    updatePhase(expandedIdx, {
+      ...phase,
+      days: phase.days.map((d) => d.dayOfWeek === activeDow ? { ...d, exercises: [...d.exercises, ...exercises] } : d),
+    });
+    setShowPicker(false);
+  }
+
   function removeExercise(phaseIdx: number, dow: number, exIdx: number) {
     const phase = phases[phaseIdx];
     updatePhase(phaseIdx, {
@@ -623,7 +798,14 @@ export default function BuilderPage() {
 
   return (
     <>
-      {showPicker && <ExercisePicker onAdd={addExercise} onClose={() => setShowPicker(false)} />}
+      {showPicker && (
+        <ExercisePicker
+          onAdd={addExercise}
+          onAddPreset={addPreset}
+          onClose={() => setShowPicker(false)}
+          currentDayExercises={expandedIdx !== null ? phases[expandedIdx]?.days[activeDow]?.exercises ?? [] : []}
+        />
+      )}
 
       <div className="space-y-3 pb-8">
         {/* Header */}
@@ -673,9 +855,11 @@ export default function BuilderPage() {
             onRemoveExercise={(dow, exIdx) => removeExercise(idx, dow, exIdx)}
             onMoveExercise={(dow, exIdx, dir) => moveExercise(idx, dow, exIdx, dir)}
             onUpdateExercisePr={(dow, exIdx, pct) => updateExercisePr(idx, dow, exIdx, pct)}
+            onSavePreset={() => {}}
             canMoveUp={idx > 0}
             canMoveDown={idx < phases.length - 1}
             prModeEnabled={prModeEnabled}
+            overloadEnabled={overloadEnabled}
             prs={prs}
           />
         ))}
