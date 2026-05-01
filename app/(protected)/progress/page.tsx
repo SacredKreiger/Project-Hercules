@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/Skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from "recharts";
-import { calcBMR, calcTDEE, calcMacros } from "@/lib/macros";
+import { calcBMR, calcTDEE, getEffectiveMacros } from "@/lib/macros";
 
 type Log = { id: string; log_date: string; weight_lbs: number; body_fat_pct: number | null; notes: string | null };
 
@@ -192,7 +192,7 @@ export default function ProgressPage() {
     : 0;
   const tdee = profile ? calcTDEE(bmr, profile.activity_level) : 0;
   const macros = profile && latestWeight
-    ? calcMacros(tdee, latestWeight, profile.phase)
+    ? getEffectiveMacros({ ...profile, current_weight_lbs: latestWeight })
     : null;
   const dailyDelta = macros ? macros.calories - tdee : 0;
 
