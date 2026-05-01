@@ -141,11 +141,12 @@ export default function ReconfigureSheet({
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch {}
 
-    // Custom mode: clear any auto-generated meals so user starts with blank slots
+    // Custom mode: clear any auto-generated meals, sync mode key, reload
     if (mode === "custom") {
+      try { localStorage.setItem("hc-meal-mode", "custom"); } catch {}
       startTransition(async () => {
         await clearMealPlan();
-        onClose();
+        window.location.href = "/meals";
       });
       return;
     }
