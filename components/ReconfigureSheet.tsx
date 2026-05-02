@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { reconfigureMealPlan, clearMealPlan } from "@/lib/actions/meal-plan";
+import { reconfigureMealPlan, clearMealPlan, saveMealsPerDay } from "@/lib/actions/meal-plan";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 const CUISINES = [
@@ -145,7 +145,7 @@ export default function ReconfigureSheet({
     if (mode === "custom") {
       try { localStorage.setItem("hc-meal-mode", "custom"); } catch {}
       startTransition(async () => {
-        await clearMealPlan();
+        await clearMealPlan(mealsPerDay);
         window.location.href = "/meals";
       });
       return;
@@ -165,6 +165,7 @@ export default function ReconfigureSheet({
 
     startTransition(async () => {
       try {
+        await saveMealsPerDay(mealsPerDay);
         const result = await reconfigureMealPlan(fd);
         if (result?.error) setError(result.error);
       } catch (err: unknown) {

@@ -473,11 +473,25 @@ export async function searchRecipes(params: {
   return { error: error?.message ?? null, data: data ?? [] };
 }
 
-export async function clearMealPlan(): Promise<{ error: string | null }> {
+export async function clearMealPlan(mealsPerDay?: number): Promise<{ error: string | null }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase.from("meal_plans").delete().eq("user_id", user.id);
+  if (error) return { error: error.message };
+
+  if (mealsPerDay) {
+    await supabase.from("profiles").update({ meals_per_day: mealsPerDay }).eq("id", user.id);
+  }
+
+  return { error: null };
+}
+
+export async function saveMealsPerDay(mealsPerDay: number): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+  const { error } = await supabase.from("profiles").update({ meals_per_day: mealsPerDay }).eq("id", user.id);
   return { error: error?.message ?? null };
 }

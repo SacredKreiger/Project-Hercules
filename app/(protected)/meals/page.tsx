@@ -26,9 +26,7 @@ export default async function MealsPage() {
   const macros = getEffectiveMacros(profile);
 
   const plan = mealPlan ?? [];
-  const mealsPerDay = plan.length > 0
-    ? (Math.max(...plan.map((e) => e.meal_slot)) as 3 | 4 | 5)
-    : 4;
+  const mealsPerDay = (profile.meals_per_day as 3 | 4 | 5) ?? 4;
 
   return (
     <MealPlanView
