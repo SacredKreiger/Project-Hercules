@@ -82,6 +82,7 @@ export default function MealPlanView({
   mealsPerDay: mealsPerDayProp = 4,
   savedCuisines = [],
   savedRestrictions = [],
+  mealMode,
 }: {
   mealPlan: MealEntry[];
   weekNumber: number;
