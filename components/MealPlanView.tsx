@@ -124,7 +124,12 @@ export default function MealPlanView({
 
       const todayDate = new Date().toISOString().split("T")[0];
       const eaten = localStorage.getItem(`hc-eaten-${todayDate}`);
-      if (eaten) setEatenIds(new Set(JSON.parse(eaten)));
+      if (eaten) {
+        // Stored as meal_slot numbers for stability across plan regenerations — map back to entry IDs
+        const eatenSlots = new Set<number>(JSON.parse(eaten));
+        const todayPlan = mealPlan.filter((e) => e.week_number === weekNumber && e.day_of_week === todayDow);
+        setEatenIds(new Set(todayPlan.filter((e) => eatenSlots.has(e.meal_slot)).map((e) => e.id)));
+      }
 
       const s = localStorage.getItem("hc-checked-steps");
       const i = localStorage.getItem("hc-checked-ingredients");
@@ -155,6 +160,7 @@ export default function MealPlanView({
       const { data } = await searchRecipes({
         mealType: pickerTab === "all" ? undefined : pickerTab,
         query: pickerQuery,
+        cuisines: savedCuisines.length > 0 ? savedCuisines : undefined,
       });
       setPickerRecipes(data);
       setPickerLoading(false);
@@ -186,7 +192,7 @@ export default function MealPlanView({
     setPickerQuery("");
     setPickerTab(mealType);
     setPickerLoading(true);
-    const { data } = await searchRecipes({ mealType });
+    const { data } = await searchRecipes({ mealType, cuisines: savedCuisines.length > 0 ? savedCuisines : undefined });
     setPickerRecipes(data);
     setPickerLoading(false);
   }
@@ -438,13 +444,13 @@ export default function MealPlanView({
                             disabled={lockingId === entry.id}
                             onClick={async () => {
                               setLockingId(entry.id);
-                              await toggleMealLock({
+                              const { error: lockErr } = await toggleMealLock({
                                 weekNumber: entry.week_number,
                                 dayOfWeek: entry.day_of_week,
                                 mealSlot: entry.meal_slot,
                               });
-                              router.refresh();
                               setLockingId(null);
+                              if (!lockErr) router.refresh();
                             }}
                             className={`shrink-0 press transition-colors p-2 ${
                               isLocked ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground"

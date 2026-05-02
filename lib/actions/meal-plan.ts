@@ -195,7 +195,7 @@ async function generatePlan(config: PlanConfig) {
           const recipe = pickRecipe(pool, targets, usedIds[type]);
           usedIds[type].add(recipe.id);
           thisWeekUsed[type].add(recipe.id);
-          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id, locked: false });
         }
       }
     } else if (prepStyle === "batch_weekly" || prepStyle === "batch_biweekly") {
@@ -229,7 +229,7 @@ async function generatePlan(config: PlanConfig) {
           if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
           const recipe = recipeSet[slot];
           if (!recipe) continue;
-          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id, locked: false });
         }
       }
     } else if (prepStyle === "repeat_daily") {
@@ -239,7 +239,7 @@ async function generatePlan(config: PlanConfig) {
           if (lockedSet.has(`${week}-${dow}-${slot}`)) continue; // skip — user has locked this slot
           const recipe = repeatDailySet[slot];
           if (!recipe) continue;
-          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id });
+          allEntries.push({ user_id: userId, week_number: week, day_of_week: dow, day_type: DAY_TYPES[dow], meal_slot: slot, recipe_id: recipe.id, locked: false });
         }
       }
     }
@@ -453,6 +453,7 @@ export async function toggleMealLock(params: {
 export async function searchRecipes(params: {
   mealType?: string;
   query?: string;
+  cuisines?: string[];
 }): Promise<{ error: string | null; data: any[] }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -467,6 +468,9 @@ export async function searchRecipes(params: {
   }
   if (params.query?.trim()) {
     q = q.ilike("name", `%${params.query.trim()}%`);
+  } else if (params.cuisines?.length) {
+    // Only filter by cuisine when not doing a text search (text search should show all results)
+    q = q.in("cuisine", params.cuisines);
   }
 
   const { data, error } = await q.limit(100);
