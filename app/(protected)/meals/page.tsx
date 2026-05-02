@@ -38,6 +38,7 @@ export default async function MealsPage() {
       todayDow={todayDow}
       dailyCalories={macros.calories}
       dailyMacros={macros}
+      hasCustomMacros={!!profile.macro_overrides}
       mealsPerDay={mealsPerDay}
       savedCuisines={profile.cuisine_preferences ?? []}
       savedRestrictions={profile.dietary_restrictions ?? []}

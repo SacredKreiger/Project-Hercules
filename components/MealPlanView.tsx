@@ -78,6 +78,7 @@ export default function MealPlanView({
   todayDow,
   dailyCalories = 2000,
   dailyMacros,
+  hasCustomMacros = false,
   mealsPerDay: mealsPerDayProp = 4,
   savedCuisines = [],
   savedRestrictions = [],
@@ -88,6 +89,7 @@ export default function MealPlanView({
   todayDow: number;
   dailyCalories?: number;
   dailyMacros?: { calories: number; protein: number; carbs: number; fat: number };
+  hasCustomMacros?: boolean;
   mealsPerDay?: 3 | 4 | 5;
   savedCuisines?: string[];
   savedRestrictions?: string[];
@@ -222,7 +224,8 @@ export default function MealPlanView({
   // ── Macro calculations ───────────────────────────────────────────────────────
   const baseMacros = dailyMacros ?? { calories: dailyCalories, protein: 0, carbs: 0, fat: 0 };
   const isRestToday  = !trainingDays.includes(todayDow);
-  const todayMult    = isRestToday ? 0.85 : 1.0;
+  // Custom macros are the exact user-defined targets — never scale them by rest/training day
+  const todayMult    = hasCustomMacros ? 1.0 : (isRestToday ? 0.85 : 1.0);
   const todayCalTarget  = Math.round(baseMacros.calories * todayMult);
   const todayProtTarget = Math.round(baseMacros.protein  * todayMult);
   const todayCarbTarget = Math.round(baseMacros.carbs    * todayMult);
@@ -369,7 +372,7 @@ export default function MealPlanView({
                   const slotLabel = SLOT_LABELS[mealsPerDay]?.[slot] ?? "Meal";
                   const isRestDay = !trainingDays.includes(selectedDow);
                   const split     = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
-                  const fraction  = (split[slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
+                  const fraction  = (split[slot] ?? 0.25) * (hasCustomMacros ? 1.0 : (isRestDay ? 0.85 : 1.0));
                   const slotCal   = Math.round(baseMacros.calories * fraction);
                   const slotProt  = Math.round(baseMacros.protein  * fraction);
                   const slotCarb  = Math.round(baseMacros.carbs    * fraction);

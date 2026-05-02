@@ -401,11 +401,14 @@ export async function pickMealSlot(params: {
   if (!user) return { error: "Not authenticated" };
 
   const { error } = await supabase.from("meal_plans")
-    .update({ recipe_id: params.recipeId })
-    .eq("user_id", user.id)
-    .eq("week_number", params.weekNumber)
-    .eq("day_of_week", params.dayOfWeek)
-    .eq("meal_slot", params.mealSlot);
+    .upsert({
+      user_id: user.id,
+      week_number: params.weekNumber,
+      day_of_week: params.dayOfWeek,
+      meal_slot: params.mealSlot,
+      recipe_id: params.recipeId,
+      locked: false,
+    }, { onConflict: "user_id,week_number,day_of_week,meal_slot" });
 
   return { error: error?.message ?? null };
 }
