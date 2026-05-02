@@ -125,6 +125,10 @@ function pricePerUnit(name: string, unit: string, category: string): number {
 
   if (unit === "lbs") {
     // Proteins
+    if (n.includes("protein powder"))                         return 1.20; // ~$40/2lb tub
+    if (n.includes("protein pasta"))                          return 4.49; // ~$8.99/2lb bag
+    if (n.includes("center-cut bacon") || n.includes("canadian bacon")) return 5.99;
+    if (n.includes("bacon"))                                  return 5.49;
     if (n.includes("chicken breast"))                         return 5.49;
     if (n.includes("chicken thigh"))                          return 4.49;
     if (n.includes("ground chicken"))                         return 4.99;
@@ -167,6 +171,9 @@ function pricePerUnit(name: string, unit: string, category: string): number {
   }
 
   if (unit === "oz") {
+    if (n.includes("egg white"))                              return 0.18; // ~$3.49/carton
+    if (n.includes("buffalo sauce"))                          return 0.22; // ~$3.49/16oz bottle
+    if (n.includes("chipotle"))                               return 0.30; // ~$2.49/7oz can
     if (n.includes("oil") || n.includes("ghee"))              return 0.45;
     if (n.includes("peanut butter") || n.includes("almond butter")) return 0.35;
     if (n.includes("cheddar") || n.includes("parmesan") || n.includes("cheese")) return 0.60;
@@ -183,9 +190,10 @@ function pricePerUnit(name: string, unit: string, category: string): number {
   if (unit === "ct") {
     // Eggs elevated due to ongoing supply constraints (~$5.40/doz)
     if (n.includes("egg"))                                    return 0.45;
+    if (n.includes("burrito tortilla"))                       return 0.75; // ~$4.49 for 6 large
     if (n.includes("flour tortilla"))                         return 0.55; // ~$4.49 for 8
     if (n.includes("corn tortilla"))                          return 0.28; // ~$3.29 for 12
-    if (n.includes("tortilla"))                               return 0.42;
+    if (n.includes("tortilla"))                               return 0.55;
     if (n.includes("pita"))                                   return 0.85;
     if (n.includes("naan"))                                   return 1.49;
     if (n.includes("bread"))                                  return 0.25; // ~$3.99 for 16

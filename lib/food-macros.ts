@@ -64,7 +64,7 @@ const PROTEINS: Record<string, IngredientInfo> = {
   // Cured / processed meats
   "chorizo":           { macros: { protein: 14.0, carbs: 1.0,  fat: 34.0, kcal: 373 }, category: "protein" },
   "prosciutto":        { macros: { protein: 26.0, carbs: 0.0,  fat: 14.0, kcal: 230 }, category: "protein" },
-  "bacon":             { macros: { protein: 37.0, carbs: 1.5,  fat: 42.0, kcal: 541 }, category: "protein" },
+  "bacon":             { macros: { protein: 37.0, carbs: 1.5,  fat: 42.0, kcal: 541 }, category: "protein", pieceGrams: 28 },
   "sausage":           { macros: { protein: 14.0, carbs: 1.0,  fat: 27.0, kcal: 301 }, category: "protein" },
   // Dairy proteins
   "paneer":            { macros: { protein: 18.3, carbs: 3.6,  fat: 22.0, kcal: 281 }, category: "protein" },
@@ -103,9 +103,10 @@ const CARBS: Record<string, IngredientInfo> = {
   "kidney beans":      { macros: { protein: 8.7,  carbs: 22.0, fat: 0.5,  kcal: 127 }, category: "carb", cupGrams: 177 },
   "chickpeas":         { macros: { protein: 9.0,  carbs: 27.0, fat: 2.6,  kcal: 164 }, category: "carb", cupGrams: 164 },
   "lentils":           { macros: { protein: 9.0,  carbs: 20.0, fat: 0.4,  kcal: 116 }, category: "carb", cupGrams: 198 },
+  "burrito tortilla":  { macros: { protein: 8.5,  carbs: 50.0, fat: 7.5,  kcal: 302 }, category: "carb", pieceGrams: 75 },
   "corn tortilla":     { macros: { protein: 5.5,  carbs: 47.0, fat: 2.5,  kcal: 218 }, category: "carb", pieceGrams: 26 },
   "flour tortilla":    { macros: { protein: 8.5,  carbs: 50.0, fat: 7.5,  kcal: 302 }, category: "carb", pieceGrams: 45 },
-  "tortilla":          { macros: { protein: 7.0,  carbs: 49.0, fat: 5.0,  kcal: 260 }, category: "carb", pieceGrams: 35 },
+  "tortilla":          { macros: { protein: 7.0,  carbs: 49.0, fat: 5.0,  kcal: 260 }, category: "carb", pieceGrams: 45 },
   "pita":              { macros: { protein: 9.0,  carbs: 55.0, fat: 1.0,  kcal: 275 }, category: "carb", pieceGrams: 57 },
   "naan":              { macros: { protein: 9.0,  carbs: 51.0, fat: 4.5,  kcal: 290 }, category: "carb", pieceGrams: 90 },
   "bread":             { macros: { protein: 9.0,  carbs: 49.0, fat: 3.2,  kcal: 265 }, category: "carb", pieceGrams: 28 },
@@ -278,6 +279,10 @@ const OTHER: Record<string, IngredientInfo> = {
   "oyster sauce":   { macros: { protein: 2.0,  carbs: 9.0,  fat: 0.5, kcal: 51  }, category: "other", tbspGrams: 18 },
   "hoisin sauce":   { macros: { protein: 1.5,  carbs: 28.0, fat: 1.5, kcal: 220 }, category: "other", tbspGrams: 16 },
   "hot sauce":      { macros: { protein: 0.5,  carbs: 1.0,  fat: 0.0, kcal: 11  }, category: "other", tbspGrams: 16 },
+  "buffalo sauce":  { macros: { protein: 0.5,  carbs: 2.0,  fat: 0.5, kcal: 15  }, category: "other", tbspGrams: 15 },
+  "chipotle":       { macros: { protein: 1.5,  carbs: 5.0,  fat: 2.5, kcal: 40  }, category: "other", tbspGrams: 15 },
+  "corn starch":    { macros: { protein: 0.3,  carbs: 91.0, fat: 0.1, kcal: 381 }, category: "other", tbspGrams: 8.0 },
+  "egg white":      { macros: { protein: 11.0, carbs: 0.7,  fat: 0.2, kcal: 52  }, category: "protein", cupGrams: 243 },
   "sriracha":       { macros: { protein: 1.2,  carbs: 8.0,  fat: 1.5, kcal: 43  }, category: "other", tbspGrams: 17 },
   "gochujang":      { macros: { protein: 1.7,  carbs: 18.0, fat: 1.2, kcal: 99  }, category: "other", tbspGrams: 22 },
   "doubanjiang":    { macros: { protein: 3.0,  carbs: 8.0,  fat: 3.0, kcal: 70  }, category: "other", tbspGrams: 18 },
@@ -430,6 +435,8 @@ export function toGrams(qty: number, unit: string, info: IngredientInfo): number
   if (["whole", "piece", "pieces", "large", "medium", "small", "fillet", "fillets", "slice", "slices"].includes(u)) {
     return qty * (info.pieceGrams ?? 100);
   }
+  if (u === "clove" || u === "cloves") return qty * (info.pieceGrams ?? 4); // ~4g per garlic clove
+  if (u === "pinch" || u === "dash") return qty * 0.5; // ~0.5g per pinch
   // Unknown — return original qty, assume grams
   return qty;
 }

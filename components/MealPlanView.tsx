@@ -241,12 +241,22 @@ export default function MealPlanView({
   let consumedCal = 0, consumedProt = 0, consumedCarb = 0, consumedFat = 0;
   for (const entry of todayEntries) {
     if (eatenIds.has(entry.id)) {
-      const split    = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
-      const fraction = (split[entry.meal_slot] ?? 0.25) * todayMult;
-      consumedCal  += Math.round(baseMacros.calories * fraction);
-      consumedProt += Math.round(baseMacros.protein  * fraction);
-      consumedCarb += Math.round(baseMacros.carbs    * fraction);
-      consumedFat  += Math.round(baseMacros.fat      * fraction);
+      if (mode === "custom" && entry.recipes) {
+        // Custom mode: use actual recipe nutrition (1 serving as written)
+        const svgs = entry.recipes.servings || 1;
+        consumedCal  += Math.round(entry.recipes.calories  / svgs);
+        consumedProt += Math.round(entry.recipes.protein_g / svgs);
+        consumedCarb += Math.round(entry.recipes.carbs_g   / svgs);
+        consumedFat  += Math.round(entry.recipes.fat_g     / svgs);
+      } else {
+        // Auto mode: use the slot target (recipes were scaled to match)
+        const split    = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
+        const fraction = (split[entry.meal_slot] ?? 0.25) * todayMult;
+        consumedCal  += Math.round(baseMacros.calories * fraction);
+        consumedProt += Math.round(baseMacros.protein  * fraction);
+        consumedCarb += Math.round(baseMacros.carbs    * fraction);
+        consumedFat  += Math.round(baseMacros.fat      * fraction);
+      }
     }
   }
   const remainingCal = todayCalTarget - consumedCal;
