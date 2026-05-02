@@ -236,9 +236,10 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     .eq("user_id", userId)
     .order("week_number");
 
-  if (!mealPlans?.length) return { error: "No meal plan found. Generate a plan first." };
+  if (!mealPlans?.length) return { error: "No meals added yet. Add some meals first." };
 
-  const mealsPerDay = Math.max(...mealPlans.map((e) => e.meal_slot)) as 3 | 4 | 5;
+  const isCustomMode = profile.meal_mode === "custom";
+  const mealsPerDay = (profile.meals_per_day as 3 | 4 | 5) ?? (Math.max(...mealPlans.map((e) => e.meal_slot)) as 3 | 4 | 5);
 
   // Count distinct weeks that have meal data so we can average to a single week
   const weekCount = new Set(mealPlans.map((e) => e.week_number)).size;
@@ -252,7 +253,10 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     if (!recipe?.ingredients || !Array.isArray(recipe.ingredients)) continue;
 
     const isRestDay  = !trainingDays.includes(entry.day_of_week);
-    const multiplier = getServingsMultiplier(macros.calories, mealsPerDay, entry.meal_slot, recipe.calories, isRestDay);
+    // Custom mode: always use 1 serving as written — no macro-based scaling
+    const multiplier = isCustomMode
+      ? 1.0
+      : getServingsMultiplier(macros.calories, mealsPerDay, entry.meal_slot, recipe.calories, isRestDay);
 
     for (const ing of recipe.ingredients) {
       const key  = ing.name.toLowerCase().trim();

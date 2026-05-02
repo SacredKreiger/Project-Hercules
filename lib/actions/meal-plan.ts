@@ -481,9 +481,9 @@ export async function clearMealPlan(mealsPerDay?: number): Promise<{ error: stri
   const { error } = await supabase.from("meal_plans").delete().eq("user_id", user.id);
   if (error) return { error: error.message };
 
-  if (mealsPerDay) {
-    await supabase.from("profiles").update({ meals_per_day: mealsPerDay }).eq("id", user.id);
-  }
+  const updates: Record<string, unknown> = { meal_mode: "custom" };
+  if (mealsPerDay) updates.meals_per_day = mealsPerDay;
+  await supabase.from("profiles").update(updates).eq("id", user.id);
 
   return { error: null };
 }
@@ -492,6 +492,6 @@ export async function saveMealsPerDay(mealsPerDay: number): Promise<{ error: str
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
-  const { error } = await supabase.from("profiles").update({ meals_per_day: mealsPerDay }).eq("id", user.id);
+  const { error } = await supabase.from("profiles").update({ meals_per_day: mealsPerDay, meal_mode: "auto" }).eq("id", user.id);
   return { error: error?.message ?? null };
 }
