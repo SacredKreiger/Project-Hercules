@@ -57,15 +57,25 @@ export default async function DashboardPage() {
     .order("log_date", { ascending: false })
     .limit(1);
 
-  const mealsPerDay = todayMeals && todayMeals.length > 0
-    ? (Math.max(...todayMeals.map((m: any) => m.meal_slot)) as 3 | 4 | 5)
-    : 4;
+  const mealMode      = (profile.meal_mode ?? "auto") as "auto" | "custom";
+  const mealsPerDay   = (profile.meals_per_day as 3 | 4 | 5) ?? 4;
+  const hasCustomMacros = !!profile.macro_overrides;
 
   const isRestDay = todayDay?.isRest ?? false;
 
-  function slotMacros(slot: number) {
+  function slotMacros(entry: any) {
+    if (mealMode === "custom" && entry.recipes) {
+      const r = entry.recipes;
+      const svgs = r.servings || 1;
+      return {
+        calories: Math.round(r.calories  / svgs),
+        protein:  Math.round(r.protein_g / svgs),
+        carbs:    Math.round(r.carbs_g   / svgs),
+        fat:      Math.round(r.fat_g     / svgs),
+      };
+    }
     const split = CAL_SPLIT[mealsPerDay] ?? CAL_SPLIT[4];
-    const f = (split[slot] ?? 0.25) * (isRestDay ? 0.85 : 1.0);
+    const f = (split[entry.meal_slot] ?? 0.25) * (hasCustomMacros ? 1.0 : (isRestDay ? 0.85 : 1.0));
     return {
       calories: Math.round(macros.calories * f),
       protein:  Math.round(macros.protein  * f),
@@ -76,7 +86,7 @@ export default async function DashboardPage() {
 
   const slotMacrosList = (todayMeals ?? []).map((entry: any) => ({
     slot: entry.meal_slot,
-    ...slotMacros(entry.meal_slot),
+    ...slotMacros(entry),
   }));
 
   const currentWeight = progressLogs?.[0]?.weight_lbs ?? profile.current_weight_lbs;
@@ -254,7 +264,7 @@ export default async function DashboardPage() {
         {todayMeals && todayMeals.length > 0 ? (
           <div className="grid grid-cols-2 gap-2">
             {todayMeals.map((entry: any) => {
-              const m = slotMacros(entry.meal_slot);
+              const m = slotMacros(entry);
               return (
                 <Link key={entry.id} href="/meals" className="bg-foreground/5 rounded-xl px-3 py-2.5 block press">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground leading-none">

@@ -191,6 +191,8 @@ const FATS: Record<string, IngredientInfo> = {
   "feta":              { macros: { protein: 14.2, carbs: 4.1,  fat: 21.3,  kcal: 264 }, category: "fat", cupGrams: 113 },
   "goat cheese":       { macros: { protein: 21.6, carbs: 0.1,  fat: 29.8,  kcal: 364 }, category: "fat", cupGrams: 113 },
   "cheese":            { macros: { protein: 25.0, carbs: 2.0,  fat: 30.0,  kcal: 380 }, category: "fat", cupGrams: 113 },
+  "monterey jack":     { macros: { protein: 24.5, carbs: 0.7,  fat: 30.3,  kcal: 373 }, category: "fat", cupGrams: 113 },
+  "mac and cheese powder": { macros: { protein: 12.0, carbs: 68.0, fat: 6.0, kcal: 374 }, category: "other", tspGrams: 3.0 },
   "heavy cream":       { macros: { protein: 2.0,  carbs: 3.0,  fat: 35.0,  kcal: 345 }, category: "fat", tbspGrams: 15.0 },
   "sour cream":        { macros: { protein: 2.5,  carbs: 4.0,  fat: 20.0,  kcal: 198 }, category: "fat", tbspGrams: 12.0 },
   "tahini":            { macros: { protein: 17.0, carbs: 21.0, fat: 54.0,  kcal: 595 }, category: "fat", tbspGrams: 15.0 },
@@ -359,6 +361,9 @@ const OTHER: Record<string, IngredientInfo> = {
   // Chili & hot spices
   "cayenne":        { macros: { protein: 12.0, carbs: 57.0, fat: 17.3, kcal: 318 }, category: "other", tspGrams: 2.7 },
   "chili flakes":   { macros: { protein: 12.0, carbs: 57.0, fat: 17.3, kcal: 318 }, category: "other", tspGrams: 2.7 },
+  "chili powder":   { macros: { protein: 13.0, carbs: 50.0, fat: 14.0, kcal: 282 }, category: "other", tspGrams: 2.7 },
+  "garlic powder":  { macros: { protein: 16.6, carbs: 72.7, fat: 0.6,  kcal: 331 }, category: "other", tspGrams: 2.8 },
+  "onion powder":   { macros: { protein: 10.4, carbs: 79.1, fat: 0.4,  kcal: 341 }, category: "other", tspGrams: 2.5 },
   "red chili":      { macros: { protein: 12.0, carbs: 57.0, fat: 17.3, kcal: 318 }, category: "other", tspGrams: 2.7 },
   "ancho chile":    { macros: { protein: 12.0, carbs: 57.0, fat: 17.3, kcal: 318 }, category: "other", tspGrams: 2.7 },
   "ancho chili":    { macros: { protein: 12.0, carbs: 57.0, fat: 17.3, kcal: 318 }, category: "other", tspGrams: 2.7 },
