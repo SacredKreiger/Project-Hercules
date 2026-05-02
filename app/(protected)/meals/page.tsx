@@ -40,6 +40,7 @@ export default async function MealsPage() {
       mealsPerDay={mealsPerDay}
       savedCuisines={profile.cuisine_preferences ?? []}
       savedRestrictions={profile.dietary_restrictions ?? []}
+      mealMode={(profile.meal_mode as "auto" | "custom") ?? "auto"}
     />
   );
 }

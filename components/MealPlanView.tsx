@@ -93,11 +93,12 @@ export default function MealPlanView({
   mealsPerDay?: 3 | 4 | 5;
   savedCuisines?: string[];
   savedRestrictions?: string[];
+  mealMode?: "auto" | "custom";
 }) {
   const mealsPerDay = mealsPerDayProp;
   const router = useRouter();
 
-  const [mode, setMode]                 = useState<"auto" | "custom">("auto");
+  const [mode, setMode]                 = useState<"auto" | "custom">(mealMode ?? "auto");
   const [selectedWeek, setSelectedWeek] = useState(weekNumber);
   const [selectedDow, setSelectedDow]   = useState(todayDow);
   const [selected, setSelected]         = useState<MealEntry | null>(null);
@@ -119,8 +120,10 @@ export default function MealPlanView({
 
   useEffect(() => {
     try {
+      // Only apply localStorage override if user explicitly toggled — profile is authoritative
       const m = localStorage.getItem(MODE_KEY);
       if (m === "auto" || m === "custom") setMode(m);
+      else if (mealMode) setMode(mealMode);
 
       const todayDate = new Date().toISOString().split("T")[0];
       const eaten = localStorage.getItem(`hc-eaten-${todayDate}`);
