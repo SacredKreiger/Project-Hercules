@@ -249,8 +249,12 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
   const isCustomMode = profile.meal_mode === "custom";
   const mealsPerDay = (profile.meals_per_day as 3 | 4 | 5) ?? (Math.max(...mealPlans.map((e) => e.meal_slot)) as 3 | 4 | 5);
 
-  // Count distinct weeks that have meal data so we can average to a single week
+  // Monthly scale factor:
+  // Auto  → 4-week plan total is already 1 month — no scaling needed (factor = 1)
+  // Custom → treat configured days as daily routine, scale up to 28 days
   const weekCount = new Set(mealPlans.map((e) => e.week_number)).size;
+  const uniqueDays = new Set(mealPlans.map((e) => `${e.week_number}-${e.day_of_week}`)).size;
+  const monthlyScale = isCustomMode ? 28 / Math.max(1, uniqueDays) : 4 / Math.max(1, weekCount);
 
   // Accumulate total grams per ingredient key
   type Accumulator = { grams: number; category: string; displayName: string; unit?: string; qty?: number };
@@ -293,7 +297,7 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     }
   }
 
-  // Convert accumulated data to grocery items (divide by weekCount for weekly quantities)
+  // Convert accumulated data to grocery items — scaled to monthly (28-day) quantities
   type GroceryItem = { name: string; qty: number; unit: string; category: string; checked: boolean; cost: number };
   const items: GroceryItem[] = [];
 
@@ -301,8 +305,8 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
     const groceryCategory = getGroceryCategory(data.displayName, data.category);
 
     if (data.grams > 0) {
-      const weeklyGrams = data.grams / weekCount;
-      const { qty, unit } = toBulkDisplay(weeklyGrams, groceryCategory, data.displayName);
+      const monthlyGrams = data.grams * monthlyScale;
+      const { qty, unit } = toBulkDisplay(monthlyGrams, groceryCategory, data.displayName);
       if (qty <= 0) continue;
       const roundedQty = Math.round(qty * 10) / 10;
       const cost = Math.round(roundedQty * pricePerUnit(data.displayName, unit, groceryCategory) * 100) / 100;
@@ -315,8 +319,8 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
         cost,
       });
     } else if (data.qty && data.qty > 0) {
-      const weeklyQty  = data.qty / weekCount;
-      const roundedQty = Math.max(1, Math.round(weeklyQty));
+      const monthlyQty = data.qty * monthlyScale;
+      const roundedQty = Math.max(1, Math.round(monthlyQty));
       items.push({
         name:     data.displayName,
         qty:      roundedQty,
