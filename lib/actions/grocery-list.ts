@@ -17,7 +17,7 @@ const FOOD_TO_GROCERY: Record<string, string> = {
 };
 
 // Keywords that override the food-macros category for grocery purposes
-const DAIRY_KEYWORDS    = ["milk", "yogurt", "butter", "cream", "kefir", "cheddar", "parmesan", "sour cream", "heavy cream"];
+const DAIRY_KEYWORDS    = ["milk", "yogurt", "butter", "cream", "kefir", "cheddar", "parmesan", "sour cream", "heavy cream", "monterey", "jack cheese", "mozzarella", "provolone", "gouda", "brie", "ricotta", "cream cheese"];
 const PRODUCE_KEYWORDS  = ["sweet potato", "banana", "apple", "berr", "orange", "plantain", "avocado"];
 // Pantry items sometimes labelled as other categories
 const PANTRY_KEYWORDS   = ["oil", "paste", "sauce", "broth", "stock", "honey", "vinegar", "tahini", "salsa", "spice", "seasoning", "salt", "pepper", "cumin", "paprika", "turmeric", "cinnamon", "oregano", "basil", "thyme"];
@@ -68,7 +68,7 @@ function toBulkDisplay(grams: number, groceryCategory: string, name: string): { 
   // ── Grains & Carbs ────────────────────────────────────────────────────────────
   if (groceryCategory === "Grains & Carbs") {
     if (n.includes("tortilla") || n.includes("bread") || n.includes("pita") || n.includes("naan")) {
-      const pieceG = n.includes("flour tortilla") ? 45 : n.includes("corn tortilla") ? 26 : 28;
+      const pieceG = n.includes("burrito tortilla") ? 75 : n.includes("flour tortilla") ? 45 : n.includes("corn tortilla") ? 26 : 28;
       const count  = Math.round(grams / pieceG);
       return { qty: Math.max(1, count), unit: "ct" };
     }
@@ -84,6 +84,10 @@ function toBulkDisplay(grams: number, groceryCategory: string, name: string): { 
     if (n.includes("milk") || n.includes("coconut milk")) {
       const qts = grams / 946;
       return { qty: Math.round(qts * 10) / 10, unit: "qt" };
+    }
+    if (n.includes("peanut butter") || n.includes("almond butter") || n.includes("nut butter")) {
+      const oz = grams / 28.35;
+      return { qty: Math.round(oz * 10) / 10, unit: "oz" };
     }
     if (n.includes("butter")) {
       return { qty: Math.max(1, Math.round(grams / 113)), unit: "sticks" }; // 1 stick = 113 g
