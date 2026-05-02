@@ -405,6 +405,7 @@ export async function pickMealSlot(params: {
       user_id: user.id,
       week_number: params.weekNumber,
       day_of_week: params.dayOfWeek,
+      day_type: DAY_TYPES[params.dayOfWeek] ?? "work",
       meal_slot: params.mealSlot,
       recipe_id: params.recipeId,
       locked: false,
