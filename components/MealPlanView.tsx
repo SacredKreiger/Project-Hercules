@@ -379,13 +379,20 @@ export default function MealPlanView({
                   const isEaten   = entry ? eatenIds.has(entry.id) : false;
                   const isLocked  = entry?.locked ?? false;
 
+                  // Custom mode: show actual recipe macros if a recipe is assigned
+                  const r = entry?.recipes;
+                  const rServings = r?.servings || 1;
+                  const displayCal  = mode === "custom" && r ? Math.round(r.calories  / rServings) : slotCal;
+                  const displayProt = mode === "custom" && r ? Math.round(r.protein_g / rServings) : slotProt;
+                  const displayCarb = mode === "custom" && r ? Math.round(r.carbs_g   / rServings) : slotCarb;
+
                   return (
                     <div key={slot} className="glass widget-shadow rounded-2xl overflow-hidden">
                       {/* Slot header */}
                       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
                         <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{slotLabel}</p>
                         <p className="text-[11px] text-muted-foreground tabular-nums">
-                          {slotCal} kcal · {slotProt}P · {slotCarb}C
+                          {displayCal} kcal · {displayProt}P · {displayCarb}C
                         </p>
                       </div>
 
