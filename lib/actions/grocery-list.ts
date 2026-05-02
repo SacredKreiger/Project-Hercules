@@ -254,7 +254,7 @@ export async function generateGroceryList(userId: string): Promise<{ error: stri
   // Custom → treat configured days as daily routine, scale up to 28 days
   const weekCount = new Set(mealPlans.map((e) => e.week_number)).size;
   const uniqueDays = new Set(mealPlans.map((e) => `${e.week_number}-${e.day_of_week}`)).size;
-  const monthlyScale = isCustomMode ? 28 / Math.max(1, uniqueDays) : 4 / Math.max(1, weekCount);
+  const monthlyScale = isCustomMode ? 30 / Math.max(1, uniqueDays) : 30 / (Math.max(1, weekCount) * 7);
 
   // Accumulate total grams per ingredient key
   type Accumulator = { grams: number; category: string; displayName: string; unit?: string; qty?: number };
