@@ -10,7 +10,26 @@ import { SLOT_LABELS } from "@/lib/types/food";
 
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), { ssr: false });
 
-type Tab = "search" | "barcode" | "myfoods" | "recipes";
+type Tab = "search" | "browse" | "barcode" | "myfoods" | "recipes";
+
+const BROWSE_CATEGORIES = [
+  { emoji: "🍗", label: "Chicken",      query: "chicken breast" },
+  { emoji: "🥩", label: "Beef",         query: "ground beef" },
+  { emoji: "🐟", label: "Fish",         query: "salmon fillet" },
+  { emoji: "🥚", label: "Eggs",         query: "eggs" },
+  { emoji: "🥛", label: "Dairy",        query: "greek yogurt" },
+  { emoji: "🌾", label: "Grains",       query: "brown rice" },
+  { emoji: "🍝", label: "Pasta",        query: "pasta" },
+  { emoji: "🥦", label: "Vegetables",   query: "broccoli" },
+  { emoji: "🍎", label: "Fruits",       query: "apple" },
+  { emoji: "🥜", label: "Nuts & Seeds", query: "almonds" },
+  { emoji: "🍫", label: "Snacks",       query: "protein bar" },
+  { emoji: "🍕", label: "Fast Food",    query: "burger" },
+  { emoji: "🥤", label: "Beverages",    query: "protein shake" },
+  { emoji: "💊", label: "Supplements",  query: "whey protein" },
+  { emoji: "🌮", label: "Mexican",      query: "burrito" },
+  { emoji: "🍱", label: "Asian",        query: "sushi" },
+];
 
 interface Props {
   mealSlot: MealSlot;
@@ -50,6 +69,9 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged, onS
   const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "loading" | "error">("idle");
   const [barcodeError, setBarcodeError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [browseQuery, setBrowseQuery] = useState<string | null>(null);
+  const [browseResults, setBrowseResults] = useState<FoodResult[]>([]);
+  const [isBrowsePending, startBrowseTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load custom foods + recent/frequent once
@@ -74,6 +96,14 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged, onS
     }, 400);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, tab]);
+
+  function handleCategoryTap(query: string) {
+    setBrowseQuery(query);
+    startBrowseTransition(async () => {
+      const { results } = await searchFoods(query);
+      setBrowseResults(results);
+    });
+  }
 
   function handleFoodRowSelect(food: FoodResult) {
     if (onSelect) {
@@ -119,6 +149,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged, onS
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "search",  label: "Search" },
+    { id: "browse",  label: "Browse" },
     { id: "barcode", label: "Barcode" },
     { id: "myfoods", label: "My Foods" },
     { id: "recipes", label: "Recipes" },
@@ -227,6 +258,55 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged, onS
                   <FoodRow key={`${food.source}-${food.id}`} food={food} onSelect={handleFoodRowSelect} />
                 ))}
               </ul>
+            )}
+          </div>
+        )}
+
+        {/* ── Browse categories ── */}
+        {tab === "browse" && (
+          <div>
+            {browseQuery === null ? (
+              <div>
+                <p className="px-5 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Browse by Category</p>
+                <div className="grid grid-cols-2 gap-3 px-5 pt-3 pb-6">
+                  {BROWSE_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.query}
+                      type="button"
+                      onClick={() => handleCategoryTap(cat.query)}
+                      className="glass widget-shadow rounded-2xl p-4 flex flex-col items-center justify-center press active:scale-95 transition-transform"
+                    >
+                      <span className="text-3xl">{cat.emoji}</span>
+                      <span className="text-xs font-semibold text-center mt-2">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => { setBrowseQuery(null); setBrowseResults([]); }}
+                  className="flex items-center gap-1.5 px-5 py-3 text-xs text-muted-foreground font-semibold press"
+                >
+                  ← Back to Browse
+                </button>
+                {isBrowsePending ? (
+                  <div className="flex items-center justify-center h-48">
+                    <div className="w-6 h-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+                  </div>
+                ) : browseResults.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-48 text-center px-8">
+                    <p className="text-sm text-muted-foreground">No results found</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border/30">
+                    {browseResults.map((food) => (
+                      <FoodRow key={`${food.source}-${food.id}`} food={food} onSelect={handleFoodRowSelect} />
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
           </div>
         )}
