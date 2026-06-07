@@ -102,8 +102,18 @@ export const progressLogs = pgTable("progress_logs", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── Meal Plans ────────────────────────────────────────────────────────────────
+export const mealPlans = pgTable("meal_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  slots: jsonb("slots").notNull().default({}), // Record<MealSlot, FoodResult>
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type Profile = typeof profiles.$inferSelect;
+export type MealPlan = typeof mealPlans.$inferSelect;
 export type FoodLog = typeof foodLog.$inferSelect;
 export type CustomFood = typeof customFoods.$inferSelect;
 export type TrainingPlan = typeof trainingPlans.$inferSelect;

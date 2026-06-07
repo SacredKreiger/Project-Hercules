@@ -17,6 +17,7 @@ interface Props {
   date: string;
   onClose: () => void;
   onLogged: () => void;
+  onSelect?: (food: FoodResult) => void;
 }
 
 function customFoodToResult(f: CustomFood): FoodResult {
@@ -37,7 +38,7 @@ function customFoodToResult(f: CustomFood): FoodResult {
   };
 }
 
-export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: Props) {
+export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged, onSelect }: Props) {
   const [tab, setTab] = useState<Tab>("search");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FoodResult[]>([]);
@@ -74,6 +75,14 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, tab]);
 
+  function handleFoodRowSelect(food: FoodResult) {
+    if (onSelect) {
+      onSelect(food);
+    } else {
+      setSelected(food);
+    }
+  }
+
   async function handleBarcodeDetected(barcode: string) {
     setBarcodeStatus("loading");
     setBarcodeError("");
@@ -85,7 +94,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
     }
     setBarcodeFood(food);
     setBarcodeStatus("idle");
-    setSelected(food);
+    handleFoodRowSelect(food);
   }
 
   function handleLogged() {
@@ -189,7 +198,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
                         <p className="px-5 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Recent</p>
                         <ul className="divide-y divide-border/30">
                           {recentFoods.map((food) => (
-                            <FoodRow key={`recent-${food.id}-${food.name}`} food={food} onSelect={setSelected} />
+                            <FoodRow key={`recent-${food.id}-${food.name}`} food={food} onSelect={handleFoodRowSelect} />
                           ))}
                         </ul>
                       </div>
@@ -199,7 +208,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
                         <p className="px-5 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Frequent</p>
                         <ul className="divide-y divide-border/30">
                           {frequentFoods.map((food) => (
-                            <FoodRow key={`frequent-${food.id}-${food.name}`} food={food} onSelect={setSelected} />
+                            <FoodRow key={`frequent-${food.id}-${food.name}`} food={food} onSelect={handleFoodRowSelect} />
                           ))}
                         </ul>
                       </div>
@@ -215,7 +224,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
             ) : (
               <ul className="divide-y divide-border/30">
                 {results.map((food) => (
-                  <FoodRow key={`${food.source}-${food.id}`} food={food} onSelect={setSelected} />
+                  <FoodRow key={`${food.source}-${food.id}`} food={food} onSelect={handleFoodRowSelect} />
                 ))}
               </ul>
             )}
@@ -260,7 +269,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
             ) : (
               <ul className="divide-y divide-border/30">
                 {myFoodsFiltered.map((f) => (
-                  <FoodRow key={f.id} food={customFoodToResult(f)} onSelect={setSelected} />
+                  <FoodRow key={f.id} food={customFoodToResult(f)} onSelect={handleFoodRowSelect} />
                 ))}
               </ul>
             )}
@@ -278,7 +287,7 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
             ) : (
               <ul className="divide-y divide-border/30">
                 {recipesFiltered.map((f) => (
-                  <FoodRow key={f.id} food={customFoodToResult(f)} onSelect={setSelected} badge="Recipe" />
+                  <FoodRow key={f.id} food={customFoodToResult(f)} onSelect={handleFoodRowSelect} badge="Recipe" />
                 ))}
               </ul>
             )}

@@ -10,6 +10,7 @@ import { MEAL_SLOTS, SLOT_LABELS } from "@/lib/types/food";
 
 const FoodSearchSheet = dynamic(() => import("@/components/FoodSearchSheet"), { ssr: false });
 const RecipeBuilderSheet = dynamic(() => import("@/components/RecipeBuilderSheet"), { ssr: false });
+const MealPlansSheet = dynamic(() => import("@/components/MealPlansSheet"), { ssr: false });
 
 interface Props {
   entries: FoodLogEntry[];
@@ -22,6 +23,7 @@ export default function FoodDiaryView({ entries, totals, targets, date }: Props)
   const router = useRouter();
   const [activeSlot, setActiveSlot] = useState<MealSlot | null>(null);
   const [showRecipeBuilder, setShowRecipeBuilder] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
   const [, startTransition] = useTransition();
 
   const [optimisticEntries, removeOptimistic] = useOptimistic<FoodLogEntry[], string>(
@@ -63,16 +65,28 @@ export default function FoodDiaryView({ entries, totals, targets, date }: Props)
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold">{displayDate}</p>
             <h1 className="text-xl font-bold tracking-tight mt-0.5">Food Diary</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowRecipeBuilder(true)}
-            className="glass widget-shadow rounded-full px-3 py-1.5 text-[11px] font-semibold press text-muted-foreground flex items-center gap-1.5"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-            Recipe
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPlans(true)}
+              className="glass widget-shadow rounded-full px-3 py-1.5 text-[11px] font-semibold press text-muted-foreground flex items-center gap-1.5"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
+              </svg>
+              Plans
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRecipeBuilder(true)}
+              className="glass widget-shadow rounded-full px-3 py-1.5 text-[11px] font-semibold press text-muted-foreground flex items-center gap-1.5"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Recipe
+            </button>
+          </div>
         </div>
 
         {/* Macro progress */}
@@ -136,6 +150,15 @@ export default function FoodDiaryView({ entries, totals, targets, date }: Props)
         <RecipeBuilderSheet
           onClose={() => setShowRecipeBuilder(false)}
           onSaved={() => setShowRecipeBuilder(false)}
+        />
+      )}
+
+      {/* Meal plans sheet */}
+      {showPlans && (
+        <MealPlansSheet
+          date={date}
+          onClose={() => setShowPlans(false)}
+          onApplied={() => { setShowPlans(false); router.refresh(); }}
         />
       )}
     </>
