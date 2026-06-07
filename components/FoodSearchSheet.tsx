@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { searchFoods, lookupBarcodeAction, getUserCustomFoods } from "@/lib/actions/food-search";
+import { getRecentFoods } from "@/lib/actions/food-log";
 import ServingPickerSheet from "@/components/ServingPickerSheet";
 import type { FoodResult, CustomFood, MealSlot } from "@/lib/types/food";
 import { SLOT_LABELS } from "@/lib/types/food";
@@ -41,6 +42,8 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FoodResult[]>([]);
   const [customFoods, setCustomFoods] = useState<CustomFood[]>([]);
+  const [recentFoods, setRecentFoods] = useState<FoodResult[]>([]);
+  const [frequentFoods, setFrequentFoods] = useState<FoodResult[]>([]);
   const [selected, setSelected] = useState<FoodResult | null>(null);
   const [barcodeFood, setBarcodeFood] = useState<FoodResult | null>(null);
   const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -48,9 +51,13 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load custom foods once
+  // Load custom foods + recent/frequent once
   useEffect(() => {
     getUserCustomFoods().then(({ results }) => setCustomFoods(results));
+    getRecentFoods().then(({ recent, frequent }) => {
+      setRecentFoods(recent);
+      setFrequentFoods(frequent);
+    });
   }, []);
 
   // Debounced search
@@ -169,9 +176,36 @@ export default function FoodSearchSheet({ mealSlot, date, onClose, onLogged }: P
         {tab === "search" && (
           <div>
             {!query.trim() ? (
-              <div className="flex flex-col items-center justify-center h-48 text-center px-8">
-                <p className="text-3xl mb-2">🍎</p>
-                <p className="text-sm text-muted-foreground">Search any food, brand, or restaurant item</p>
+              <div className="pb-6">
+                {recentFoods.length === 0 && frequentFoods.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-48 text-center px-8">
+                    <p className="text-3xl mb-2">🍎</p>
+                    <p className="text-sm text-muted-foreground">Search any food, brand, or restaurant item</p>
+                  </div>
+                ) : (
+                  <>
+                    {recentFoods.length > 0 && (
+                      <div>
+                        <p className="px-5 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Recent</p>
+                        <ul className="divide-y divide-border/30">
+                          {recentFoods.map((food) => (
+                            <FoodRow key={`recent-${food.id}-${food.name}`} food={food} onSelect={setSelected} />
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {frequentFoods.length > 0 && (
+                      <div>
+                        <p className="px-5 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Frequent</p>
+                        <ul className="divide-y divide-border/30">
+                          {frequentFoods.map((food) => (
+                            <FoodRow key={`frequent-${food.id}-${food.name}`} food={food} onSelect={setSelected} />
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             ) : results.length === 0 && !isPending ? (
               <div className="flex flex-col items-center justify-center h-48 text-center px-8">

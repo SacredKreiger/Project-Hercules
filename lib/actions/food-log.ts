@@ -68,6 +68,64 @@ export async function deleteFoodLog(id: string): Promise<{ error: string | null 
   return { error: error?.message ?? null };
 }
 
+// ─── Recent + frequent foods ──────────────────────────────────────────────────
+
+export async function getRecentFoods(): Promise<{ recent: FoodResult[]; frequent: FoodResult[] }> {
+  const { supabase, user } = await getUser();
+
+  const { data } = await supabase
+    .from("food_log")
+    .select("food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sodium_mg, serving_qty, serving_unit, serving_size_g, source, external_id, barcode, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (!data || data.length === 0) return { recent: [], frequent: [] };
+
+  // Deduplicate by food_name — keep the most recent occurrence per food
+  const seen = new Map<string, typeof data[0]>();
+  const countMap = new Map<string, number>();
+
+  for (const row of data) {
+    const key = row.food_name.toLowerCase();
+    countMap.set(key, (countMap.get(key) ?? 0) + 1);
+    if (!seen.has(key)) seen.set(key, row);
+  }
+
+  type Row = NonNullable<typeof data>[0];
+  function rowToResult(row: Row): FoodResult {
+    return {
+      id: row.external_id ?? row.food_name,
+      source: (row.source as FoodResult["source"]) ?? "custom",
+      name: row.food_name,
+      brand: row.brand_name ?? undefined,
+      calories: row.calories,
+      protein_g: row.protein_g,
+      carbs_g: row.carbs_g,
+      fat_g: row.fat_g,
+      fiber_g: row.fiber_g ?? undefined,
+      sodium_mg: row.sodium_mg ?? undefined,
+      serving_qty: row.serving_qty,
+      serving_unit: row.serving_unit,
+      serving_size_g: row.serving_size_g ?? undefined,
+      barcode: row.barcode ?? undefined,
+    };
+  }
+
+  // Recent: first 10 unique foods in reverse-chron order
+  const recent = Array.from(seen.values()).slice(0, 10).map(rowToResult);
+
+  // Frequent: top 10 by log count (excluding anything already in recent top 5)
+  const recentTop5Keys = new Set(Array.from(seen.keys()).slice(0, 5));
+  const frequent = Array.from(seen.entries())
+    .filter(([key]) => !recentTop5Keys.has(key))
+    .sort((a, b) => (countMap.get(b[0]) ?? 0) - (countMap.get(a[0]) ?? 0))
+    .slice(0, 10)
+    .map(([, row]) => rowToResult(row));
+
+  return { recent, frequent };
+}
+
 // ─── Get day log ──────────────────────────────────────────────────────────────
 
 export async function getDayLog(date: string): Promise<{
