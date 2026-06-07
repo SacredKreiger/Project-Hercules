@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useOptimistic, useTransition } from "react";
+import { useState, useOptimistic, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { deleteFoodLog } from "@/lib/actions/food-log";
@@ -24,7 +24,18 @@ export default function FoodDiaryView({ entries, totals, targets, date }: Props)
   const [activeSlot, setActiveSlot] = useState<MealSlot | null>(null);
   const [showRecipeBuilder, setShowRecipeBuilder] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!showMenu) return;
+    function handleOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+    }
+    window.addEventListener("mousedown", handleOutside);
+    return () => window.removeEventListener("mousedown", handleOutside);
+  }, [showMenu]);
 
   const [optimisticEntries, removeOptimistic] = useOptimistic<FoodLogEntry[], string>(
     entries,
@@ -65,27 +76,35 @@ export default function FoodDiaryView({ entries, totals, targets, date }: Props)
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold">{displayDate}</p>
             <h1 className="text-xl font-bold tracking-tight mt-0.5">Food Diary</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="relative" ref={menuRef}>
             <button
               type="button"
-              onClick={() => setShowPlans(true)}
-              className="glass widget-shadow rounded-full px-3 py-1.5 text-[11px] font-semibold press text-muted-foreground flex items-center gap-1.5"
+              onClick={() => setShowMenu((v) => !v)}
+              className="w-8 h-8 flex items-center justify-center glass widget-shadow rounded-full press text-muted-foreground"
+              aria-label="More options"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
               </svg>
-              Plans
             </button>
-            <button
-              type="button"
-              onClick={() => setShowRecipeBuilder(true)}
-              className="glass widget-shadow rounded-full px-3 py-1.5 text-[11px] font-semibold press text-muted-foreground flex items-center gap-1.5"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14"/>
-              </svg>
-              Recipe
-            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-10 z-40 glass widget-shadow rounded-xl overflow-hidden min-w-[160px]">
+                <button
+                  type="button"
+                  onClick={() => { setShowMenu(false); setShowPlans(true); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-foreground press active:bg-foreground/5 text-left"
+                >
+                  <span>📋</span> Meal Plans
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowMenu(false); setShowRecipeBuilder(true); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-foreground press active:bg-foreground/5 text-left border-t border-border/40"
+                >
+                  <span>🍳</span> Build Recipe
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
