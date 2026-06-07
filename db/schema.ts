@@ -19,102 +19,82 @@ export const activityLevelEnum = pgEnum("activity_level", [
   "very_active",
   "extra_active",
 ]);
-export const mealTypeEnum = pgEnum("meal_type", [
-  "breakfast",
-  "lunch",
-  "dinner",
-  "snack",
-  "shake",
-]);
-export const dayTypeEnum = pgEnum("day_type", ["work", "off", "cook"]);
 
 // ── Users ────────────────────────────────────────────────────────────────────
 export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey(), // matches auth.users.id
+  id: uuid("id").primaryKey(),
   name: text("name").notNull(),
   age: integer("age").notNull(),
   height_cm: real("height_cm").notNull(),
   current_weight_lbs: real("current_weight_lbs").notNull(),
   goal_weight_lbs: real("goal_weight_lbs").notNull(),
-  gender: text("gender").notNull(), // 'male' | 'female'
+  gender: text("gender").notNull(),
   activity_level: activityLevelEnum("activity_level").notNull(),
   phase: phaseEnum("phase").notNull(),
   program_start_date: date("program_start_date").notNull(),
   onboarding_complete: boolean("onboarding_complete").default(false).notNull(),
-  cuisine_preferences: text("cuisine_preferences").array().default([]).notNull(),
-  dietary_restrictions: text("dietary_restrictions").array().default([]).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-// ── Recipes ──────────────────────────────────────────────────────────────────
-export const recipes = pgTable("recipes", {
+// ── Food Log ──────────────────────────────────────────────────────────────────
+export const foodLog = pgTable("food_log", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  description: text("description"),
-  meal_type: mealTypeEnum("meal_type").notNull(),
-  cuisine: text("cuisine").notNull(), // e.g. 'Mexican', 'Japanese', 'Mediterranean'
-  calories: integer("calories").notNull(),
-  protein_g: real("protein_g").notNull(),
-  carbs_g: real("carbs_g").notNull(),
-  fat_g: real("fat_g").notNull(),
-  prep_time_min: integer("prep_time_min"),
-  cook_time_min: integer("cook_time_min"),
-  servings: integer("servings").default(1).notNull(),
-  ingredients: jsonb("ingredients").notNull(), // [{ name, qty, unit }]
-  instructions: text("instructions"),
-  image_url: text("image_url"),
-  tags: text("tags").array(), // ['bulk-friendly', 'high-protein', 'meal-prep', etc.]
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  logged_date: date("logged_date").notNull(),
+  meal_slot: text("meal_slot").notNull(), // 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  food_name: text("food_name").notNull(),
+  brand_name: text("brand_name"),
+  calories: real("calories").notNull(),
+  protein_g: real("protein_g").notNull().default(0),
+  carbs_g: real("carbs_g").notNull().default(0),
+  fat_g: real("fat_g").notNull().default(0),
+  fiber_g: real("fiber_g"),
+  sodium_mg: real("sodium_mg"),
+  serving_qty: real("serving_qty").notNull().default(1),
+  serving_unit: text("serving_unit").notNull().default("serving"),
+  serving_size_g: real("serving_size_g"),
+  source: text("source").notNull().default("search"),
+  barcode: text("barcode"),
+  external_id: text("external_id"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-// ── Meal Plans ───────────────────────────────────────────────────────────────
-export const mealPlans = pgTable("meal_plans", {
+// ── Custom Foods & Recipes ────────────────────────────────────────────────────
+export const customFoods = pgTable("custom_foods", {
   id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  week_number: integer("week_number").notNull(),
-  day_of_week: integer("day_of_week").notNull(), // 0=Sun … 6=Sat
-  day_type: dayTypeEnum("day_type").notNull(),
-  meal_slot: integer("meal_slot").notNull(), // 1–4
-  recipe_id: uuid("recipe_id")
-    .notNull()
-    .references(() => recipes.id),
-  servings_multiplier: real("servings_multiplier").default(1.0).notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-});
-
-// ── Grocery Lists ─────────────────────────────────────────────────────────────
-export const groceryLists = pgTable("grocery_lists", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  week_number: integer("week_number").notNull(),
-  items: jsonb("items").notNull(), // [{ name, qty, unit, category, checked }]
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  food_name: text("food_name").notNull(),
+  brand_name: text("brand_name"),
+  calories: real("calories").notNull(),
+  protein_g: real("protein_g").notNull().default(0),
+  carbs_g: real("carbs_g").notNull().default(0),
+  fat_g: real("fat_g").notNull().default(0),
+  fiber_g: real("fiber_g"),
+  serving_qty: real("serving_qty").notNull().default(1),
+  serving_unit: text("serving_unit").notNull().default("serving"),
+  serving_size_g: real("serving_size_g"),
+  is_recipe: boolean("is_recipe").default(false),
+  ingredients: jsonb("ingredients"), // RecipeIngredient[]
+  barcode: text("barcode"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ── Training Plans ────────────────────────────────────────────────────────────
 export const trainingPlans = pgTable("training_plans", {
   id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   week_number: integer("week_number").notNull(),
   day_of_week: integer("day_of_week").notNull(),
   workout_name: text("workout_name").notNull(),
   is_rest_day: boolean("is_rest_day").default(false).notNull(),
-  exercises: jsonb("exercises"), // [{ name, sets, reps, rest_sec, notes }]
+  exercises: jsonb("exercises"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ── Progress Logs ─────────────────────────────────────────────────────────────
 export const progressLogs = pgTable("progress_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   log_date: date("log_date").notNull(),
   weight_lbs: real("weight_lbs").notNull(),
   body_fat_pct: real("body_fat_pct"),
@@ -124,8 +104,7 @@ export const progressLogs = pgTable("progress_logs", {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type Profile = typeof profiles.$inferSelect;
-export type Recipe = typeof recipes.$inferSelect;
-export type MealPlan = typeof mealPlans.$inferSelect;
-export type GroceryList = typeof groceryLists.$inferSelect;
+export type FoodLog = typeof foodLog.$inferSelect;
+export type CustomFood = typeof customFoods.$inferSelect;
 export type TrainingPlan = typeof trainingPlans.$inferSelect;
 export type ProgressLog = typeof progressLogs.$inferSelect;

@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, UtensilsCrossed, ShoppingCart, Dumbbell, TrendingUp, User } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, Dumbbell, TrendingUp, User } from "lucide-react";
 
 const NAV = [
   { href: "/dashboard", icon: LayoutDashboard },
   { href: "/meals", icon: UtensilsCrossed },
-  { href: "/grocery", icon: ShoppingCart },
   { href: "/train", icon: Dumbbell },
   { href: "/progress", icon: TrendingUp },
   { href: "/profile", icon: User },
@@ -219,7 +218,7 @@ export default function DrumNav() {
 
   return (
     <>
-      {/* 6 indicator dots — same size, filled = current page, outline = inactive */}
+      {/* indicator dots — same size, filled = current page, outline = inactive */}
       <div
         className="md:hidden fixed right-0.5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-[10px] pointer-events-none"
         style={{ opacity: open ? 0 : 1, transition: `opacity 0.18s ${EASING}` }}
