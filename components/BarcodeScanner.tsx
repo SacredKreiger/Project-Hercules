@@ -80,22 +80,19 @@ export default function BarcodeScanner({ onDetected, onError }: Props) {
   async function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setStatus("loading");
-    try {
-      const { BrowserMultiFormatReader } = await import("@zxing/library");
-      const reader = new BrowserMultiFormatReader();
-      const img = await createImageBitmap(file);
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0);
-      const dataUrl = canvas.toDataURL();
-      const result = await reader.decodeFromImageUrl(dataUrl);
-      handleBarcode(result.getText());
-    } catch {
-      setStatus("unsupported");
-      onError?.("Couldn't read barcode. Try better lighting or a clearer angle.");
+    // Use native BarcodeDetector on image file if available
+    if ("BarcodeDetector" in window) {
+      try {
+        setStatus("loading");
+        const bitmap = await createImageBitmap(file);
+        // @ts-ignore
+        const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "qr_code"] });
+        const results = await detector.detect(bitmap);
+        if (results.length > 0) { handleBarcode(results[0].rawValue); return; }
+      } catch {}
     }
+    setStatus("unsupported");
+    onError?.("Couldn't read barcode from image. Try scanning with the live camera instead.");
   }
 
   if (status === "denied") {
