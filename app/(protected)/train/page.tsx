@@ -154,15 +154,14 @@ function SupersetBlock({
   const timerEndRef = useRef<number>(0);
 
   useEffect(() => {
-    if (restSecondsLeft <= 0) return;
-    timerEndRef.current = Date.now() + restSecondsLeft * 1000;
     const id = setInterval(() => {
+      if (timerEndRef.current === 0) return;
       const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
       setRestSecondsLeft(remaining);
-      if (remaining <= 0) { clearInterval(id); setRestDone(true); }
+      if (remaining <= 0) { timerEndRef.current = 0; setRestDone(true); }
     }, 500);
     return () => clearInterval(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function onVisible() {
@@ -413,21 +412,16 @@ function ExerciseCard({
   const restTotal = exercise.restSeconds ?? 0;
   const timerEndRef = useRef<number>(0);
 
-  // Timestamp-based timer — survives tab backgrounding on iOS
+  // Always-running interval — startTimer() sets timerEndRef, interval picks it up next tick
   useEffect(() => {
-    if (restSecondsLeft <= 0) return;
-    timerEndRef.current = Date.now() + restSecondsLeft * 1000;
-
     const id = setInterval(() => {
+      if (timerEndRef.current === 0) return;
       const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
       setRestSecondsLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(id);
-        setRestDone(true);
-      }
-    }, 500); // 500ms tick for accuracy without battery drain
+      if (remaining <= 0) { timerEndRef.current = 0; setRestDone(true); }
+    }, 500);
     return () => clearInterval(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally fires once on start
+  }, []);
 
   // Re-sync when tab becomes visible again
   useEffect(() => {
@@ -459,6 +453,7 @@ function ExerciseCard({
     onLogSet(i + 1, weight, reps);
     if (restTotal > 0) {
       setRestDone(false);
+      timerEndRef.current = Date.now() + restTotal * 1000;
       setRestSecondsLeft(restTotal);
     }
   }
@@ -609,6 +604,19 @@ export default function TrainPage() {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragTouchStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const exerciseItemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const isDraggingRef = useRef(false);
+  const exerciseListRef = useRef<HTMLDivElement>(null);
+
+  // Native passive:false touchmove to prevent page scroll + text selection during drag
+  useEffect(() => {
+    const el = exerciseListRef.current;
+    if (!el) return;
+    function onTouchMove(e: TouchEvent) {
+      if (isDraggingRef.current) e.preventDefault();
+    }
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onTouchMove);
+  }, []);
 
   const todayDow = new Date().getDay();
   const [selectedDow, setSelectedDow] = useState<number>(todayDow);
@@ -780,6 +788,7 @@ export default function TrainPage() {
     const t = e.touches[0];
     dragTouchStart.current = { x: t.clientX, y: t.clientY };
     longPressTimerRef.current = setTimeout(() => {
+      isDraggingRef.current = true;
       setDraggingIdx(originalIndex);
       navigator.vibrate?.(40);
     }, 600);
@@ -814,6 +823,7 @@ export default function TrainPage() {
     if (draggingIdx !== null && dragOverIdx !== null) {
       groupOrUngroup(draggingIdx, dragOverIdx);
     }
+    isDraggingRef.current = false;
     setDraggingIdx(null);
     setDragOverIdx(null);
   }
@@ -1100,6 +1110,7 @@ export default function TrainPage() {
                 </div>
               )}
 
+              <div ref={exerciseListRef} className="space-y-4">
               {buildRenderItems((selectedDay as { exercises?: ExerciseConfig[] }).exercises ?? []).map((item) => {
                 if (item.type === "group") {
                   const isDraggingGroup = item.originalIndices.includes(draggingIdx ?? -1);
@@ -1113,6 +1124,7 @@ export default function TrainPage() {
                       onTouchStart={(e) => handleExTouchStart(e, item.originalIndices[0])}
                       onTouchMove={handleExTouchMove}
                       onTouchEnd={handleExTouchEnd}
+                      style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
                       className={`transition-all duration-150 rounded-2xl ${isDraggingGroup ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDraggingGroup ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
                     >
                       <SupersetBlock
@@ -1142,6 +1154,7 @@ export default function TrainPage() {
                     onTouchStart={(e) => handleExTouchStart(e, item.originalIndex)}
                     onTouchMove={handleExTouchMove}
                     onTouchEnd={handleExTouchEnd}
+                    style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
                     className={`transition-all duration-150 rounded-2xl ${isDragging ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDragging ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
                   >
                     <ExerciseCard
@@ -1160,6 +1173,7 @@ export default function TrainPage() {
                   </div>
                 );
               })}
+              </div>
 
               {isViewingToday && doneSets > 0 && !completed && (
                 <button type="button" onClick={handleCompleteWorkout}
