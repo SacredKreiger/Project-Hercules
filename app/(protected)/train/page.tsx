@@ -78,21 +78,35 @@ function ExerciseCard({
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
   const [restDone,        setRestDone]        = useState(false);
   const restTotal = exercise.restSeconds ?? 0;
+  const timerEndRef = useRef<number>(0);
 
+  // Timestamp-based timer — survives tab backgrounding on iOS
   useEffect(() => {
     if (restSecondsLeft <= 0) return;
+    timerEndRef.current = Date.now() + restSecondsLeft * 1000;
+
     const id = setInterval(() => {
-      setRestSecondsLeft((s) => {
-        if (s <= 1) {
-          clearInterval(id);
-          setRestDone(true);
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
+      const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
+      setRestSecondsLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(id);
+        setRestDone(true);
+      }
+    }, 500); // 500ms tick for accuracy without battery drain
     return () => clearInterval(id);
-  }, [restSecondsLeft]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally fires once on start
+
+  // Re-sync when tab becomes visible again
+  useEffect(() => {
+    function onVisible() {
+      if (document.hidden || timerEndRef.current === 0) return;
+      const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
+      setRestSecondsLeft(remaining);
+      if (remaining === 0) setRestDone(true);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   // Hide "Ready" indicator after 2 s
   useEffect(() => {

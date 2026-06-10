@@ -11,7 +11,7 @@ export function increment(exercise: string) { return LOWER_BODY.has(exercise) ? 
 export function round5(n: number) { return Math.round(n / 5) * 5; }
 export function startingWeight(pr: number): number { return Math.max(45, round5(pr * 0.70)); }
 /** Calculate working weight from PR and percentage, rounded to nearest 5 lbs. */
-export function prWeight(prLbs: number, percent: number): number { return Math.max(45, round5(prLbs * percent / 100)); }
+export function prWeight(prLbs: number, percent: number): number { return round5(prLbs * percent / 100); }
 
 // ── Bodyweight-based 1RM estimates (Strength Level / ExRx beginner standards) ──
 // Multiplier = estimated 1RM / bodyweight for an untrained individual
