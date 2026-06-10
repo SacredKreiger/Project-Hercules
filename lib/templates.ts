@@ -5,6 +5,7 @@ export type ExerciseConfig = {
   restSeconds: number;
   notes?: string;
   prPercent?: number; // % of PR to use as working weight (PR mode only)
+  groupId?: string;   // exercises sharing the same groupId form a superset (2) or circuit (3+)
 };
 
 export type ProgramDay = {

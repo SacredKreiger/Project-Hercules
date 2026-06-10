@@ -9,7 +9,7 @@ import { updateProgressAfterWorkout } from "@/lib/actions/training";
 import { getSuggested, increment, prWeight } from "@/lib/training-utils";
 import { resetProgram } from "@/lib/actions/programs";
 import { getActiveDayInfo, isV2 } from "@/lib/program";
-import type { AnyProgram } from "@/lib/program";
+import type { AnyProgram, ProgramV1, ProgramV2, Phase } from "@/lib/program";
 import type { ExerciseConfig } from "@/lib/templates";
 
 type SetLog = { setNumber: number; actualWeight: number | null; actualReps: number | null; completed: boolean };
@@ -21,7 +21,7 @@ function todayKey() {
   return `hc-setlogs-${new Date().toISOString().split("T")[0]}`;
 }
 
-// ── ExerciseCard ──────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
 function parseDefaultReps(reps: string): string {
   if (!reps || reps === "AMRAP") return "";
@@ -30,6 +30,339 @@ function parseDefaultReps(reps: string): string {
 }
 
 type Draft = { weight: string; reps: string };
+
+// ── RenderItem type ───────────────────────────────────────────────────────────
+
+type RenderItem =
+  | { type: "single"; exercise: ExerciseConfig; originalIndex: number }
+  | { type: "group"; exercises: ExerciseConfig[]; groupId: string; originalIndices: number[] };
+
+function buildRenderItems(exercises: ExerciseConfig[]): RenderItem[] {
+  const items: RenderItem[] = [];
+  const seen = new Set<string>();
+  exercises.forEach((ex, i) => {
+    if (ex.groupId) {
+      if (seen.has(ex.groupId)) return;
+      seen.add(ex.groupId);
+      const groupExercises = exercises
+        .map((e, idx) => ({ e, idx }))
+        .filter(({ e }) => e.groupId === ex.groupId);
+      items.push({
+        type: "group",
+        exercises: groupExercises.map(x => x.e),
+        groupId: ex.groupId,
+        originalIndices: groupExercises.map(x => x.idx),
+      });
+    } else {
+      items.push({ type: "single", exercise: ex, originalIndex: i });
+    }
+  });
+  return items;
+}
+
+/** Replace exercises for a given dayOfWeek inside any program shape. */
+function updateDayExercises(program: AnyProgram, dow: number, exercises: ExerciseConfig[]): AnyProgram {
+  if (!isV2(program)) {
+    const p1 = program as ProgramV1;
+    return {
+      ...p1,
+      days: p1.days.map(d => d.dayOfWeek === dow ? { ...d, exercises } : d),
+    };
+  }
+  const p2 = program as ProgramV2;
+  // We need to find the active phase — use today's week to determine it
+  const start = new Date(p2.startDate);
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((today.getTime() - start.getTime()) / 86_400_000);
+  const weekNum = Math.max(0, Math.floor(diffDays / 7));
+  let accumulated = 0;
+  let activePhaseIdx = p2.phases.length - 1;
+  for (let i = 0; i < p2.phases.length; i++) {
+    if (weekNum < accumulated + p2.phases[i].weeks) {
+      activePhaseIdx = i;
+      break;
+    }
+    accumulated += p2.phases[i].weeks;
+  }
+  const updatedPhases: Phase[] = p2.phases.map((phase, idx) => {
+    if (idx !== activePhaseIdx) return phase;
+    return {
+      ...phase,
+      days: phase.days.map(d => d.dayOfWeek === dow ? { ...d, exercises } : d),
+    };
+  });
+  return { ...p2, phases: updatedPhases };
+}
+
+// ── SupersetBlock ─────────────────────────────────────────────────────────────
+
+function SupersetBlock({
+  exercises,
+  setLogs,
+  onLogSet,
+  onUnlogSet,
+  suggestedWeights,
+  personalRecords,
+  prModeEnabled,
+  prevSession,
+  onUngroup,
+}: {
+  exercises: ExerciseConfig[];
+  setLogs: Record<string, SetLog[]>;
+  onLogSet: (name: string, setNum: number, weight: number | null, reps: number | null) => void;
+  onUnlogSet: (name: string, setNum: number) => void;
+  suggestedWeights: Record<string, number>;
+  personalRecords: Record<string, number>;
+  prModeEnabled: boolean;
+  prevSession: Record<string, { sets: number; weight: number; reps: string }>;
+  onUngroup: (exerciseName: string) => void;
+}) {
+  const isCircuit = exercises.length >= 3;
+  const label = isCircuit ? "Circuit" : "Superset";
+  const maxSets = Math.max(...exercises.map(e => e.sets));
+
+  // Per-exercise draft state keyed by exercise name
+  const [draftsMap, setDraftsMap] = useState<Record<string, Draft[]>>(() => {
+    const m: Record<string, Draft[]> = {};
+    for (const ex of exercises) {
+      const info = getExerciseInfo(ex.name);
+      const isWeighted = info?.unit === "weight_reps";
+      const sw = suggestedWeights[ex.name] ?? 0;
+      const defaultWeight = sw > 0 ? sw.toString() : "";
+      const defaultReps = parseDefaultReps(ex.reps);
+      m[ex.name] = Array.from({ length: ex.sets }, () => ({
+        weight: isWeighted ? defaultWeight : "",
+        reps: defaultReps,
+      }));
+    }
+    return m;
+  });
+
+  function setDraft(exName: string, setIdx: number, field: keyof Draft, val: string) {
+    setDraftsMap(prev => ({
+      ...prev,
+      [exName]: (prev[exName] ?? []).map((d, i) => i === setIdx ? { ...d, [field]: val } : d),
+    }));
+  }
+
+  // Rest timer (shared for the block — fires after each round completes)
+  const lastRestSeconds = exercises[exercises.length - 1]?.restSeconds ?? 0;
+  const [restSecondsLeft, setRestSecondsLeft] = useState(0);
+  const [restDone, setRestDone] = useState(false);
+  const timerEndRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (restSecondsLeft <= 0) return;
+    timerEndRef.current = Date.now() + restSecondsLeft * 1000;
+    const id = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
+      setRestSecondsLeft(remaining);
+      if (remaining <= 0) { clearInterval(id); setRestDone(true); }
+    }, 500);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.hidden || timerEndRef.current === 0) return;
+      const remaining = Math.max(0, Math.ceil((timerEndRef.current - Date.now()) / 1000));
+      setRestSecondsLeft(remaining);
+      if (remaining === 0) setRestDone(true);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  useEffect(() => {
+    if (!restDone) return;
+    const id = setTimeout(() => setRestDone(false), 2000);
+    return () => clearTimeout(id);
+  }, [restDone]);
+
+  function startRestTimer() {
+    if (lastRestSeconds > 0) {
+      setRestDone(false);
+      setRestSecondsLeft(lastRestSeconds);
+      timerEndRef.current = Date.now() + lastRestSeconds * 1000;
+    }
+  }
+
+  function handleCheck(ex: ExerciseConfig, setIdx: number, justLoggedName: string) {
+    const info = getExerciseInfo(ex.name);
+    const isWeighted = info?.unit === "weight_reps";
+    const isCardio = info?.unit === "distance_time";
+    const d = (draftsMap[ex.name] ?? [])[setIdx] ?? { weight: "", reps: "" };
+    const weight = isWeighted ? (parseFloat(d.weight) || null) : null;
+    const reps = isCardio ? null : (parseInt(d.reps, 10) || null);
+    const setNum = setIdx + 1;
+    onLogSet(ex.name, setNum, weight, reps);
+
+    // Check if round is complete (optimistic: treat just-logged ex as done)
+    const eligibleForThisSet = exercises.filter(e => e.sets >= setNum);
+    const allDone = eligibleForThisSet.every(e => {
+      if (e.name === justLoggedName) return true;
+      return (setLogs[e.name] ?? []).some(l => l.setNumber === setNum && l.completed);
+    });
+    if (allDone) startRestTimer();
+  }
+
+  function handleUncheck(ex: ExerciseConfig, setIdx: number) {
+    const setNum = setIdx + 1;
+    const log = (setLogs[ex.name] ?? []).find(l => l.setNumber === setNum);
+    if (log) {
+      if (log.actualWeight != null) setDraft(ex.name, setIdx, "weight", log.actualWeight.toString());
+      if (log.actualReps != null) setDraft(ex.name, setIdx, "reps", log.actualReps.toString());
+    }
+    onUnlogSet(ex.name, setNum);
+  }
+
+  // Long-press state for ungroup
+  const ungroupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleLabelPressStart(exName: string) {
+    ungroupTimerRef.current = setTimeout(() => {
+      onUngroup(exName);
+    }, 700);
+  }
+
+  function handleLabelPressEnd() {
+    if (ungroupTimerRef.current) clearTimeout(ungroupTimerRef.current);
+  }
+
+  return (
+    <div className="glass widget-shadow rounded-2xl overflow-hidden border-l-4 border-purple-500">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50">
+        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 bg-purple-500/15 text-purple-400 rounded-full">
+          {label}
+        </span>
+        <span className="text-[10px] text-muted-foreground">{exercises.length} exercises · {maxSets} rounds</span>
+        <span className="ml-auto text-[9px] text-muted-foreground/50">hold label to ungroup</span>
+      </div>
+
+      {/* Rest timer */}
+      {lastRestSeconds > 0 && (restSecondsLeft > 0 || restDone) && (
+        <div className="px-4 py-3 flex flex-col gap-1.5 border-b border-border/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              {restDone ? "Ready" : `Rest ${Math.floor(restSecondsLeft / 60)}:${String(restSecondsLeft % 60).padStart(2, "0")}`}
+            </span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {restDone ? "" : `/ ${Math.floor(lastRestSeconds / 60)}:${String(lastRestSeconds % 60).padStart(2, "0")}`}
+            </span>
+          </div>
+          <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 ease-linear ${restDone ? "bg-emerald-500" : "bg-purple-500"}`}
+              style={{ width: restDone ? "100%" : `${((lastRestSeconds - restSecondsLeft) / lastRestSeconds) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Exercises */}
+      {exercises.map((ex, exIdx) => {
+        const info = getExerciseInfo(ex.name);
+        const isWeighted = info?.unit === "weight_reps";
+        const exLogs = setLogs[ex.name] ?? [];
+        const doneSetsCount = exLogs.filter(s => s.completed).length;
+        const prevData = prevSession[ex.name];
+
+        return (
+          <div key={ex.name} className="px-4 py-3 border-b border-border/30 last:border-0">
+            {/* Exercise header row */}
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                type="button"
+                onPointerDown={() => handleLabelPressStart(ex.name)}
+                onPointerUp={handleLabelPressEnd}
+                onPointerLeave={handleLabelPressEnd}
+                className="text-sm font-semibold flex-1 text-left press"
+              >
+                {ex.name}
+              </button>
+              {/* Set dots */}
+              <div className="flex items-center gap-1 shrink-0">
+                {Array.from({ length: ex.sets }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      exLogs.find(l => l.setNumber === i + 1)?.completed
+                        ? "bg-purple-500"
+                        : "border border-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                {doneSetsCount}/{ex.sets}
+              </span>
+            </div>
+
+            {prevData && (
+              <p className="text-[10px] text-muted-foreground mb-2">
+                Last: {prevData.sets}×{prevData.reps} @ {prevData.weight} lbs
+              </p>
+            )}
+
+            {/* Set rows */}
+            {Array.from({ length: ex.sets }).map((_, setIdx) => {
+              const done = exLogs.find(l => l.setNumber === setIdx + 1)?.completed ?? false;
+              const d = (draftsMap[ex.name] ?? [])[setIdx] ?? { weight: "", reps: "" };
+              return (
+                <div
+                  key={setIdx}
+                  className={`flex items-center gap-2 py-2 transition-opacity ${done ? "opacity-60" : ""} ${setIdx > 0 ? "border-t border-border/20" : ""}`}
+                >
+                  <span className="text-xs text-muted-foreground shrink-0 w-8">Set {setIdx + 1}</span>
+                  {isWeighted && (
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="lbs"
+                      value={d.weight}
+                      onChange={e => setDraft(ex.name, setIdx, "weight", e.target.value)}
+                      readOnly={done}
+                      className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-purple-500/50 read-only:opacity-60"
+                    />
+                  )}
+                  {isWeighted && <span className="text-xs text-muted-foreground shrink-0">×</span>}
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={ex.reps === "AMRAP" ? "reps" : ex.reps}
+                    value={d.reps}
+                    onChange={e => setDraft(ex.name, setIdx, "reps", e.target.value)}
+                    readOnly={done}
+                    className="w-20 shrink-0 bg-foreground/5 rounded-lg px-2 py-1.5 text-sm text-center tabular-nums outline-none focus:ring-1 focus:ring-purple-500/50 read-only:opacity-60"
+                  />
+                  <div className="flex-1" />
+                  <button
+                    type="button"
+                    onPointerUp={() => done ? handleUncheck(ex, setIdx) : handleCheck(ex, setIdx, ex.name)}
+                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 press transition-all ${
+                      done ? "border-purple-500 bg-purple-500" : "border-border"
+                    }`}
+                  >
+                    {done && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 12 12">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── ExerciseCard ──────────────────────────────────────────────────────────────
 
 function ExerciseCard({
   exercise, logs, isExpanded, onToggle, onLogSet, onUnlogSet,
@@ -270,6 +603,13 @@ export default function TrainPage() {
   const [, startTransition] = useTransition();
   const overflowRef = useRef<HTMLDivElement>(null);
 
+  // Drag-to-group state
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragTouchStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const exerciseItemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
   const todayDow = new Date().getDay();
   const [selectedDow, setSelectedDow] = useState<number>(todayDow);
 
@@ -311,7 +651,9 @@ export default function TrainPage() {
       .select("exercise_name, weight_lbs").eq("user_id", user.id);
     if (prRows?.length) {
       const map: Record<string, number> = {};
-      prRows.forEach((r: any) => { map[r.exercise_name] = Number(r.weight_lbs); });
+      prRows.forEach((r: { exercise_name: string; weight_lbs: number | string }) => {
+        map[r.exercise_name] = Number(r.weight_lbs);
+      });
       setPersonalRecords(map);
     }
 
@@ -323,7 +665,7 @@ export default function TrainPage() {
     try {
       const log = JSON.parse(localStorage.getItem("hc-workout-log") ?? "[]");
       const today = new Date().toISOString().split("T")[0];
-      const prev = log.find((s: any) => s.date !== today);
+      const prev = log.find((s: { date: string }) => s.date !== today);
       if (prev) setPrevSession(prev.exercises);
     } catch { /* ignore */ }
 
@@ -342,11 +684,11 @@ export default function TrainPage() {
 
   // Week strip — use V2 phase days if available, else V1 program days
   const weekDays = program
-    ? (isV2(program) && activeInfo?.phase ? activeInfo.phase.days : (program as any).days ?? [])
+    ? (isV2(program) && activeInfo?.phase ? activeInfo.phase.days : (program as { days?: unknown[] }).days ?? [])
     : [];
 
   // Selected day's workout (may differ from today when tapping week strip)
-  const selectedDay = weekDays.find((d: any) => d.dayOfWeek === selectedDow) ?? null;
+  const selectedDay = (weekDays as { dayOfWeek: number; [k: string]: unknown }[]).find(d => d.dayOfWeek === selectedDow) ?? null;
   const isViewingToday = selectedDow === todayDow;
 
   // Sets progress always refers to today's actual workout
@@ -374,6 +716,106 @@ export default function TrainPage() {
       try { localStorage.setItem(todayKey(), JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
+  }
+
+  // ── Superset / grouping helpers ───────────────────────────────────────────
+
+  /** Get the exercises array for the currently viewed day */
+  function getCurrentDayExercises(): ExerciseConfig[] {
+    if (!selectedDay) return [];
+    return (selectedDay as { exercises?: ExerciseConfig[] }).exercises ?? [];
+  }
+
+  async function saveGroupChanges(updatedExercises: ExerciseConfig[]) {
+    if (!program) return;
+    const updatedProgram = updateDayExercises(program, selectedDow, updatedExercises);
+    setProgram(updatedProgram);
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("profiles").update({ training_program: updatedProgram }).eq("id", user.id);
+  }
+
+  function groupOrUngroup(fromIdx: number, toIdx: number) {
+    const dayExercises = getCurrentDayExercises();
+    const fromEx = dayExercises[fromIdx];
+    const toEx = dayExercises[toIdx];
+    if (!fromEx || !toEx) return;
+
+    const existingGroupId = toEx.groupId || fromEx.groupId;
+    const newGroupId = existingGroupId || crypto.randomUUID().slice(0, 8);
+
+    const updated = dayExercises.map((ex, i) => {
+      if (i === fromIdx || i === toIdx) return { ...ex, groupId: newGroupId };
+      return ex;
+    });
+
+    saveGroupChanges(updated);
+  }
+
+  function ungroupExercise(exerciseName: string, dayExercises: ExerciseConfig[]) {
+    // Find the groupId of this exercise
+    const targetEx = dayExercises.find(e => e.name === exerciseName);
+    if (!targetEx?.groupId) return;
+    const groupId = targetEx.groupId;
+
+    // Remove the exercise from the group
+    const withoutEx = dayExercises.map(e =>
+      e.name === exerciseName ? { ...e, groupId: undefined } : e
+    );
+
+    // Check if only 1 exercise remains in the group — if so, dissolve the group
+    const remaining = withoutEx.filter(e => e.groupId === groupId);
+    const updated = remaining.length <= 1
+      ? withoutEx.map(e => e.groupId === groupId ? { ...e, groupId: undefined } : e)
+      : withoutEx;
+
+    saveGroupChanges(updated);
+  }
+
+  // ── Touch drag handlers ───────────────────────────────────────────────────
+
+  function handleExTouchStart(e: React.TouchEvent, originalIndex: number) {
+    const t = e.touches[0];
+    dragTouchStart.current = { x: t.clientX, y: t.clientY };
+    longPressTimerRef.current = setTimeout(() => {
+      setDraggingIdx(originalIndex);
+      navigator.vibrate?.(40);
+    }, 600);
+  }
+
+  function handleExTouchMove(e: React.TouchEvent) {
+    if (longPressTimerRef.current) {
+      const t = e.touches[0];
+      const dx = t.clientX - dragTouchStart.current.x;
+      const dy = t.clientY - dragTouchStart.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 12) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
+    if (draggingIdx === null) return;
+    const t = e.touches[0];
+    let found: number | null = null;
+    for (const [idxStr, el] of Object.entries(exerciseItemRefs.current)) {
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      if (t.clientY >= rect.top && t.clientY <= rect.bottom && t.clientX >= rect.left && t.clientX <= rect.right) {
+        found = Number(idxStr);
+        break;
+      }
+    }
+    setDragOverIdx(found !== draggingIdx ? found : null);
+  }
+
+  function handleExTouchEnd() {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    if (draggingIdx !== null && dragOverIdx !== null) {
+      groupOrUngroup(draggingIdx, dragOverIdx);
+    }
+    setDraggingIdx(null);
+    setDragOverIdx(null);
   }
 
   function handleCompleteWorkout() {
@@ -547,9 +989,9 @@ export default function TrainPage() {
             {/* Hero: selected day name + sets progress */}
             <div className="flex items-start justify-between">
               <div>
-                {selectedDay && !selectedDay.isRest ? (
+                {selectedDay && !(selectedDay as { isRest?: boolean }).isRest ? (
                   <>
-                    <p className="text-xl font-bold leading-tight">{selectedDay.name}</p>
+                    <p className="text-xl font-bold leading-tight">{(selectedDay as { name?: string }).name}</p>
                     {activeInfo?.phase?.isDeload && isViewingToday && (
                       <span className="mt-1 inline-block text-[10px] font-bold uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                         Deload
@@ -593,7 +1035,7 @@ export default function TrainPage() {
             {/* Week strip */}
             <div className="flex gap-1">
               {Array.from({ length: 7 }).map((_, dow) => {
-                const day        = weekDays.find((d: any) => d.dayOfWeek === dow);
+                const day        = (weekDays as { dayOfWeek: number; isRest?: boolean; name?: string }[]).find(d => d.dayOfWeek === dow);
                 const isToday    = dow === todayDow;
                 const isSelected = dow === selectedDow;
                 const isRest     = !day || day.isRest;
@@ -643,7 +1085,7 @@ export default function TrainPage() {
           </div>
 
           {/* ── Exercise list for selected day ── */}
-          {selectedDay?.isRest ? (
+          {(selectedDay as { isRest?: boolean } | null)?.isRest ? (
             <div className="glass widget-shadow rounded-2xl px-6 py-10 text-center space-y-2">
               <p className="text-3xl">😴</p>
               <p className="font-semibold">Rest Day</p>
@@ -651,22 +1093,73 @@ export default function TrainPage() {
             </div>
           ) : selectedDay ? (
             <>
-              {selectedDay.exercises.map((ex: ExerciseConfig) => (
-                <ExerciseCard
-                  key={ex.name}
-                  exercise={ex}
-                  logs={isViewingToday ? (setLogs[ex.name] ?? []) : []}
-                  isExpanded={isViewingToday && expandedEx === ex.name}
-                  onToggle={() => isViewingToday && setExpandedEx((prev) => prev === ex.name ? null : ex.name)}
-                  onLogSet={(setNum, weight, reps) => isViewingToday && handleLogSet(ex.name, setNum, weight, reps)}
-                  onUnlogSet={(setNum) => isViewingToday && handleUnlogSet(ex.name, setNum)}
-                  suggestedWeight={getSuggested(ex.name, progress, prs, bodyweight, gender)}
-                  isManual={isManual}
-                  prevData={prevSession[ex.name]}
-                  prLbs={personalRecords[ex.name]}
-                  prModeEnabled={prModeEnabled}
-                />
-              ))}
+              {/* Drag hint — only shown when dragging is active */}
+              {draggingIdx !== null && (
+                <div className="px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
+                  <p className="text-xs text-purple-400 font-medium">Drop on another exercise to group as superset</p>
+                </div>
+              )}
+
+              {buildRenderItems((selectedDay as { exercises?: ExerciseConfig[] }).exercises ?? []).map((item) => {
+                if (item.type === "group") {
+                  const isDraggingGroup = item.originalIndices.includes(draggingIdx ?? -1);
+                  const isDropTarget = item.originalIndices.includes(dragOverIdx ?? -1);
+                  return (
+                    <div
+                      key={item.groupId}
+                      ref={(el) => {
+                        item.originalIndices.forEach(i => { exerciseItemRefs.current[i] = el; });
+                      }}
+                      onTouchStart={(e) => handleExTouchStart(e, item.originalIndices[0])}
+                      onTouchMove={handleExTouchMove}
+                      onTouchEnd={handleExTouchEnd}
+                      className={`transition-all duration-150 rounded-2xl ${isDraggingGroup ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDraggingGroup ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
+                    >
+                      <SupersetBlock
+                        exercises={item.exercises}
+                        setLogs={setLogs}
+                        onLogSet={(name, setNum, w, r) => isViewingToday && handleLogSet(name, setNum, w, r)}
+                        onUnlogSet={(name, setNum) => isViewingToday && handleUnlogSet(name, setNum)}
+                        suggestedWeights={Object.fromEntries(
+                          item.exercises.map(ex => [ex.name, getSuggested(ex.name, progress, prs, bodyweight, gender)])
+                        )}
+                        personalRecords={personalRecords}
+                        prModeEnabled={prModeEnabled}
+                        prevSession={prevSession}
+                        onUngroup={(name) => ungroupExercise(name, (selectedDay as { exercises?: ExerciseConfig[] }).exercises ?? [])}
+                      />
+                    </div>
+                  );
+                }
+
+                // Single exercise
+                const isDragging = draggingIdx === item.originalIndex;
+                const isDropTarget = dragOverIdx === item.originalIndex;
+                return (
+                  <div
+                    key={item.exercise.name}
+                    ref={(el) => { exerciseItemRefs.current[item.originalIndex] = el; }}
+                    onTouchStart={(e) => handleExTouchStart(e, item.originalIndex)}
+                    onTouchMove={handleExTouchMove}
+                    onTouchEnd={handleExTouchEnd}
+                    className={`transition-all duration-150 rounded-2xl ${isDragging ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDragging ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
+                  >
+                    <ExerciseCard
+                      exercise={item.exercise}
+                      logs={isViewingToday ? (setLogs[item.exercise.name] ?? []) : []}
+                      isExpanded={isViewingToday && expandedEx === item.exercise.name}
+                      onToggle={() => isViewingToday && setExpandedEx((prev) => prev === item.exercise.name ? null : item.exercise.name)}
+                      onLogSet={(setNum, weight, reps) => isViewingToday && handleLogSet(item.exercise.name, setNum, weight, reps)}
+                      onUnlogSet={(setNum) => isViewingToday && handleUnlogSet(item.exercise.name, setNum)}
+                      suggestedWeight={getSuggested(item.exercise.name, progress, prs, bodyweight, gender)}
+                      isManual={isManual}
+                      prevData={prevSession[item.exercise.name]}
+                      prLbs={personalRecords[item.exercise.name]}
+                      prModeEnabled={prModeEnabled}
+                    />
+                  </div>
+                );
+              })}
 
               {isViewingToday && doneSets > 0 && !completed && (
                 <button type="button" onClick={handleCompleteWorkout}
