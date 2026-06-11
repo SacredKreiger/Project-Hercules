@@ -627,10 +627,8 @@ export default function TrainPage() {
   const touchMovedRef = useRef(false);
   const exerciseListRef = useRef<HTMLDivElement>(null);
 
-  // Swipe-to-swap state
+  // Swap exercise state
   const [swappingExercise, setSwappingExercise] = useState<string | null>(null);
-  const [swipeOffsets, setSwipeOffsets] = useState<Record<string, number>>({});
-  const swipeTouchStartRef = useRef<Record<string, { x: number; y: number }>>({});
 
   const todayDow = new Date().getDay();
   const [selectedDow, setSelectedDow] = useState<number>(todayDow);
@@ -800,37 +798,6 @@ export default function TrainPage() {
     saveGroupChanges(updated);
   }
 
-  // ── Swipe-to-swap handlers ────────────────────────────────────────────────
-
-  function handleSwipeTouchStart(exName: string, e: React.TouchEvent) {
-    swipeTouchStartRef.current[exName] = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }
-
-  function handleSwipeTouchMove(exName: string, e: React.TouchEvent) {
-    const start = swipeTouchStartRef.current[exName];
-    if (!start) return;
-    const dx = e.touches[0].clientX - start.x;
-    const dy = Math.abs(e.touches[0].clientY - start.y);
-    if (dy > 20) { // vertical scroll — cancel swipe
-      setSwipeOffsets(prev => ({ ...prev, [exName]: 0 }));
-      return;
-    }
-    if (dx < 0) { // swipe left
-      setSwipeOffsets(prev => ({ ...prev, [exName]: Math.max(-80, dx) }));
-    }
-  }
-
-  function handleSwipeTouchEnd(exName: string) {
-    const offset = swipeOffsets[exName] ?? 0;
-    if (offset < -50) {
-      // Committed swipe — keep revealed
-      setSwipeOffsets(prev => ({ ...prev, [exName]: -80 }));
-    } else {
-      setSwipeOffsets(prev => ({ ...prev, [exName]: 0 }));
-    }
-    delete swipeTouchStartRef.current[exName];
-  }
-
   function handleSwapExercise(oldName: string, newName: string) {
     const dayExercises = getCurrentDayExercises();
     const updated = dayExercises.map(ex =>
@@ -838,7 +805,6 @@ export default function TrainPage() {
     );
     saveGroupChanges(updated);
     setSwappingExercise(null);
-    setSwipeOffsets(prev => ({ ...prev, [oldName]: 0 }));
   }
 
   // ── Hold-to-select + tap-to-group handlers ───────────────────────────────
@@ -1200,49 +1166,31 @@ export default function TrainPage() {
                 const exName = item.exercise.name;
                 const isSelected = selectedIdx === item.originalIndex;
                 const isTarget = selectedIdx !== null && selectedIdx !== item.originalIndex;
-                const swipeOffset = swipeOffsets[exName] ?? 0;
-                const isSwipeRevealed = swipeOffset <= -60;
 
                 return (
                   <div
                     key={exName}
-                    className="relative overflow-hidden rounded-2xl"
+                    className="relative"
                     style={{ WebkitTouchCallout: "none", userSelect: "none" }}
                   >
-                    {/* Swap action revealed on swipe */}
-                    <div className="absolute inset-y-0 right-0 flex items-center justify-center w-20 bg-indigo-500 rounded-r-2xl">
-                      <button
-                        type="button"
-                        onClick={() => { setSwappingExercise(exName); setSwipeOffsets(prev => ({ ...prev, [exName]: 0 })); }}
-                        className="flex flex-col items-center gap-0.5 px-3 text-white"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
-                        </svg>
-                        <span className="text-[10px] font-semibold">Swap</span>
-                      </button>
-                    </div>
+                    {/* Swap button — top-right corner */}
+                    <button
+                      type="button"
+                      onClick={() => setSwappingExercise(exName)}
+                      className="absolute top-3 right-10 z-10 p-1.5 text-muted-foreground/40 hover:text-indigo-400 transition-colors press"
+                      aria-label="Swap exercise"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                      </svg>
+                    </button>
 
-                    {/* Exercise card — slides left on swipe */}
                     <div
-                      onTouchStart={(e) => {
-                        handleExTouchStart(e, item.originalIndex);
-                        handleSwipeTouchStart(exName, e);
-                      }}
-                      onTouchMove={(e) => {
-                        handleExTouchMove();
-                        handleSwipeTouchMove(exName, e);
-                      }}
-                      onTouchEnd={() => {
-                        handleExTouchEnd();
-                        handleSwipeTouchEnd(exName);
-                      }}
-                      onClick={() => {
-                        if (isSwipeRevealed) { setSwipeOffsets(prev => ({ ...prev, [exName]: 0 })); return; }
-                        handleExTap(item.originalIndex);
-                      }}
-                      style={{ transform: `translateX(${swipeOffset}px)`, transition: swipeTouchStartRef.current[exName] ? "none" : "transform 0.2s ease" }}
-                      className={`relative transition-all duration-200 rounded-2xl bg-background ${isSelected ? "ring-2 ring-purple-500 scale-[0.98]" : ""} ${isTarget ? "ring-2 ring-purple-400/60 ring-dashed" : ""}`}
+                      onTouchStart={(e) => handleExTouchStart(e, item.originalIndex)}
+                      onTouchMove={() => handleExTouchMove()}
+                      onTouchEnd={() => handleExTouchEnd()}
+                      onClick={() => handleExTap(item.originalIndex)}
+                      className={`transition-all duration-200 rounded-2xl ${isSelected ? "ring-2 ring-purple-500 scale-[0.98]" : ""} ${isTarget ? "ring-2 ring-purple-400/60 ring-dashed" : ""}`}
                     >
                       <ExerciseCard
                         exercise={item.exercise}
