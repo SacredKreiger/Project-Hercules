@@ -129,8 +129,13 @@ function SupersetBlock({
     for (const ex of exercises) {
       const info = getExerciseInfo(ex.name);
       const isWeighted = info?.unit === "weight_reps";
-      const sw = suggestedWeights[ex.name] ?? 0;
-      const defaultWeight = sw > 0 ? sw.toString() : "";
+      // Mirror ExerciseCard: PR mode overrides suggested weight
+      const prLbs = personalRecords[ex.name];
+      const usePr = prModeEnabled && ex.prPercent && prLbs && prLbs > 0;
+      const effectiveWeight = usePr
+        ? prWeight(prLbs!, ex.prPercent!)
+        : (suggestedWeights[ex.name] ?? 0);
+      const defaultWeight = effectiveWeight > 0 ? effectiveWeight.toString() : "";
       const defaultReps = parseDefaultReps(ex.reps);
       m[ex.name] = Array.from({ length: ex.sets }, () => ({
         weight: isWeighted ? defaultWeight : "",
