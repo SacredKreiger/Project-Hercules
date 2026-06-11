@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/Skeleton";
 import Link from "next/link";
-import { getExerciseInfo } from "@/lib/exercises";
+import { getExerciseInfo, EXERCISES } from "@/lib/exercises";
 import { updateProgressAfterWorkout } from "@/lib/actions/training";
 import { getSuggested, increment, prWeight } from "@/lib/training-utils";
 import { resetProgram } from "@/lib/actions/programs";
@@ -17,8 +17,8 @@ type WorkoutSession = { date: string; exercises: Record<string, { sets: number; 
 
 const DOW_SHORT = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
-function todayKey() {
-  return `hc-setlogs-${new Date().toISOString().split("T")[0]}`;
+function dowKey(dow: number) {
+  return `hc-setlogs-dow-${dow}`;
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -118,7 +118,8 @@ function SupersetBlock({
   prModeEnabled: boolean;
   prevSession: Record<string, { sets: number; weight: number; reps: string }>;
   onUngroup: (exerciseName: string) => void;
-}) {
+})
+ {
   const isCircuit = exercises.length >= 3;
   const label = isCircuit ? "Circuit" : "Superset";
   const maxSets = Math.max(...exercises.map(e => e.sets));
@@ -222,17 +223,21 @@ function SupersetBlock({
     onUnlogSet(ex.name, setNum);
   }
 
-  // Long-press state for ungroup
+  // Hold state for per-exercise glow
+  const [holdedExName, setHoldedExName] = useState<string | null>(null);
   const ungroupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleLabelPressStart(exName: string) {
+    setHoldedExName(exName);
     ungroupTimerRef.current = setTimeout(() => {
       onUngroup(exName);
+      setHoldedExName(null);
     }, 700);
   }
 
   function handleLabelPressEnd() {
     if (ungroupTimerRef.current) clearTimeout(ungroupTimerRef.current);
+    setHoldedExName(null);
   }
 
   return (
@@ -243,7 +248,6 @@ function SupersetBlock({
           {label}
         </span>
         <span className="text-[10px] text-muted-foreground">{exercises.length} exercises · {maxSets} rounds</span>
-        <span className="ml-auto text-[9px] text-muted-foreground/50">hold label to ungroup</span>
       </div>
 
       {/* Rest timer */}
@@ -273,9 +277,14 @@ function SupersetBlock({
         const exLogs = setLogs[ex.name] ?? [];
         const doneSetsCount = exLogs.filter(s => s.completed).length;
         const prevData = prevSession[ex.name];
+        const isHeld = holdedExName === ex.name;
 
         return (
-          <div key={ex.name} className="px-4 py-3 border-b border-border/30 last:border-0">
+          <div
+            key={ex.name}
+            className={`px-4 py-3 border-b border-border/30 last:border-0 transition-all duration-150 ${isHeld ? "bg-purple-500/10" : ""}`}
+            style={{ WebkitTouchCallout: "none", userSelect: "none" }}
+          >
             {/* Exercise header row */}
             <div className="flex items-center gap-2 mb-2">
               <button
@@ -283,9 +292,18 @@ function SupersetBlock({
                 onPointerDown={() => handleLabelPressStart(ex.name)}
                 onPointerUp={handleLabelPressEnd}
                 onPointerLeave={handleLabelPressEnd}
-                className="text-sm font-semibold flex-1 text-left press"
+                className={`text-sm font-semibold flex-1 text-left press transition-colors ${isHeld ? "text-purple-400" : ""}`}
+                style={{ WebkitTouchCallout: "none", userSelect: "none" }}
               >
                 {ex.name}
+              </button>
+              {/* Ungroup button */}
+              <button
+                type="button"
+                onClick={() => onUngroup(ex.name)}
+                className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold text-purple-400 bg-purple-500/15 press"
+              >
+                ✕ Ungroup
               </button>
               {/* Set dots */}
               <div className="flex items-center gap-1 shrink-0">
@@ -609,8 +627,21 @@ export default function TrainPage() {
   const touchMovedRef = useRef(false);
   const exerciseListRef = useRef<HTMLDivElement>(null);
 
+  // Swipe-to-swap state
+  const [swappingExercise, setSwappingExercise] = useState<string | null>(null);
+  const [swipeOffsets, setSwipeOffsets] = useState<Record<string, number>>({});
+  const swipeTouchStartRef = useRef<Record<string, { x: number; y: number }>>({});
+
   const todayDow = new Date().getDay();
   const [selectedDow, setSelectedDow] = useState<number>(todayDow);
+
+  // Load/save setLogs per day-of-week
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(dowKey(selectedDow));
+      setSetLogs(saved ? JSON.parse(saved) : {});
+    } catch { /* ignore */ }
+  }, [selectedDow]);
 
   // Close overflow menu on outside tap
   useEffect(() => {
@@ -657,11 +688,6 @@ export default function TrainPage() {
     }
 
     try {
-      const saved = localStorage.getItem(todayKey());
-      if (saved) setSetLogs(JSON.parse(saved));
-    } catch { /* ignore */ }
-
-    try {
       const log = JSON.parse(localStorage.getItem("hc-workout-log") ?? "[]");
       const today = new Date().toISOString().split("T")[0];
       const prev = log.find((s: { date: string }) => s.date !== today);
@@ -690,8 +716,9 @@ export default function TrainPage() {
   const selectedDay = (weekDays as { dayOfWeek: number; [k: string]: unknown }[]).find(d => d.dayOfWeek === selectedDow) ?? null;
   const isViewingToday = selectedDow === todayDow;
 
-  // Sets progress always refers to today's actual workout
-  const totalSets = todayDay?.exercises.reduce((acc, ex) => acc + ex.sets, 0) ?? 0;
+  // Sets progress for selected day
+  const selectedDayExercises = (selectedDay as { exercises?: ExerciseConfig[]; isRest?: boolean } | null)?.exercises ?? [];
+  const totalSets = selectedDayExercises.reduce((acc, ex) => acc + ex.sets, 0);
   const doneSets  = Object.values(setLogs).reduce((acc, sets) => acc + sets.filter((s) => s.completed).length, 0);
   const allDone   = totalSets > 0 && doneSets >= totalSets;
 
@@ -702,7 +729,7 @@ export default function TrainPage() {
       const entry: SetLog = { setNumber: setNum, actualWeight: weight, actualReps: reps, completed: true };
       const updated = idx >= 0 ? existing.map((s, i) => i === idx ? entry : s) : [...existing, entry];
       const next = { ...prev, [exercise]: updated };
-      try { localStorage.setItem(todayKey(), JSON.stringify(next)); } catch { /* ignore */ }
+      try { localStorage.setItem(dowKey(selectedDow), JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   }
@@ -712,7 +739,7 @@ export default function TrainPage() {
       const existing = prev[exercise] ?? [];
       const updated = existing.map((s) => s.setNumber === setNum ? { ...s, completed: false } : s);
       const next = { ...prev, [exercise]: updated };
-      try { localStorage.setItem(todayKey(), JSON.stringify(next)); } catch { /* ignore */ }
+      try { localStorage.setItem(dowKey(selectedDow), JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   }
@@ -771,6 +798,47 @@ export default function TrainPage() {
       : withoutEx;
 
     saveGroupChanges(updated);
+  }
+
+  // ── Swipe-to-swap handlers ────────────────────────────────────────────────
+
+  function handleSwipeTouchStart(exName: string, e: React.TouchEvent) {
+    swipeTouchStartRef.current[exName] = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+
+  function handleSwipeTouchMove(exName: string, e: React.TouchEvent) {
+    const start = swipeTouchStartRef.current[exName];
+    if (!start) return;
+    const dx = e.touches[0].clientX - start.x;
+    const dy = Math.abs(e.touches[0].clientY - start.y);
+    if (dy > 20) { // vertical scroll — cancel swipe
+      setSwipeOffsets(prev => ({ ...prev, [exName]: 0 }));
+      return;
+    }
+    if (dx < 0) { // swipe left
+      setSwipeOffsets(prev => ({ ...prev, [exName]: Math.max(-80, dx) }));
+    }
+  }
+
+  function handleSwipeTouchEnd(exName: string) {
+    const offset = swipeOffsets[exName] ?? 0;
+    if (offset < -50) {
+      // Committed swipe — keep revealed
+      setSwipeOffsets(prev => ({ ...prev, [exName]: -80 }));
+    } else {
+      setSwipeOffsets(prev => ({ ...prev, [exName]: 0 }));
+    }
+    delete swipeTouchStartRef.current[exName];
+  }
+
+  function handleSwapExercise(oldName: string, newName: string) {
+    const dayExercises = getCurrentDayExercises();
+    const updated = dayExercises.map(ex =>
+      ex.name === oldName ? { ...ex, name: newName } : ex
+    );
+    saveGroupChanges(updated);
+    setSwappingExercise(null);
+    setSwipeOffsets(prev => ({ ...prev, [oldName]: 0 }));
   }
 
   // ── Hold-to-select + tap-to-group handlers ───────────────────────────────
@@ -1011,7 +1079,7 @@ export default function TrainPage() {
                   </button>
                 )}
               </div>
-              {isViewingToday && todayDay && !todayDay.isRest && totalSets > 0 && (
+              {selectedDay && !(selectedDay as { isRest?: boolean }).isRest && totalSets > 0 && (
                 <div className="text-right shrink-0">
                   <p className="text-2xl font-bold tabular-nums leading-none">
                     {doneSets}<span className="text-base text-muted-foreground font-normal">/{totalSets}</span>
@@ -1021,8 +1089,8 @@ export default function TrainPage() {
               )}
             </div>
 
-            {/* Progress bar — only when viewing today's live workout */}
-            {isViewingToday && todayDay && !todayDay.isRest && totalSets > 0 && (
+            {/* Progress bar */}
+            {selectedDay && !(selectedDay as { isRest?: boolean }).isRest && totalSets > 0 && (
               <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
                 <div className="h-full bg-primary rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (doneSets / totalSets) * 100)}%` }}
@@ -1106,15 +1174,16 @@ export default function TrainPage() {
                     <div
                       key={item.groupId}
                       onTouchStart={(e) => handleExTouchStart(e, item.originalIndices[0])}
-                      onTouchMove={handleExTouchMove}
-                      onTouchEnd={handleExTouchEnd}
+                      onTouchMove={() => handleExTouchMove()}
+                      onTouchEnd={() => handleExTouchEnd()}
                       className="transition-all duration-150 rounded-2xl"
+                      style={{ WebkitTouchCallout: "none", userSelect: "none" }}
                     >
                       <SupersetBlock
                         exercises={item.exercises}
                         setLogs={setLogs}
-                        onLogSet={(name, setNum, w, r) => isViewingToday && handleLogSet(name, setNum, w, r)}
-                        onUnlogSet={(name, setNum) => isViewingToday && handleUnlogSet(name, setNum)}
+                        onLogSet={(name, setNum, w, r) => handleLogSet(name, setNum, w, r)}
+                        onUnlogSet={(name, setNum) => handleUnlogSet(name, setNum)}
                         suggestedWeights={Object.fromEntries(
                           item.exercises.map(ex => [ex.name, getSuggested(ex.name, progress, prs, bodyweight, gender)])
                         )}
@@ -1128,43 +1197,80 @@ export default function TrainPage() {
                 }
 
                 // Single exercise
+                const exName = item.exercise.name;
                 const isSelected = selectedIdx === item.originalIndex;
                 const isTarget = selectedIdx !== null && selectedIdx !== item.originalIndex;
+                const swipeOffset = swipeOffsets[exName] ?? 0;
+                const isSwipeRevealed = swipeOffset <= -60;
+
                 return (
                   <div
-                    key={item.exercise.name}
-                    onTouchStart={(e) => handleExTouchStart(e, item.originalIndex)}
-                    onTouchMove={handleExTouchMove}
-                    onTouchEnd={handleExTouchEnd}
-                    onClick={() => handleExTap(item.originalIndex)}
-                    className={`transition-all duration-200 rounded-2xl ${isSelected ? "ring-2 ring-purple-500 scale-[0.98]" : ""} ${isTarget ? "ring-2 ring-purple-400/60 ring-dashed" : ""}`}
+                    key={exName}
+                    className="relative overflow-hidden rounded-2xl"
+                    style={{ WebkitTouchCallout: "none", userSelect: "none" }}
                   >
-                    <ExerciseCard
-                      exercise={item.exercise}
-                      logs={isViewingToday ? (setLogs[item.exercise.name] ?? []) : []}
-                      isExpanded={isViewingToday && expandedEx === item.exercise.name}
-                      onToggle={() => isViewingToday && setExpandedEx((prev) => prev === item.exercise.name ? null : item.exercise.name)}
-                      onLogSet={(setNum, weight, reps) => isViewingToday && handleLogSet(item.exercise.name, setNum, weight, reps)}
-                      onUnlogSet={(setNum) => isViewingToday && handleUnlogSet(item.exercise.name, setNum)}
-                      suggestedWeight={getSuggested(item.exercise.name, progress, prs, bodyweight, gender)}
-                      isManual={isManual}
-                      prevData={prevSession[item.exercise.name]}
-                      prLbs={personalRecords[item.exercise.name]}
-                      prModeEnabled={prModeEnabled}
-                    />
+                    {/* Swap action revealed on swipe */}
+                    <div className="absolute inset-y-0 right-0 flex items-center justify-center w-20 bg-indigo-500 rounded-r-2xl">
+                      <button
+                        type="button"
+                        onClick={() => { setSwappingExercise(exName); setSwipeOffsets(prev => ({ ...prev, [exName]: 0 })); }}
+                        className="flex flex-col items-center gap-0.5 px-3 text-white"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                        </svg>
+                        <span className="text-[10px] font-semibold">Swap</span>
+                      </button>
+                    </div>
+
+                    {/* Exercise card — slides left on swipe */}
+                    <div
+                      onTouchStart={(e) => {
+                        handleExTouchStart(e, item.originalIndex);
+                        handleSwipeTouchStart(exName, e);
+                      }}
+                      onTouchMove={(e) => {
+                        handleExTouchMove();
+                        handleSwipeTouchMove(exName, e);
+                      }}
+                      onTouchEnd={() => {
+                        handleExTouchEnd();
+                        handleSwipeTouchEnd(exName);
+                      }}
+                      onClick={() => {
+                        if (isSwipeRevealed) { setSwipeOffsets(prev => ({ ...prev, [exName]: 0 })); return; }
+                        handleExTap(item.originalIndex);
+                      }}
+                      style={{ transform: `translateX(${swipeOffset}px)`, transition: swipeTouchStartRef.current[exName] ? "none" : "transform 0.2s ease" }}
+                      className={`relative transition-all duration-200 rounded-2xl bg-background ${isSelected ? "ring-2 ring-purple-500 scale-[0.98]" : ""} ${isTarget ? "ring-2 ring-purple-400/60 ring-dashed" : ""}`}
+                    >
+                      <ExerciseCard
+                        exercise={item.exercise}
+                        logs={setLogs[exName] ?? []}
+                        isExpanded={expandedEx === exName}
+                        onToggle={() => setExpandedEx((prev) => prev === exName ? null : exName)}
+                        onLogSet={(setNum, weight, reps) => handleLogSet(exName, setNum, weight, reps)}
+                        onUnlogSet={(setNum) => handleUnlogSet(exName, setNum)}
+                        suggestedWeight={getSuggested(item.exercise.name, progress, prs, bodyweight, gender)}
+                        isManual={isManual}
+                        prevData={prevSession[exName]}
+                        prLbs={personalRecords[exName]}
+                        prModeEnabled={prModeEnabled}
+                      />
+                    </div>
                   </div>
                 );
               })}
               </div>
 
-              {isViewingToday && doneSets > 0 && !completed && (
+              {doneSets > 0 && !completed && (
                 <button type="button" onClick={handleCompleteWorkout}
                   className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm press">
                   {allDone ? "Complete Workout ✓" : `Finish Workout (${doneSets}/${totalSets} sets)`}
                 </button>
               )}
 
-              {isViewingToday && completed && (
+              {completed && (
                 <div className="glass widget-shadow rounded-2xl px-5 py-5 space-y-3">
                   <div className="text-center">
                     <p className="text-emerald-500 font-semibold text-base">Workout Complete!</p>
@@ -1204,6 +1310,41 @@ export default function TrainPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Exercise Swap Sheet ── */}
+      {swappingExercise && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-border/50">
+            <button type="button" onClick={() => setSwappingExercise(null)} className="p-2 press text-muted-foreground">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+              </svg>
+            </button>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold">Swap Exercise</p>
+              <p className="font-bold text-base leading-tight truncate">{swappingExercise}</p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1">
+            {EXERCISES.map((ex) => (
+              <button
+                key={ex.name}
+                type="button"
+                onClick={() => handleSwapExercise(swappingExercise, ex.name)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl press text-left ${ex.name === swappingExercise ? "bg-primary/10 text-primary" : "bg-foreground/5 text-foreground"}`}
+              >
+                <div>
+                  <p className="text-sm font-semibold">{ex.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{ex.category}</p>
+                </div>
+                {ex.name === swappingExercise && (
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Current</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
