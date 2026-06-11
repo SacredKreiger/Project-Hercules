@@ -96,6 +96,44 @@ function updateDayExercises(program: AnyProgram, dow: number, exercises: Exercis
   return { ...p2, phases: updatedPhases };
 }
 
+/** Set restSeconds=targetSecs on every grouped exercise in the program. Returns patched program + whether anything changed. */
+function patchGroupedRest(program: AnyProgram, targetSecs: number): { program: AnyProgram; changed: boolean } {
+  function patchExercises(exs: ExerciseConfig[]): { exs: ExerciseConfig[]; changed: boolean } {
+    let changed = false;
+    const patched = exs.map(ex => {
+      if (ex.groupId && ex.restSeconds !== targetSecs) {
+        changed = true;
+        return { ...ex, restSeconds: targetSecs };
+      }
+      return ex;
+    });
+    return { exs: patched, changed };
+  }
+
+  if (!isV2(program)) {
+    const p1 = program as ProgramV1;
+    let anyChanged = false;
+    const days = p1.days.map(d => {
+      const { exs, changed } = patchExercises(d.exercises);
+      if (changed) anyChanged = true;
+      return changed ? { ...d, exercises: exs } : d;
+    });
+    return { program: anyChanged ? { ...p1, days } : p1, changed: anyChanged };
+  }
+
+  const p2 = program as ProgramV2;
+  let anyChanged = false;
+  const phases: Phase[] = p2.phases.map(phase => {
+    const days = phase.days.map(d => {
+      const { exs, changed } = patchExercises(d.exercises);
+      if (changed) anyChanged = true;
+      return changed ? { ...d, exercises: exs } : d;
+    });
+    return anyChanged ? { ...phase, days } : phase;
+  });
+  return { program: anyChanged ? { ...p2, phases } : p2, changed: anyChanged };
+}
+
 // ── SupersetBlock ─────────────────────────────────────────────────────────────
 
 function SupersetBlock({
@@ -673,12 +711,21 @@ export default function TrainPage() {
 
     if (profileError || !profile) { setLoading(false); return; }
 
-    if (profile?.training_program)  setProgram(profile.training_program as AnyProgram);
     if (profile?.training_prs)       setPrs(profile.training_prs as Record<string, number>);
     if (profile?.training_progress)  setProgress(profile.training_progress as Record<string, { weight: number }>);
     if (profile?.current_weight_lbs) setBodyweight(profile.current_weight_lbs as number);
     if (profile?.gender)             setGender(profile.gender as string);
     if (profile?.pr_mode_enabled)    setPrModeEnabled(true);
+
+    // Load program and fix superset/circuit rest to 120s if needed
+    if (profile?.training_program) {
+      const raw = profile.training_program as AnyProgram;
+      const { program: patched, changed } = patchGroupedRest(raw, 120);
+      setProgram(patched);
+      if (changed) {
+        await supabase.from("profiles").update({ training_program: patched }).eq("id", user.id);
+      }
+    }
 
     // Load personal records for PR mode
     const { data: prRows } = await supabase.from("personal_records")
