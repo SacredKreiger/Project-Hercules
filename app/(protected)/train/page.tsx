@@ -598,25 +598,11 @@ export default function TrainPage() {
   const [, startTransition] = useTransition();
   const overflowRef = useRef<HTMLDivElement>(null);
 
-  // Drag-to-group state
-  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  // Hold-to-select + tap-to-group state
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dragTouchStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const exerciseItemRefs = useRef<Record<number, HTMLDivElement | null>>({});
-  const isDraggingRef = useRef(false);
+  const touchMovedRef = useRef(false);
   const exerciseListRef = useRef<HTMLDivElement>(null);
-
-  // Native passive:false touchmove to prevent page scroll + text selection during drag
-  useEffect(() => {
-    const el = exerciseListRef.current;
-    if (!el) return;
-    function onTouchMove(e: TouchEvent) {
-      if (isDraggingRef.current) e.preventDefault();
-    }
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    return () => el.removeEventListener("touchmove", onTouchMove);
-  }, []);
 
   const todayDow = new Date().getDay();
   const [selectedDow, setSelectedDow] = useState<number>(todayDow);
@@ -782,50 +768,47 @@ export default function TrainPage() {
     saveGroupChanges(updated);
   }
 
-  // ── Touch drag handlers ───────────────────────────────────────────────────
+  // ── Hold-to-select + tap-to-group handlers ───────────────────────────────
 
   function handleExTouchStart(e: React.TouchEvent, originalIndex: number) {
-    const t = e.touches[0];
-    dragTouchStart.current = { x: t.clientX, y: t.clientY };
+    touchMovedRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
-      isDraggingRef.current = true;
-      setDraggingIdx(originalIndex);
+      if (touchMovedRef.current) return;
       navigator.vibrate?.(40);
-    }, 600);
+      if (selectedIdx === null) {
+        // Nothing selected yet — select this exercise
+        setSelectedIdx(originalIndex);
+      } else if (selectedIdx === originalIndex) {
+        // Tapped same one — deselect
+        setSelectedIdx(null);
+      } else {
+        // Second exercise held — group them
+        groupOrUngroup(selectedIdx, originalIndex);
+        setSelectedIdx(null);
+      }
+    }, 500);
   }
 
-  function handleExTouchMove(e: React.TouchEvent) {
+  function handleExTouchMove() {
+    touchMovedRef.current = true;
     if (longPressTimerRef.current) {
-      const t = e.touches[0];
-      const dx = t.clientX - dragTouchStart.current.x;
-      const dy = t.clientY - dragTouchStart.current.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 12) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
-    if (draggingIdx === null) return;
-    const t = e.touches[0];
-    let found: number | null = null;
-    for (const [idxStr, el] of Object.entries(exerciseItemRefs.current)) {
-      if (!el) continue;
-      const rect = el.getBoundingClientRect();
-      if (t.clientY >= rect.top && t.clientY <= rect.bottom && t.clientX >= rect.left && t.clientX <= rect.right) {
-        found = Number(idxStr);
-        break;
-      }
-    }
-    setDragOverIdx(found !== draggingIdx ? found : null);
   }
 
   function handleExTouchEnd() {
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    if (draggingIdx !== null && dragOverIdx !== null) {
-      groupOrUngroup(draggingIdx, dragOverIdx);
+  }
+
+  function handleExTap(originalIndex: number) {
+    if (selectedIdx === null) return; // no selection active, normal tap
+    if (selectedIdx === originalIndex) {
+      setSelectedIdx(null); // tap selected → deselect
+    } else {
+      groupOrUngroup(selectedIdx, originalIndex);
+      setSelectedIdx(null);
     }
-    isDraggingRef.current = false;
-    setDraggingIdx(null);
-    setDragOverIdx(null);
   }
 
   function handleCompleteWorkout() {
@@ -1103,29 +1086,24 @@ export default function TrainPage() {
             </div>
           ) : selectedDay ? (
             <>
-              {/* Drag hint — only shown when dragging is active */}
-              {draggingIdx !== null && (
-                <div className="px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-                  <p className="text-xs text-purple-400 font-medium">Drop on another exercise to group as superset</p>
+              {/* Selection hint */}
+              {selectedIdx !== null && (
+                <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <p className="text-xs text-purple-400 font-medium">Hold another exercise to group as superset</p>
+                  <button type="button" onClick={() => setSelectedIdx(null)} className="text-xs text-purple-400 font-bold press px-2">✕</button>
                 </div>
               )}
 
               <div ref={exerciseListRef} className="space-y-4">
               {buildRenderItems((selectedDay as { exercises?: ExerciseConfig[] }).exercises ?? []).map((item) => {
                 if (item.type === "group") {
-                  const isDraggingGroup = item.originalIndices.includes(draggingIdx ?? -1);
-                  const isDropTarget = item.originalIndices.includes(dragOverIdx ?? -1);
                   return (
                     <div
                       key={item.groupId}
-                      ref={(el) => {
-                        item.originalIndices.forEach(i => { exerciseItemRefs.current[i] = el; });
-                      }}
                       onTouchStart={(e) => handleExTouchStart(e, item.originalIndices[0])}
                       onTouchMove={handleExTouchMove}
                       onTouchEnd={handleExTouchEnd}
-                      style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-                      className={`transition-all duration-150 rounded-2xl ${isDraggingGroup ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDraggingGroup ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
+                      className="transition-all duration-150 rounded-2xl"
                     >
                       <SupersetBlock
                         exercises={item.exercises}
@@ -1145,17 +1123,16 @@ export default function TrainPage() {
                 }
 
                 // Single exercise
-                const isDragging = draggingIdx === item.originalIndex;
-                const isDropTarget = dragOverIdx === item.originalIndex;
+                const isSelected = selectedIdx === item.originalIndex;
+                const isTarget = selectedIdx !== null && selectedIdx !== item.originalIndex;
                 return (
                   <div
                     key={item.exercise.name}
-                    ref={(el) => { exerciseItemRefs.current[item.originalIndex] = el; }}
                     onTouchStart={(e) => handleExTouchStart(e, item.originalIndex)}
                     onTouchMove={handleExTouchMove}
                     onTouchEnd={handleExTouchEnd}
-                    style={{ userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-                    className={`transition-all duration-150 rounded-2xl ${isDragging ? "opacity-50 scale-95 ring-2 ring-purple-500" : ""} ${isDropTarget && !isDragging ? "ring-2 ring-purple-400 bg-purple-500/10" : ""}`}
+                    onClick={() => handleExTap(item.originalIndex)}
+                    className={`transition-all duration-200 rounded-2xl ${isSelected ? "ring-2 ring-purple-500 scale-[0.98]" : ""} ${isTarget ? "ring-2 ring-purple-400/60 ring-dashed" : ""}`}
                   >
                     <ExerciseCard
                       exercise={item.exercise}
