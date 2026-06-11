@@ -53,7 +53,7 @@ function ExercisePicker({
   // Strength config state
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("8");
-  const [rest, setRest] = useState("90");
+  const [rest, setRest] = useState("120");
 
   useEffect(() => {
     try {
@@ -193,7 +193,7 @@ function ExercisePicker({
                       if (ex.unit === "distance_time") {
                         setDuration("30"); setDistance(""); setEffort("Easy");
                       } else {
-                        setSets("3"); setReps("8"); setRest("90");
+                        setSets("3"); setReps("8"); setRest("120");
                       }
                       setConfiguring(ex.name);
                     }}
